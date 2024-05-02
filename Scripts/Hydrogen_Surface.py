@@ -18,7 +18,7 @@ comm_split = comm.Split(proc_id, proc_id)
 
 potential_arr = np.linspace(0, 0.5, 2)
 
-temp_arr = np.linspace(10, 910, 7)
+temp_arr = np.linspace(600, 910, 7)
 
 replica_id_arr = np.arange(8)
 

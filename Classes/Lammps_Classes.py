@@ -130,13 +130,15 @@ class LammpsParentClass:
 
         return cmdlist
     
-    def cg_min(self):
+    def cg_min(self, conv = None):
         """
         Set of commands that do a CG Minimization 
 
         Returns:
         cmdlist (list): List of Lammps commands
         """
+        if conv is None:
+            conv = self.conv
 
         cmdlist = []
 
@@ -144,7 +146,7 @@ class LammpsParentClass:
 
         cmdlist.append('minimize 1e-12 1e-15 100 100')
 
-        cmdlist.append('minimize 1e-13 1e-16 %d %d' % (self.conv, self.conv))
+        cmdlist.append('minimize 1e-13 1e-16 %d %d' % (conv, conv))
 
         return cmdlist
     
@@ -153,7 +155,7 @@ class LammpsParentClass:
         Generate a perfect Tungsten crystal to use as reference for the rest of the point defects
         """
         
-        lmp = lammps(name = self.machine, comm=self.comm)#, cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
+        lmp = lammps(name = self.machine, comm=self.comm, cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
 
         lmp.commands_list(self.init_from_box())
 
@@ -161,7 +163,7 @@ class LammpsParentClass:
 
         lmp.command('run 0')
 
-        lmp.commands_list(self.cg_min())
+        lmp.commands_list(self.cg_min(100000))
 
         lmp.command('write_data %s' % os.path.join(self.output_folder, 'Data_Files', 'V0H0He0.data'))
             
@@ -176,7 +178,9 @@ class LammpsParentClass:
         # Update Lattice Constant after minimizing the box dimensions 
         self.alattice = lmp.get_thermo('xlat') / np.sqrt(np.dot(self.orientx, self.orientx))
 
-        self.E_cohesive = np.array([lmp.get_thermo('pe')/lmp.get_natoms(), -2.121, 0])
+        self.E_cohesive = np.array([-8.949, -2.121, 0])
+
+        self.pe0 = lmp.get_thermo('pe')
 
         self.vol_perfect = lmp.get_thermo('vol')
 
@@ -191,6 +195,8 @@ class LammpsParentClass:
         self.pbc = (bounds[:,1].flatten() - bounds[:,0].flatten()) 
 
         self.offset = bounds[:,0].flatten()
+
+        print(self.get_formation_energy(lmp, np.array( [lmp.get_natoms(),0 ,0 ]) ))
 
         lmp.close()
 
@@ -216,7 +222,7 @@ class LammpsParentClass:
 
         return pe - np.sum(self.E_cohesive*N_species)
     
-    def get_kdtree(self, lmp: lammps):
+    def get_kdtree(self, lmp, species_of_interest=None):
         """
         Finds the KDTree of the set of atoms in the simulation box
 
@@ -698,6 +704,34 @@ class LammpsParentClass:
 
         return pe, rvol, xyz[-len(target_species):]
 
+    def get_kdtree_2D(self, lmp):
+        
+        xyz = np.array(lmp.gather_atoms('x', 1, 3))
+        
+        species = np.array(lmp.gather_atoms('type', 0, 1))
+
+        xyz = xyz.reshape(len(xyz)//3, 3)
+
+        xyz_kdtree = np.copy(xyz)
+
+        bounds = np.array([
+            
+            [lmp.get_thermo('xlo'), lmp.get_thermo('xhi')],
+            [lmp.get_thermo('ylo'), lmp.get_thermo('yhi')],
+            [lmp.get_thermo('zlo'), lmp.get_thermo('zhi')],
+
+            ])
+
+        self.pbc = (bounds[:,1].flatten() - bounds[:,0].flatten()) 
+
+        self.offset = bounds[:,0].flatten()
+
+        xyz_kdtree -= self.offset
+
+        kdtree = KDTree(xyz_kdtree, boxsize=self.pbc)
+
+        return xyz, species, kdtree
+
 class Monte_Carlo_Methods(LammpsParentClass):
 
     def monte_carlo(self, input_filepath, species_of_interest, N_steps, p_events_dict, 
@@ -921,7 +955,7 @@ class Monte_Carlo_Methods(LammpsParentClass):
         
         lmp.close()
 
-        return pe_accept_arr, rvol_accept_arr, xyz_accept_lst, n_accept/n_iterations
+        return pe_accept_arr, rvol_accept_arr, n_species_accept_arr, xyz_accept_lst, n_accept/n_iterations
     
     def mc_acceptance_criterion(self, lmp, delta_N, N_species):
 
@@ -1007,7 +1041,7 @@ class Monte_Carlo_Methods(LammpsParentClass):
                     (species_create, xyz_optim[0], xyz_optim[1], xyz_optim[2])
                     )
         
-        lmp.command('write_dump all custom %s id type x y z' % os.path.join(self.output_folder,'Atom_Files', 'test.atom'))
+        # lmp.command('write_dump all custom %s id type x y z' % os.path.join(self.output_folder,'Atom_Files', 'test.atom'))
         
         min_dist, closest_n = kdtree.query(xyz_optim - self.offset, k = 1)
 
