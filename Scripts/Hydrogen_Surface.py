@@ -18,7 +18,7 @@ comm_split = comm.Split(proc_id, proc_id)
 
 potential_arr = np.linspace(0, 0.5, 2)
 
-temp_arr = np.linspace(600, 910, 7)
+temp_arr = np.linspace(200, 1000, 7)
 
 replica_id_arr = np.arange(8)
 
@@ -35,7 +35,7 @@ with open('init_param.json', 'r') as file:
  
 output_folder = os.path.join('Monte_Carlo_HSurface', 'Pot_%.1f_Temp_%d_Replica_%d' % (potential, int(temp), int(replica_id)))
 
-init_dict['size'] = 7
+init_dict['size'] = 6
 
 init_dict['orientx'] = [1, 1, 0]
 
@@ -56,18 +56,19 @@ lmp = Monte_Carlo_Methods(init_dict, comm_split, proc_id)
 
 lmp.perfect_crystal()
 
-print('work')
-p_events_dict = {'displace':0.3, 'exchange':0, 'delete':0.1, 'create':0.6}
+p_events_dict = {'displace':0.4, 'exchange':0, 'delete':0.3, 'create':0.3}
 
 region_of_interest = np.vstack([lmp.offset, lmp.pbc + lmp.offset])
 
-region_of_interest[: , -1] = np.array([0, -3])
+region_of_interest[: , -1] = np.array([-1.5, 0])
 
-print(region_of_interest)
+dist = np.linspace(0, 200, 8)
 
-pe_arr, rvol_arr, n_species_arr, xyz_accept_lst, ratio = lmp.monte_carlo(os.path.join(output_folder, 'Data_Files','V0H0He0.data'), [2], 1000, p_events_dict,
+lmp.random_generate_atoms(os.path.join(output_folder, 'Data_Files/V0H0He0.data'), region_of_interest, np.array([0, int(dist[replica_id]), 0]), temp, 'init.data')
+
+pe_arr, rvol_arr, n_species_arr, xyz_accept_lst, ratio = lmp.monte_carlo(os.path.join(output_folder, 'Data_Files','init.data'), [2], 1000, p_events_dict,
                                             temp = temp, potential = potential, max_displacement = 0.5*np.ones((3,)),
-                                            region_of_interest= region_of_interest, save_xyz=False, diag = True )
+                                            region_of_interest= region_of_interest, save_xyz=False, diag = False )
 
 
 np.savetxt(os.path.join(output_folder, 'pe.npy', pe_arr))

@@ -159,7 +159,7 @@ class LammpsParentClass:
 
         lmp.commands_list(self.init_from_box())
 
-        lmp.command('fix 3 all box/relax aniso 0.0')
+        # lmp.command('fix 3 all box/relax aniso 0.0')
 
         lmp.command('run 0')
 
@@ -178,9 +178,13 @@ class LammpsParentClass:
         # Update Lattice Constant after minimizing the box dimensions 
         self.alattice = lmp.get_thermo('xlat') / np.sqrt(np.dot(self.orientx, self.orientx))
 
-        self.E_cohesive = np.array([-8.949, -2.121, 0])
-
+        self.E_cohesive = np.array([-8.94964, -2.121, 0])
+        
+        self.N_species = np.array([lmp.get_natoms(), 0, 0])
+        
         self.pe0 = lmp.get_thermo('pe')
+
+        self.N_atoms0 = lmp.get_natoms()
 
         self.vol_perfect = lmp.get_thermo('vol')
 
@@ -194,10 +198,9 @@ class LammpsParentClass:
 
         self.pbc = (bounds[:,1].flatten() - bounds[:,0].flatten()) 
 
+        print( (self.pe0 - self.E_cohesive[0]*self.N_atoms0)/(2*self.pbc[0]*self.pbc[1]) )
         self.offset = bounds[:,0].flatten()
-
-        print(self.get_formation_energy(lmp, np.array( [lmp.get_natoms(),0 ,0 ]) ))
-
+        
         lmp.close()
 
     def run_MD(self, lmp, temp, timestep, N_steps):
@@ -216,12 +219,60 @@ class LammpsParentClass:
 
         lmp.command('velocity all zero linear')
 
-    def get_formation_energy(self, lmp, N_species):
+    def get_formation_energy(self, lmp, N_species=None):
 
         pe = lmp.get_thermo('pe')
 
-        return pe - np.sum(self.E_cohesive*N_species)
-    
+        if N_species is None:
+            return pe - np.sum(self.E_cohesive*self.N_species)
+        
+        else:
+            return pe - np.sum(self.E_cohesive*N_species)
+
+    def trial_insert_atom(self, lmp, xyz_target, target_species, xyz_reset_c, return_xyz_optim = False):
+        
+        xyz_target -= self.offset
+        
+        xyz_target -= np.floor(xyz_target/self.pbc)*self.pbc
+
+        xyz_target += self.offset
+
+        lmp.command('create_atoms %d single %f %f %f units box' % 
+                    (target_species, xyz_target[0], xyz_target[1], xyz_target[2])
+                    )
+                        
+        lmp.commands_list(self.cg_min())
+        
+        lmp.command('write_dump all atom %s/test.atom' % self.output_folder)
+        
+        xyz_optim = None
+
+        if return_xyz_optim:
+
+            xyz = np.array(lmp.gather_atoms('x', 1, 3))
+
+            xyz = xyz.reshape(len(xyz)//3, 3)
+
+            xyz_optim = xyz[-1]
+
+        n_atoms = lmp.get_natoms()
+
+        N_species_copy = np.copy(self.N_species)
+
+        N_species_copy[target_species - 1] += 1
+        
+        ef = self.get_formation_energy(lmp, N_species_copy)
+            
+        lmp.command('group del_atoms id %d' % (n_atoms))
+
+        lmp.command('delete_atoms group del_atoms compress no')
+        
+        lmp.command('group del_atoms clear')
+
+        lmp.scatter_atoms('x', 1, 3, xyz_reset_c)
+        
+        return ef, xyz_optim
+
     def get_kdtree(self, lmp, species_of_interest=None):
         """
         Finds the KDTree of the set of atoms in the simulation box
@@ -239,6 +290,8 @@ class LammpsParentClass:
         xyz = np.array(lmp.gather_atoms('x', 1, 3))
         
         species = np.array(lmp.gather_atoms('type', 0, 1))
+        
+        self.N_species = np.array([sum(species == k) for k in range(1, 4)])
 
         xyz = xyz.reshape(len(xyz)//3, 3)
 
@@ -355,6 +408,8 @@ class LammpsParentClass:
         # Get the KDTree of the simulation
         xyz, species, kdtree = self.get_kdtree(lmp)
         
+        self.N_species = np.array([sum(species == k) for k in range(1, 4)])
+
         # If the defect centre is not specified simply use the centre of the simulation box - offset is added to bias the neighbours in a direction
         if defect_centre is None:
 
@@ -407,7 +462,7 @@ class LammpsParentClass:
             lmp.command('group del_atoms clear')
 
             lmp.commands_list(self.cg_min())
-
+            
         # Adds an interstitial to the system by trialling high symmettry points
         if action == 1:
             
@@ -435,13 +490,12 @@ class LammpsParentClass:
 
         species = np.array(lmp.gather_atoms('type', 0, 1))
 
-        N_species = np.array([sum(species == k) for k in range(1, 4)])
-
+        self.N_species = np.array([sum(species == k) for k in range(1, 4)])
 
         # Calculate the relaxation volume and formation energy
         rvol = self.get_rvol(lmp)
 
-        formation_energy = self.get_formation_energy(lmp, N_species)
+        formation_energy = self.get_formation_energy(lmp)
         
         return formation_energy, rvol
     
@@ -547,7 +601,7 @@ class LammpsParentClass:
         return sites_lst[min_idx], pe_lst[min_idx]
 
     def random_config_minimizer(self, lmp, kdtree, xyz, species, defect_centre, target_species):
-
+        
         if defect_centre.ndim == 1:
             defect_centre = defect_centre.reshape(1, -1)
         
@@ -584,8 +638,9 @@ class LammpsParentClass:
 
         sites_lst = []
 
+
         while True:
-            
+
             rng = np.random.randint(low=0, high=defect_centre.shape[0])
 
             sample = self.alattice*(np.random.rand(3) - 0.5) + defect_centre[rng]
@@ -598,67 +653,37 @@ class LammpsParentClass:
             n_to_accept += 1
 
             min_dist, closest_n = kdtree.query(sample - self.offset, k = 1)
-
+            
             if exclusion_radii is None:
                                 
                 n_to_accept = 0
 
+                pe, xyz_min = self.trial_insert_atom(lmp, sample, target_species, xyz_reset_c, True)
+
+                pe_lst.append(pe)
+
                 sites_lst.append(sample)
-
-                lmp.command('create_atoms %d single %f %f %f units box' % 
-                            (target_species, sample[0], sample[1], sample[2])
-                            )
-                
-                lmp.commands_list(self.cg_min())
-
-                xyz_min = np.array(lmp.gather_atoms('x', 1, 3))
-
-                pe_lst.append(lmp.get_thermo('pe'))
-
-                lmp.command('group del_atoms id %d' % (len(xyz) + 1))
-
-                lmp.command('delete_atoms group del_atoms')
-                
-                lmp.command('group del_atoms clear')
-
-                lmp.scatter_atoms('x', 1, 3, xyz_reset_c)
 
                 exclusion_centres = np.array([sample])
                 
-                radius = np.clip(np.linalg.norm(xyz_min[-1] - sample), a_min=0, a_max=2)
+                radius = np.clip(np.linalg.norm(xyz_min - sample), a_min=0, a_max=2)
 
                 exclusion_radii = np.array([radius])
 
             elif np.all(dist_sample_centre > exclusion_radii) and min_dist > 0.5:
-                
                 n_to_accept = 0
 
-                lmp.command('create_atoms %d single %f %f %f units box' % 
-                            (target_species, sample[0], sample[1], sample[2])
-                            )
-                
-                lmp.commands_list(self.cg_min())
+                pe, xyz_min = self.trial_insert_atom(lmp, sample, target_species, xyz_reset_c, True)
 
-                xyz_min = np.array(lmp.gather_atoms('x', 1, 3))
-
-                pe_lst.append(lmp.get_thermo('pe'))
+                pe_lst.append(pe)
 
                 sites_lst.append(sample)
 
-                lmp.command('group del_atoms id %d' % (len(xyz) + 1))
-
-                lmp.command('delete_atoms group del_atoms')
-                
-                lmp.command('group del_atoms clear')
-
-                lmp.scatter_atoms('x', 1, 3, xyz_reset_c)
-
                 exclusion_centres = np.vstack([exclusion_centres, sample])
                 
-                radius = np.clip(np.linalg.norm(xyz_min[-1] - sample), a_min=0, a_max=2)
+                radius = np.clip(np.linalg.norm(xyz_min - sample), a_min=0, a_max=2)
 
                 exclusion_radii = np.hstack([exclusion_radii, radius])
-
 
             if n_to_accept > 500 and len(pe_lst) > 1:
 
@@ -704,35 +729,98 @@ class LammpsParentClass:
 
         return pe, rvol, xyz[-len(target_species):]
 
-    def get_kdtree_2D(self, lmp):
+    def fill_sites(self, input_filepath, region_of_interest, target_species, dist_between_sites, output_filename='init.data' ,int_energy = 0):
+
+        lmp = lammps(name = self.machine, comm=self.comm, cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
+
+        lmp.commands_list(self.init_from_datafile(input_filepath))
+                
+        lmp.command('run 0')
+
+        xyz, species, kdtree = self.get_kdtree(lmp)
+                
+        slct_idx = np.where(np.all((xyz >= region_of_interest[0,:]) & (xyz <= region_of_interest[1,:]), axis=1))
         
-        xyz = np.array(lmp.gather_atoms('x', 1, 3))
+        xyz_slct = xyz[slct_idx]
+
+        kdtree_slct = KDTree(xyz_slct - self.offset, boxsize=self.pbc)
+
+        avail_sites = np.arange(len(xyz_slct))
         
-        species = np.array(lmp.gather_atoms('type', 0, 1))
+        while len(avail_sites) > 1:
 
-        xyz = xyz.reshape(len(xyz)//3, 3)
+            rng_idx = np.random.randint(low=0, high=len(avail_sites))
 
-        xyz_kdtree = np.copy(xyz)
-
-        bounds = np.array([
+            idx = avail_sites[rng_idx]
             
-            [lmp.get_thermo('xlo'), lmp.get_thermo('xhi')],
-            [lmp.get_thermo('ylo'), lmp.get_thermo('yhi')],
-            [lmp.get_thermo('zlo'), lmp.get_thermo('zhi')],
+            print(idx, lmp.get_natoms())
+             
+            for i in range(2):
 
-            ])
+                xyz_optim, pe_optim = self.random_config_minimizer(lmp, kdtree, xyz, species, xyz_slct[idx], target_species)
+                                
+                lmp.command('create_atoms %d single %f %f %f units box' % 
+                        (target_species, xyz_optim[0], xyz_optim[1], xyz_optim[2])
+                )
 
-        self.pbc = (bounds[:,1].flatten() - bounds[:,0].flatten()) 
+                lmp.commands_list(self.cg_min())
 
-        self.offset = bounds[:,0].flatten()
+                self.N_species[target_species - 1] += 1
+            
+            nn = kdtree_slct.query_ball_point(xyz_slct[idx] - self.offset, r=dist_between_sites)
+            
+            avail_sites = avail_sites[np.bitwise_not(np.isin(avail_sites, nn))]
+                        
+        lmp.command('write_data %s' % os.path.join(self.output_folder, 'Data_Files', output_filename))
 
-        xyz_kdtree -= self.offset
+    def random_generate_atoms(self, input_filepath, region_of_interest, target_species, temp, output_filename):
 
-        kdtree = KDTree(xyz_kdtree, boxsize=self.pbc)
+        lmp = lammps(name = self.machine, comm=self.comm, cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
 
-        return xyz, species, kdtree
+        lmp.commands_list(self.init_from_datafile(input_filepath))
+                
+        _, _, kdtree = self.get_kdtree(lmp)
+        
+        for i in range(len(target_species)):
+            for j in range(target_species[i]):
+
+                while True:
+                    rng = np.random.rand(3)*(region_of_interest[1,:] - region_of_interest[0,:]) + region_of_interest[0,:]
+                    
+                    d, nn = kdtree.query(rng, k=1)
+
+                    if d > 1:
+                        lmp.command('create_atoms %d single %f %f %f units box' % 
+                                    (i + 1, rng[0], rng[1], rng[2])
+                                    )
+                        break
+        
+        lmp.commands_list(self.cg_min())
+        
+        lmp.command('region vacuum block %f %f %f %f %f %f' % (
+            self.offset[0], self.offset[0] + self.pbc[0],
+            self.offset[1], self.offset[1] + self.pbc[1],
+            self.offset[2], -5 ))
+        
+
+        for k in range(20):
+            self.run_MD(lmp, temp=temp, timestep=1e-4, N_steps=1000)
+
+            lmp.command('group del_atoms region vacuum')
+
+            lmp.command('delete_atoms group del_atoms')
+
+            lmp.command('group del_atoms clear')
+
+        lmp.commands_list(self.cg_min())
+
+        lmp.command('write_data %s' % os.path.join(self.output_folder, 'Data_Files', output_filename))
+
+        print(os.path.join(self.output_folder, 'Data_Files', output_filename))
 
 class Monte_Carlo_Methods(LammpsParentClass):
+
+
 
     def monte_carlo(self, input_filepath, species_of_interest, N_steps, p_events_dict, 
                     temp = 300, potential = 0, max_displacement = np.ones((3,)),
@@ -1041,6 +1129,7 @@ class Monte_Carlo_Methods(LammpsParentClass):
                     (species_create, xyz_optim[0], xyz_optim[1], xyz_optim[2])
                     )
         
+        
         # lmp.command('write_dump all custom %s id type x y z' % os.path.join(self.output_folder,'Atom_Files', 'test.atom'))
         
         min_dist, closest_n = kdtree.query(xyz_optim - self.offset, k = 1)
@@ -1226,3 +1315,4 @@ class Monte_Carlo_Methods(LammpsParentClass):
                 lmp.scatter_atoms('x', 1, 3, xyz_c)
                 
                 print('reject: ',pe_test - accepted_pe[-1])
+

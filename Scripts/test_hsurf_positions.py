@@ -35,7 +35,14 @@ with open('init_param.json', 'r') as file:
  
 output_folder = os.path.join('Monte_Carlo_HSurface_Test')
 
-init_dict['size'] = 7
+init_dict['size'] = 5
+
+
+# init_dict['orientx'] = [1, 0, 0]
+
+# init_dict['orienty'] = [0, 1, 0]
+
+# init_dict['orientz'] = [0, 0, 1]
 
 # init_dict['orientx'] = [1, 1, 0]
 
@@ -44,7 +51,9 @@ init_dict['size'] = 7
 # init_dict['orientz'] = [-1, 1, 0]
 
 init_dict['orientx'] = [1, 1, 1]
+
 init_dict['orienty'] = [-1,2,-1]
+
 init_dict['orientz'] = [-1,0, 1]
 
 init_dict['surface'] = 20
@@ -60,11 +69,10 @@ lmp = Monte_Carlo_Methods(init_dict, comm_split, proc_id)
 
 lmp.perfect_crystal()
 
-for i in range(5):
-    input_filepath = '%s/Data_Files/V%dH%dHe%d.data' % (output_folder, 0, i, 0)
-    
-    output_filepath = '%s/Data_Files/V%dH%dHe%d.data' % (output_folder, 0, i+1, 0)
+region_of_interest = np.vstack([lmp.offset, lmp.pbc + lmp.offset])
 
-    ef, rvol = lmp.add_defect(input_filepath, output_filepath, 2, 1, defect_centre=np.array([0, 0, 0])) 
+region_of_interest[: , -1] = np.array([-1, 0])
 
-    print(ef, rvol)
+target_species = np.array([0, 80, 0])
+
+lmp.random_generate_atoms(os.path.join(output_folder, 'Data_Files/V0H0He0.data'), region_of_interest, target_species)
