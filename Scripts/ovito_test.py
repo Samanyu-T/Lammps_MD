@@ -6,16 +6,17 @@ from ovito.pipeline import *
 import numpy as np
 import sys, os, glob
  
-def main(rpath, fpath, sfolder):
+def main(rpath, fpath, sfolder, sfile):
 
     # Data import:
     # rpath = sys.argv[1]
     # fpath = sys.argv[2]
-    sfile = "int_%s" % fpath.split('/')[-1]
+    # sfile = "int_%s" % fpath.split('/')[-1]
 
     spath = os.path.join(os.path.join(sfolder, sfile))
 
-    print ("Processing %s, exporting interstitial cluster data into %s." % (fpath, sfile))
+    print ("Processing %s, exporting interstitial cluster data into %s" % (fpath, spath))
+    
     if os.path.isfile(spath):
         print ("File %s already exists. Skipping." % spath)
         return 0
@@ -44,21 +45,35 @@ def main(rpath, fpath, sfolder):
 
         # get cluster size data
         if data.tables != None:
+
             cluster_size = np.array(data.tables['clusters'].y.T)
+
+            print(sfile)
+
             np.savetxt(sfile, cluster_size)
 
 if __name__=="__main__":
     
-    rpath = '~/rds/rds-ukaea-ap002-mOlK9qn0PlQ/CRAsimulations/Cascades/w_220_cascade/w_220_cascade.0.dump.gz'
+    rpath = '/home/ir-tiru1/rds/rds-ukaea-ap002-mOlK9qn0PlQ/CRAsimulations/Cascades/w_220_cascade/w_220_cascade.0.dump.gz'
 
-    files = glob.glob('~/rds/rds-ukaea-ap002-mOlK9qn0PlQ/CRAsimulations/Cascades/w_220_cascade/w_220_cascade.*.dump.gz')
+    files = glob.glob('/home/ir-tiru1/rds/rds-ukaea-ap002-mOlK9qn0PlQ/CRAsimulations/Cascades/w_220_cascade/w_220_cascade.*.dump.gz')
     
+    dump_idx = sorted([files.split('.')[1] for file in files])
+
     chosen_idx = np.linspace(0, len(files), 100).astype(int)
     
-    sfolder = 'w_220_cascade'
+    sfolder = '/home/ir-tiru1/w_220_cascade'
 
     if not os.path.exists(sfolder):
         os.mkdir(sfolder)
+    
+    
+    for i in chosen_idx:
 
-    for idx in chosen_idx:
-        main(rpath, files[idx], sfolder)
+        idx = dump_idx[i]
+
+        sname = 'int_%d.txt' % idx
+        
+        fpath = '/home/ir-tiru1/rds/rds-ukaea-ap002-mOlK9qn0PlQ/CRAsimulations/Cascades/w_220_cascade/w_220_cascade.%d.dump.gz' % idx
+
+        main(rpath, fpath, sfolder, sname)
