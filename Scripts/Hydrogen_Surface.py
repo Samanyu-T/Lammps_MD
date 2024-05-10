@@ -18,9 +18,9 @@ comm_split = comm.Split(proc_id, proc_id)
 
 potential_arr = np.linspace(0, 0.5, 2)
 
-temp_arr = np.linspace(200, 1000, 7)
+temp_arr = np.linspace(900, 1000, 7)
 
-replica_id_arr = np.arange(8)
+replica_id_arr = np.arange(0,10)
 
 potential = potential_arr[ proc_id % 2]
 
@@ -66,9 +66,10 @@ dist = np.linspace(0, 200, 8)
 
 lmp.random_generate_atoms(os.path.join(output_folder, 'Data_Files/V0H0He0.data'), region_of_interest, np.array([0, int(dist[replica_id]), 0]), temp, 'init.data')
 
-pe_arr, rvol_arr, n_species_arr, xyz_accept_lst, ratio = lmp.monte_carlo(os.path.join(output_folder, 'Data_Files','init.data'), [2], 1000, p_events_dict,
+pe_arr, rvol_arr, n_species_arr, xyz_accept_lst, ratio = lmp.hybrid_monte_carlo(os.path.join(output_folder, 'Data_Files','init.data'), [2], 1000,
+                                            p_events_dict, mc_steps=10, md_steps=10000,
                                             temp = temp, potential = potential, max_displacement = 0.5*np.ones((3,)),
-                                            region_of_interest= region_of_interest, save_xyz=False, diag = False )
+                                            region_of_interest= region_of_interest, save_xyz=False, diag = True, fix_aniso=False )
 
 
 np.savetxt(os.path.join(output_folder, 'pe.npy', pe_arr))

@@ -5,7 +5,7 @@ import json
 from mpi4py import MPI
 from glob import glob
 
-sys.path.append(os.path.join(os.getcwd(), 'Classes'))
+sys.path.append(os.path.join(os.getcwd(), 'git_folder','Classes'))
 
 from Lammps_Classes import Monte_Carlo_Methods
 
@@ -20,7 +20,7 @@ init_dict = {}
 with open('init_param.json', 'r') as file:
     init_dict = json.load(file)
 
-output_folder = 'Lammps_Files_7x7'
+output_folder = 'Lammps_Files_7x7_MC_New'
 
 init_dict['orientx'] = [1, 0, 0]
 
@@ -49,7 +49,7 @@ xyz_lst = []
 
 p_events_dict = {'displace':0.75, 'exchange':0.25, 'delete':0, 'create':0}
 
-for file in glob('Lammps_Files_5x5/Data_Files/*'):
+for file in glob('Lammps_Files_7x7/Data_Files/*'):
     
     filename = os.path.basename(file).split('.')[0]
 
@@ -59,16 +59,16 @@ for file in glob('Lammps_Files_5x5/Data_Files/*'):
 
     he = int(filename[-1])
     
-    pe_arr, rvol_arr, xyz_accept_lst, ratio = lmp.monte_carlo(file, [2,3], 100, p_events_dict,
+    pe_arr, rvol_arr, xyz_accept_lst, n_species, ratio = lmp.monte_carlo(file, [2,3], 500, p_events_dict,
                                               temp = 100, potential = 0, max_displacement = 0.5*np.ones((3,)),
-                                              region_of_interest= None, save_xyz=True, diag = False )
+                                              region_of_interest= None, save_xyz=False, diag = False )
    
 
     pe_sort_idx = np.argsort(pe_arr)
 
     N_slct = 5
 
-    slct_idx = [ int(i*(len(pe_sort_idx)-1)//(N_slct-1)) for i in range(N_slct)]
+    slct_idx = pe_arr.argmin() #[ int(i*(len(pe_sort_idx)-1)//(N_slct-1)) for i in range(N_slct)]
 
     struct_lst.append(np.array([v, h, he]))
 
@@ -80,13 +80,18 @@ for file in glob('Lammps_Files_5x5/Data_Files/*'):
 
     xyz_lst.append(xyz_accept_lst[pe_sort_idx[slct_idx]])
 
-    print(file, pe_arr[pe_sort_idx[0]],ratio)
+    print(file, pe_lst[-1], rvol_lst[-1], ratio)
 
 struct_lst = np.array(struct_lst)
 pe_lst = np.array(pe_lst)
 rvol_lst = np.array(rvol_lst)
 
-np.savez('struct_mcmc_5x5.npz', *struct_lst)
-np.savez('ef_mcmc_5x5.npz', *pe_lst)
-np.savez('rvol_mcmc_5x5.npz', *rvol_lst)
-np.savez('config_mcmc_5x5.npz', *xyz_lst)
+np.save('ef.npy', pe_lst)
+np.save('rvol.npy', rvol_lst)
+np.save('xyz.npy', struct_lst)
+
+
+# np.savez('struct_mcmc_5x5.npz', *struct_lst)
+# np.savez('ef_mcmc_5x5.npz', *pe_lst)
+# np.savez('rvol_mcmc_5x5.npz', *rvol_lst)
+# np.savez('config_mcmc_5x5.npz', *xyz_lst)
