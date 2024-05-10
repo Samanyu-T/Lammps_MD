@@ -58,7 +58,7 @@ if __name__=="__main__":
 
     files = glob.glob('/home/ir-tiru1/rds/rds-ukaea-ap002-mOlK9qn0PlQ/CRAsimulations/Cascades/w_220_cascade/w_220_cascade.*.dump.gz')
     
-    dump_idx = sorted([file.split('.')[1] for file in files])
+    dump_idx = sorted([int(file.split('.')[1]) for file in files])
 
     chosen_idx = np.linspace(0, len(files), 100).astype(int)
     
