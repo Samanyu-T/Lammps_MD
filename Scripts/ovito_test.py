@@ -48,9 +48,9 @@ def main(rpath, fpath, sfolder, sfile):
 
             cluster_size = np.array(data.tables['clusters'].y.T)
 
-            print(sfile)
+            print(spath)
 
-            np.savetxt(sfile, cluster_size)
+            np.savetxt(spath, cluster_size)
 
 if __name__=="__main__":
     
@@ -60,7 +60,7 @@ if __name__=="__main__":
     
     dump_idx = sorted([int(file.split('.')[1]) for file in files])
 
-    chosen_idx = np.linspace(0, len(files), 100).astype(int)
+    chosen_idx = np.linspace(0, len(files) - 1, 100).astype(int)
     
     sfolder = '/home/ir-tiru1/w_220_cascade'
 
