@@ -77,7 +77,7 @@ def main(rpath, fpath, sfolder, idx):
     # Cluster analysis of remaining interstitials
     pipeline2.modifiers.append(ClusterAnalysisModifier(cutoff = 3.3, sort_by_size=True))
     
-    for i,frame in enumerate(range(pipeline.source.num_frames)):
+    for i,frame in enumerate(range(pipeline2.source.num_frames)):
         data = pipeline2.compute(frame)
 
         # get cluster size data
