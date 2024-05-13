@@ -18,40 +18,40 @@ def main(rpath, fpath, sfolder, idx):
 
     print ("Processing %s, exporting interstitial cluster data into %s" % (fpath, spath))
     
-    if os.path.isfile(spath):
-        print ("File %s already exists. Skipping." % spath)
-        return 0
+    # if os.path.isfile(spath):
+    #     print ("File %s already exists. Skipping." % spath)
+    #     return 0
      
-    pipeline = import_file(fpath)
+    # pipeline = import_file(fpath)
 
-    # Wigner-Seitz defect analysis:
-    mod = WignerSeitzAnalysisModifier()
-    mod.per_type_occupancies = True
-    mod.reference = FileSource()
-    mod.reference.load(rpath)
-    mod.affine_mapping = ReferenceConfigurationModifier.AffineMapping.ToReference
-    pipeline.modifiers.append(mod)
+    # # Wigner-Seitz defect analysis:
+    # mod = WignerSeitzAnalysisModifier()
+    # mod.per_type_occupancies = True
+    # mod.reference = FileSource()
+    # mod.reference.load(rpath)
+    # mod.affine_mapping = ReferenceConfigurationModifier.AffineMapping.ToReference
+    # pipeline.modifiers.append(mod)
     
-    # Expression selection:
-    pipeline.modifiers.append(ExpressionSelectionModifier(expression = 'Occupancy <= 1'))
+    # # Expression selection:
+    # pipeline.modifiers.append(ExpressionSelectionModifier(expression = 'Occupancy <= 1'))
 
-    # Delete selected:
-    pipeline.modifiers.append(DeleteSelectedModifier())
+    # # Delete selected:
+    # pipeline.modifiers.append(DeleteSelectedModifier())
  
-    # Cluster analysis of remaining interstitials
-    pipeline.modifiers.append(ClusterAnalysisModifier(cutoff = 3.3, sort_by_size=True))
+    # # Cluster analysis of remaining interstitials
+    # pipeline.modifiers.append(ClusterAnalysisModifier(cutoff = 3.3, sort_by_size=True))
     
-    for i,frame in enumerate(range(pipeline.source.num_frames)):
-        data = pipeline.compute(frame)
+    # for i,frame in enumerate(range(pipeline.source.num_frames)):
+    #     data = pipeline.compute(frame)
 
-        # get cluster size data
-        if data.tables != None:
+    #     # get cluster size data
+    #     if data.tables != None:
 
-            cluster_size = np.array(data.tables['clusters'].y.T)
+    #         cluster_size = np.array(data.tables['clusters'].y.T)
 
-            print(spath)
+    #         print(spath)
 
-            np.savetxt(spath, cluster_size)
+    #         np.savetxt(spath, cluster_size)
 
 
     sfile = "vac_%s" % idx
