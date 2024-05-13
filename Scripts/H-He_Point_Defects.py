@@ -56,13 +56,11 @@ rvol_arr = np.zeros((len(points), ))
 
 for i, pt in enumerate(points[1:]):
     
-    defect_centre = np.ones((3,))
+    defect_centre = ( lmp.alattice*lmp.size/2 )*np.ones((3,))
     
     if pt[0] == 2:
         defect_centre = np.vstack([defect_centre, ( lmp.alattice* (lmp.size/2 + 0.5) )*np.ones((3,))])
-    else:
-        defect_centre = ( lmp.alattice*lmp.size/2 )*np.ones((3,))
-        
+
     target_species = 2
     action = 1
 

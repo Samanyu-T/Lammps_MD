@@ -414,15 +414,16 @@ class LammpsParentClass:
 
             defect_centre = ( self.offset + self.pbc/2 + np.array([1e-2, 1e-2, 0]) )
         
-        if defect_centre.ndim > 1:
+        if defect_centre.ndim == 1:
 
-            defect_centre = np.mean(defect_centre, axis=0)
+            defect_centre = defect_centre.reshape(1, -1)
 
         # Creates a vacancy by looping through each nearest-neighbors and selecting the energy minima
         if action == -1:
             
             # Find the closest species to the defect centre
-            dist, nn = kdtree.query(defect_centre - self.offset, k=6)
+            
+            dist, nn = kdtree.query(defect_centre[0] - self.offset, k=6)
 
             target_idxs = nn[species[nn] == target_species]
             
@@ -430,7 +431,7 @@ class LammpsParentClass:
 
             # Find the energy minima when each respective atom is removed 
             for i, idx in enumerate(target_idxs):
-                    
+                
                 lmp.command('region sphere_remove_%d sphere %f %f %f 0.25' % 
                             (i,xyz[idx,0], xyz[idx,1], xyz[idx,2]))
                 
@@ -447,7 +448,7 @@ class LammpsParentClass:
                 lmp.command('create_atoms %d single %f %f %f units box' % 
                             (target_species, xyz[idx,0], xyz[idx,1], xyz[idx,2])
                             )
-            
+                
             # Select the minima of NN and remove it
             optim_idx = target_idxs[np.round(pe_arr, 3).argmin()]            
             

@@ -58,25 +58,27 @@ def main(rpath, fpath, sfolder, idx):
 
     spath = os.path.join(os.path.join(sfolder, sfile))
 
+    pipeline2 = import_file(fpath)
+
     # Wigner-Seitz defect analysis:
     mod = WignerSeitzAnalysisModifier()
     mod.per_type_occupancies = True
     mod.reference = FileSource()
     mod.reference.load(rpath)
     mod.affine_mapping = ReferenceConfigurationModifier.AffineMapping.ToReference
-    pipeline.modifiers.append(mod)
+    pipeline2.modifiers.append(mod)
     
     # Expression selection:
-    pipeline.modifiers.append(ExpressionSelectionModifier(expression = 'Occupancy >= 1'))
+    pipeline2.modifiers.append(ExpressionSelectionModifier(expression = 'Occupancy >= 1'))
 
     # Delete selected:
-    pipeline.modifiers.append(DeleteSelectedModifier())
+    pipeline2.modifiers.append(DeleteSelectedModifier())
  
     # Cluster analysis of remaining interstitials
-    pipeline.modifiers.append(ClusterAnalysisModifier(cutoff = 3.3, sort_by_size=True))
+    pipeline2.modifiers.append(ClusterAnalysisModifier(cutoff = 3.3, sort_by_size=True))
     
     for i,frame in enumerate(range(pipeline.source.num_frames)):
-        data = pipeline.compute(frame)
+        data = pipeline2.compute(frame)
 
         # get cluster size data
         if data.tables != None:
