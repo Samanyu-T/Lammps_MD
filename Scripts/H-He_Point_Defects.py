@@ -19,7 +19,7 @@ init_dict = {}
 with open('init_param.json', 'r') as file:
     init_dict = json.load(file)
 
-output_folder = 'Lammps_Files_7x7'
+output_folder = 'Lammps_Files_Pdefects'
 
 init_dict['orientx'] = [1, 0, 0]
 
@@ -62,7 +62,7 @@ for i, pt in enumerate(points[1:]):
         defect_centre = np.vstack([defect_centre, ( lmp.alattice* (lmp.size/2 + 0.5) )*np.ones((3,))])
     else:
         defect_centre = ( lmp.alattice*lmp.size/2 )*np.ones((3,))
-
+        
     target_species = 2
     action = 1
 
@@ -97,5 +97,5 @@ for i, pt in enumerate(points[1:]):
 
     print(ef_arr[i + 1], rvol_arr[i + 1])
 
-np.save('ef_test_7.npy', ef_arr)
-np.save('rvol_test_7.npy', rvol_arr)
+np.save('Numpy_Files/Point_Defects/ef_test_7.npy', ef_arr)
+np.save('Numpy_Files/Point_Defects/rvol_test_7.npy', rvol_arr)

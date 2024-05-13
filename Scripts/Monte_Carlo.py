@@ -49,7 +49,7 @@ xyz_lst = []
 
 p_events_dict = {'displace':0.75, 'exchange':0.25, 'delete':0, 'create':0}
 
-for file in glob('Lammps_Files_7x7/Data_Files/*'):
+for file in glob('Lammps_Files_Pdefects/Data_Files/*'):
     
     filename = os.path.basename(file).split('.')[0]
 
@@ -59,8 +59,8 @@ for file in glob('Lammps_Files_7x7/Data_Files/*'):
 
     he = int(filename[-1])
     
-    pe_arr, rvol_arr, xyz_accept_lst, n_species, ratio = lmp.monte_carlo(file, [2,3], 500, p_events_dict,
-                                              temp = 100, potential = 0, max_displacement = 0.5*np.ones((3,)),
+    pe_arr, rvol_arr, xyz_accept_lst, n_species, ratio = lmp.monte_carlo(file, [2,3], 100, p_events_dict,
+                                              temp = 300, potential = 0, max_displacement = np.ones((3,)),
                                               region_of_interest= None, save_xyz=False, diag = False )
    
 
@@ -80,15 +80,15 @@ for file in glob('Lammps_Files_7x7/Data_Files/*'):
 
     xyz_lst.append(xyz_accept_lst[pe_sort_idx[slct_idx]])
 
-    print(file, pe_lst[-1], rvol_lst[-1], ratio)
+    print(file, pe_arr.argmax(), pe_arr.max(), pe_lst[-1], rvol_lst[-1], ratio)
 
 struct_lst = np.array(struct_lst)
 pe_lst = np.array(pe_lst)
 rvol_lst = np.array(rvol_lst)
 
-np.save('ef.npy', pe_lst)
-np.save('rvol.npy', rvol_lst)
-np.save('xyz.npy', struct_lst)
+np.save('Numpy_Files/Point_Defects/ef_new.npy', pe_lst)
+np.save('Numpy_Files/Point_Defects/rvol_new.npy', rvol_lst)
+np.save('Numpy_Files/Point_Defects/xyz_new.npy', struct_lst)
 
 
 # np.savez('struct_mcmc_5x5.npz', *struct_lst)

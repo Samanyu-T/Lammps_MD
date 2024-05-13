@@ -67,6 +67,8 @@ class LammpsParentClass:
 
         cmdlist.append('thermo_style custom step temp pe pxx pyy pzz pxy pxz pyz vol')
 
+        cmdlist.append('thermo 100')
+
         cmdlist.append('run 0')
 
         return cmdlist
@@ -126,6 +128,8 @@ class LammpsParentClass:
         
         cmdlist.append('thermo_style custom step temp pe pxx pyy pzz pxy pxz pyz vol')
 
+        cmdlist.append('thermo 100')
+
         cmdlist.append('run 0')
 
         return cmdlist
@@ -148,7 +152,6 @@ class LammpsParentClass:
         lmp.command('minimize 1e-12 1e-15 100 100')
 
         lmp.command('minimize 1e-13 1e-16 %d %d' % (conv, conv))
-
 
         if fix_aniso:
 
@@ -186,9 +189,7 @@ class LammpsParentClass:
         
         self.N_species = np.array([lmp.get_natoms(), 0, 0])
         
-        self.pe0 = lmp.get_thermo('pe')
-
-        self.N_atoms0 = lmp.get_natoms()
+        self.pe_perfect = lmp.get_thermo('pe')
 
         self.vol_perfect = lmp.get_thermo('vol')
 
@@ -202,9 +203,8 @@ class LammpsParentClass:
 
         self.pbc = (bounds[:,1].flatten() - bounds[:,0].flatten()) 
 
-        print( (self.pe0 - self.E_cohesive[0]*self.N_atoms0)/(2*self.pbc[0]*self.pbc[1]) )
         self.offset = bounds[:,0].flatten()
-        
+
         lmp.close()
 
     def run_MD(self, lmp, temp, timestep, N_steps):
@@ -247,7 +247,7 @@ class LammpsParentClass:
                         
         self.cg_min(lmp)
         
-        lmp.command('write_dump all atom %s/test.atom' % self.output_folder)
+        # lmp.command('write_dump all atom %s/test.atom' % self.output_folder)
         
         xyz_optim = None
 
@@ -261,11 +261,7 @@ class LammpsParentClass:
 
         n_atoms = lmp.get_natoms()
 
-        N_species_copy = np.copy(self.N_species)
-
-        N_species_copy[target_species - 1] += 1
-        
-        ef = self.get_formation_energy(lmp, N_species_copy)
+        pe = lmp.get_thermo('pe')
             
         lmp.command('group del_atoms id %d' % (n_atoms))
 
@@ -275,9 +271,9 @@ class LammpsParentClass:
 
         lmp.scatter_atoms('x', 1, 3, xyz_reset_c)
         
-        return ef, xyz_optim
+        return pe, xyz_optim
 
-    def get_kdtree(self, lmp, species_of_interest=None):
+    def get_kdtree(self, lmp):
         """
         Finds the KDTree of the set of atoms in the simulation box
 
@@ -314,7 +310,7 @@ class LammpsParentClass:
         self.offset = bounds[:,0].flatten()
 
         xyz_kdtree -= self.offset
-
+            
         kdtree = KDTree(xyz_kdtree, boxsize=self.pbc)
 
         return xyz, species, kdtree
@@ -416,7 +412,7 @@ class LammpsParentClass:
         # If the defect centre is not specified simply use the centre of the simulation box - offset is added to bias the neighbours in a direction
         if defect_centre is None:
 
-            defect_centre = ( self.offset + self.pbc/2 + np.array([-1e-2, -1e-2, 0]) )
+            defect_centre = ( self.offset + self.pbc/2 + np.array([1e-2, 1e-2, 0]) )
         
         if defect_centre.ndim > 1:
 
@@ -477,6 +473,8 @@ class LammpsParentClass:
                         )
                         
             self.cg_min(lmp)
+        
+        rvol = self.get_rvol(lmp)
 
         # Save Data Files and Atom Files for diagnosis and restart purposes
         lmp.command('write_data %s' % (output_filepath))
@@ -489,14 +487,11 @@ class LammpsParentClass:
 
         lmp.command('write_dump all custom %s id type x y z' % (atom_filepath))
 
-        pe_final = lmp.get_thermo('pe')
-
         species = np.array(lmp.gather_atoms('type', 0, 1))
 
         self.N_species = np.array([sum(species == k) for k in range(1, 4)])
 
         # Calculate the relaxation volume and formation energy
-        rvol = self.get_rvol(lmp)
 
         formation_energy = self.get_formation_energy(lmp)
         
@@ -518,87 +513,34 @@ class LammpsParentClass:
         
         xyz_c = xyz_reset.astype(np.float64).ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 
-        # Geometric Test Sites based on any species
-        for i in range(2, 6):
-            
-            test_site = np.mean(xyz[nn[:i]], axis = 0)   
-            
-            # print(dist)
-
-            min_dist, closest_n = kdtree.query(test_site - self.offset, k = 1)
-                        
-            # Skip if too close to an atom
-            if np.any(min_dist > 0.5):  
-                sites_lst.append(test_site)
-
-                lmp.command('create_atoms %d single %f %f %f units box' % 
-                            (target_species, test_site[0], test_site[1], test_site[2])
-                            )
-                
-                self.cg_min(lmp)
-
-                pe_lst.append(lmp.get_thermo('pe'))
-
-                lmp.command('group del_atoms id %d' % (len(xyz) + 1))
-
-                lmp.command('delete_atoms group del_atoms')
-                
-                lmp.command('group del_atoms clear')
-
-                lmp.scatter_atoms('x', 1, 3, xyz_c)
-
         # Geometric Test Sites of positions of only the tungsten atoms
         slct_nn = nn[species[nn] == 1]
-
-        for i in range(2, 6):
+        
+        for i in range(2, len(slct_nn)):
             
             test_site = np.mean(xyz[slct_nn[:i]], axis = 0)   
 
             min_dist, closest_n = kdtree.query(test_site - self.offset, k = 1)
 
             # Skip if too close to an atom
-            if min_dist > 1:  
+            if min_dist > 0.5:  
                 sites_lst.append(test_site)
 
-                lmp.command('create_atoms %d single %f %f %f units box' % 
-                            (target_species, test_site[0], test_site[1], test_site[2])
-                            )
+                pe, _ = self.trial_insert_atom(lmp, test_site, target_species, xyz_c, False)
                 
-                self.cg_min(lmp)
-
-                pe_lst.append(lmp.get_thermo('pe'))
-
-                lmp.command('group del_atoms id %d' % (len(xyz) + 1))
-
-                lmp.command('delete_atoms group del_atoms')
-                
-                lmp.command('group del_atoms clear')
-
-                lmp.scatter_atoms('x', 1, 3, xyz_c)
+                pe_lst.append(pe)
 
         # Test the defect centre as a potential candidate
         if dist[0] > 0.5:
-
-            lmp.command('create_atoms %d single %f %f %f units box' % 
-                        (target_species, defect_centre[0], defect_centre[1], defect_centre[2])
-                        )
             
-            self.cg_min(lmp)
+            sites_lst.append(defect_centre)
 
-            lmp.command('group del_atoms id %d' % (len(xyz) + 1))
-
-            lmp.command('delete_atoms group del_atoms')
+            pe, _ = self.trial_insert_atom(lmp, defect_centre, target_species, xyz_c, False)
             
-            lmp.command('group del_atoms clear')
-
-            lmp.scatter_atoms('x', 1, 3, xyz_c)
-
-            pe_lst.append(lmp.get_thermo('pe'))
-            
-            sites_lst.append(test_site)
+            pe_lst.append(pe)
         
         pe_lst = np.array(pe_lst)
-
+        
         min_idx = pe_lst.argmin()
 
         return sites_lst[min_idx], pe_lst[min_idx]
@@ -684,7 +626,7 @@ class LammpsParentClass:
 
                 exclusion_centres = np.vstack([exclusion_centres, sample])
                 
-                radius = np.clip(np.linalg.norm(xyz_min - sample), a_min=0, a_max=2)
+                radius = np.clip(np.linalg.norm(xyz_min - sample), a_min=0, a_max=3)
 
                 exclusion_radii = np.hstack([exclusion_radii, radius])
 
@@ -857,11 +799,11 @@ class Monte_Carlo_Methods(LammpsParentClass):
 
         self.beta = 1/(kb*temp)
 
-        pe_accept_arr = np.zeros((N_steps + 1, ))
+        pe_accept_arr = []
         
-        rvol_accept_arr = np.zeros((N_steps + 1, ))
+        rvol_accept_arr = []
         
-        n_species_accept_arr = np.zeros((N_steps + 1, 3))
+        n_species_accept_arr = []
 
         xyz_accept_lst = []
 
@@ -891,18 +833,18 @@ class Monte_Carlo_Methods(LammpsParentClass):
 
         species = np.array(lmp.gather_atoms('type', 0, 1))
         
-        N_species = np.array([sum(species == k) for k in range(1, 4)])
+        self.N_species = np.array([sum(species == k) for k in range(1, 4)])
         
         # store the current state
-        self.pe_current = self.get_formation_energy(lmp, N_species)
+        self.pe_current = self.get_formation_energy(lmp, self.N_species)
 
         rvol = self.get_rvol(lmp)
 
-        n_species_accept_arr[0] = N_species
+        n_species_accept_arr.append(self.N_species)
 
-        rvol_accept_arr[0] = rvol
+        rvol_accept_arr.append(rvol)
 
-        pe_accept_arr[0] = self.pe_current
+        pe_accept_arr.append(self.pe_current)
 
         p_events_copy = np.copy(p_events)
 
@@ -944,7 +886,7 @@ class Monte_Carlo_Methods(LammpsParentClass):
                     p_cumulative = np.cumsum(p_events_copy)
 
             # if there are only a single type of species in the set of particles - then exchange cannot be possible
-            elif np.bitwise_or.reduce([N_species[target - 1] == 0 for target in species_of_interest]):
+            elif np.bitwise_or.reduce([self.N_species[target - 1] == 0 for target in species_of_interest]):
                 
                 p_norm = np.sum([ p_events[key[key_loop]] for key_loop in key.keys() if key_loop != 'exchange' ]) 
 
@@ -1015,20 +957,20 @@ class Monte_Carlo_Methods(LammpsParentClass):
 
                 self.pe_current = pe_test
 
-                pe_accept_arr[n_accept] = pe_test
+                pe_accept_arr.append(pe_test)
 
-                n_species_accept_arr[n_accept] = N_species_test
+                n_species_accept_arr.append(N_species_test)
 
                 rvol = self.get_rvol(lmp)   
 
-                rvol_accept_arr[n_accept] = rvol
+                rvol_accept_arr.append(rvol)
 
                 if save_xyz:
                     xyz_accept_lst.append(np.array(lmp.gather_atoms('x',1,3)))
                                 
                 if n_accept % 2 == 0 and diag == True:
 
-                    print(n_accept, self.pe_current - pe_accept_arr[-1])
+                    print(n_accept, self.pe_current, self.N_species)
 
                     filename = '%s.%d.atom' % (os.path.basename(input_filepath).split('.')[0], n_accept)
 
@@ -1037,7 +979,7 @@ class Monte_Carlo_Methods(LammpsParentClass):
 
         filename_data = '%s.final.data' % (os.path.basename(input_filepath).split('.')[0])
         filename_atom = '%s.final.atom' % (os.path.basename(input_filepath).split('.')[0])
-
+        
         lmp.command('write_data %s' % os.path.join(self.output_folder,'Data_Files', filename_data))
 
         lmp.command('write_dump all custom %s id type x y z' % os.path.join(self.output_folder,'Atom_Files', filename_atom))
@@ -1046,7 +988,7 @@ class Monte_Carlo_Methods(LammpsParentClass):
 
         lmp.close()
 
-        return pe_accept_arr, rvol_accept_arr, n_species_accept_arr, xyz_accept_lst, n_accept/n_iterations
+        return np.array(pe_accept_arr), np.array(rvol_accept_arr), np.array(n_species_accept_arr), xyz_accept_lst, n_accept/n_iterations
     
     def mc_acceptance_criterion(self, lmp, delta_N, N_species):
 

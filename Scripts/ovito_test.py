@@ -6,12 +6,13 @@ from ovito.pipeline import *
 import numpy as np
 import sys, os, glob
  
-def main(rpath, fpath, sfolder, sfile):
+def main(rpath, fpath, sfolder, idx):
 
     # Data import:
     # rpath = sys.argv[1]
     # fpath = sys.argv[2]
-    # sfile = "int_%s" % fpath.split('/')[-1]
+
+    sfile = "int_%s" % idx
 
     spath = os.path.join(os.path.join(sfolder, sfile))
 
@@ -52,6 +53,41 @@ def main(rpath, fpath, sfolder, sfile):
 
             np.savetxt(spath, cluster_size)
 
+
+    sfile = "vac_%s" % idx
+
+    spath = os.path.join(os.path.join(sfolder, sfile))
+
+    # Wigner-Seitz defect analysis:
+    mod = WignerSeitzAnalysisModifier()
+    mod.per_type_occupancies = True
+    mod.reference = FileSource()
+    mod.reference.load(rpath)
+    mod.affine_mapping = ReferenceConfigurationModifier.AffineMapping.ToReference
+    pipeline.modifiers.append(mod)
+    
+    # Expression selection:
+    pipeline.modifiers.append(ExpressionSelectionModifier(expression = 'Occupancy >= 1'))
+
+    # Delete selected:
+    pipeline.modifiers.append(DeleteSelectedModifier())
+ 
+    # Cluster analysis of remaining interstitials
+    pipeline.modifiers.append(ClusterAnalysisModifier(cutoff = 3.3, sort_by_size=True))
+    
+    for i,frame in enumerate(range(pipeline.source.num_frames)):
+        data = pipeline.compute(frame)
+
+        # get cluster size data
+        if data.tables != None:
+
+            cluster_size = np.array(data.tables['clusters'].y.T)
+
+            print(spath)
+
+            np.savetxt(spath, cluster_size)
+
+
 if __name__=="__main__":
     
     rpath = '/home/ir-tiru1/rds/rds-ukaea-ap002-mOlK9qn0PlQ/CRAsimulations/Cascades/w_220_cascade/w_220_cascade.0.dump.gz'
@@ -71,9 +107,7 @@ if __name__=="__main__":
     for i in chosen_idx:
 
         idx = dump_idx[i]
-
-        sname = 'int_%d.txt' % idx
         
         fpath = '/home/ir-tiru1/rds/rds-ukaea-ap002-mOlK9qn0PlQ/CRAsimulations/Cascades/w_220_cascade/w_220_cascade.%d.dump.gz' % idx
 
-        main(rpath, fpath, sfolder, sname)
+        main(rpath, fpath, sfolder, idx)
