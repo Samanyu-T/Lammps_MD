@@ -43,8 +43,8 @@ lmp = LammpsParentClass(init_dict, comm, proc_id)
 lmp.perfect_crystal()
 
 x = np.arange(3)
-y = np.arange(10)
-z = np.arange(10)
+y = np.arange(6)
+z = np.arange(6)
 
 xx, yy, zz = np.meshgrid(x, y, z, indexing='ij')
 

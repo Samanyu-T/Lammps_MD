@@ -34,7 +34,7 @@ class LammpsParentClass:
         # Initialize the set of parameters from a JSON file
 
         self.comm = comm
-
+        
         self.proc_id = proc_id
 
         for key in init_dict.keys():
@@ -173,7 +173,9 @@ class LammpsParentClass:
         self.cg_min(lmp, 100000, True)
 
         lmp.command('write_data %s' % os.path.join(self.output_folder, 'Data_Files', 'V0H0He0.data'))
-            
+        
+        lmp.command('write_dump all custom %s id type x y z' % os.path.join(self.output_folder, 'Atom_Files', 'V0H0He0.atom'))
+
         self.stress_perfect = np.array([lmp.get_thermo('pxx'),
                                         lmp.get_thermo('pyy'),
                                         lmp.get_thermo('pzz'),
@@ -183,13 +185,13 @@ class LammpsParentClass:
                                         ]) 
         
         # Update Lattice Constant after minimizing the box dimensions 
-        self.alattice = lmp.get_thermo('xlat') / np.sqrt(np.dot(self.orientx, self.orientx))
+        # self.alattice = lmp.get_thermo('xlat') / np.sqrt(np.dot(self.orientx, self.orientx))
 
         self.E_cohesive = np.array([-8.94964, -2.121, 0])
         
         self.N_species = np.array([lmp.get_natoms(), 0, 0])
         
-        self.pe_perfect = lmp.get_thermo('pe')
+        self.pe_perfect = self.get_formation_energy(lmp)
 
         self.vol_perfect = lmp.get_thermo('vol')
 
@@ -211,7 +213,7 @@ class LammpsParentClass:
 
         lmp.command('fix 1 all nve')
 
-        rng_seed = np.random.randint(0, 10000)
+        rng_seed = np.random.randint(1, 10000)
 
         lmp.command('velocity all create %f %d mom yes rot no dist gaussian units box' % (temp, rng_seed))
 
@@ -240,15 +242,25 @@ class LammpsParentClass:
         xyz_target -= np.floor(xyz_target/self.pbc)*self.pbc
 
         xyz_target += self.offset
-
+        
+        # id_prev = lmp.numpy.extract_atom('id')
+        
         lmp.command('create_atoms %d single %f %f %f units box' % 
-                    (target_species, xyz_target[0], xyz_target[1], xyz_target[2])
-                    )
-                        
+                        (target_species, xyz_target[0], xyz_target[1], xyz_target[2])
+                        )
+
+        # id_new = lmp.numpy.extract_atom('id')
+
+        xyz = np.array(lmp.gather_atoms('x', 1, 3))
+
+        xyz = xyz.reshape(len(xyz)//3, 3)
+
+        xyz_optim = xyz[-1]
+
         self.cg_min(lmp)
         
         # lmp.command('write_dump all atom %s/test.atom' % self.output_folder)
-        
+
         xyz_optim = None
 
         if return_xyz_optim:
@@ -262,7 +274,25 @@ class LammpsParentClass:
         n_atoms = lmp.get_natoms()
 
         pe = lmp.get_thermo('pe')
-            
+        
+        # id_new_atom = 0
+        # id_new_gather = None
+
+        # if len(id_new) > len(id_prev):
+
+        #     id_new_atom = id_new[-1]
+
+        # else:
+        #     id_new_atom = 0
+
+        # id_new_gather = self.comm.gather(id_new_atom, root=0)
+
+        # id_new_gather = self.comm.bcast(id_new_gather, root=0)
+
+        # id_new_gather = np.array(id_new_gather)
+
+        # id_new_atom = id_new_gather.argmax()
+
         lmp.command('group del_atoms id %d' % (n_atoms))
 
         lmp.command('delete_atoms group del_atoms compress no')
@@ -296,7 +326,7 @@ class LammpsParentClass:
         xyz = xyz.reshape(len(xyz)//3, 3)
 
         xyz_kdtree = np.copy(xyz)
-
+        
         bounds = np.array([
             
             [lmp.get_thermo('xlo'), lmp.get_thermo('xhi')],
@@ -309,8 +339,8 @@ class LammpsParentClass:
 
         self.offset = bounds[:,0].flatten()
 
-        xyz_kdtree -= self.offset
-            
+        xyz_kdtree -= self.offset 
+        
         kdtree = KDTree(xyz_kdtree, boxsize=self.pbc)
 
         return xyz, species, kdtree
@@ -382,7 +412,7 @@ class LammpsParentClass:
 
         return strain_tensor
 
-    def add_defect(self, input_filepath, output_filepath, target_species, action, defect_centre):
+    def add_defect(self, input_filepath, output_filepath, target_species, action, defect_centre, fix_cmd = None, minimizer=None):
         """
         Add a point defect to a given Simulation Box - aims to find the global minima but is not confirmed
 
@@ -402,6 +432,9 @@ class LammpsParentClass:
         
         lmp.commands_list(self.init_from_datafile(input_filepath))
         
+        if fix_cmd is not None:
+            lmp.commands_list(fix_cmd)
+            
         lmp.command('run 0')
 
         # Get the KDTree of the simulation
@@ -466,13 +499,25 @@ class LammpsParentClass:
         # Adds an interstitial to the system by trialling high symmettry points
         if action == 1:
             
+            if minimizer is None:
+                minimizer = 'random'
+
             # Place the atom in optimal test site
-            optim_site, min_pe  = self.random_config_minimizer(lmp, kdtree, xyz, species, defect_centre, target_species)
+            if minimizer == 'geometric':
+                optim_site, min_pe  = self.geometric_config_minimizer(lmp, kdtree, xyz, species, defect_centre, target_species)
+
+            elif minimizer == 'random':
+                optim_site, min_pe  = self.random_config_minimizer(lmp, kdtree, xyz, species, defect_centre, target_species)
+
+            optim_site -= self.offset
             
+            optim_site -= np.floor(optim_site/self.pbc)*self.pbc
+
+            optim_site += self.offset
+
             lmp.command('create_atoms %d single %f %f %f units box' % 
                         (target_species, optim_site[0], optim_site[1], optim_site[2])
                         )
-                        
             self.cg_min(lmp)
         
         rvol = self.get_rvol(lmp)
@@ -501,19 +546,19 @@ class LammpsParentClass:
     def geometric_config_minimizer(self, lmp, kdtree, xyz, species, defect_centre, target_species):
 
         # Find a set of nearest-neighbours 
+        defect_centre = np.mean(defect_centre, axis = 0)
+
         n_neighbours = 9 + sum(species==2) + sum(species==3)
         
         dist, nn = kdtree.query(defect_centre - self.offset, k=n_neighbours)
-                
+        
         pe_lst = []
         
         sites_lst = []
 
         # Store the current state in memory to reset back to
-        xyz_reset = lmp.numpy.extract_atom('x')
+        xyz_reset_c = lmp.gather_atoms('x', 1, 3)
         
-        xyz_c = xyz_reset.astype(np.float64).ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-
         # Geometric Test Sites of positions of only the tungsten atoms
         slct_nn = nn[species[nn] == 1]
         
@@ -527,7 +572,7 @@ class LammpsParentClass:
             if min_dist > 0.5:  
                 sites_lst.append(test_site)
 
-                pe, _ = self.trial_insert_atom(lmp, test_site, target_species, xyz_c, False)
+                pe, _ = self.trial_insert_atom(lmp, test_site, target_species, xyz_reset_c, False)
                 
                 pe_lst.append(pe)
 
@@ -536,7 +581,7 @@ class LammpsParentClass:
             
             sites_lst.append(defect_centre)
 
-            pe, _ = self.trial_insert_atom(lmp, defect_centre, target_species, xyz_c, False)
+            pe, _ = self.trial_insert_atom(lmp, defect_centre, target_species, xyz_reset_c, False)
             
             pe_lst.append(pe)
         
@@ -574,9 +619,7 @@ class LammpsParentClass:
             exclusion_radii = None
 
         # Store the current state in memory to reset back to
-        xyz_reset = lmp.numpy.extract_atom('x')
-        
-        xyz_reset_c = xyz_reset.astype(np.float64).ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+        xyz_reset_c = lmp.gather_atoms('x', 1, 3)
 
         n_to_accept = 0
 
@@ -586,10 +629,21 @@ class LammpsParentClass:
 
 
         while True:
+            
+            if self.proc_id == 0:
+                rng = np.random.randint(low=0, high=defect_centre.shape[0])
 
-            rng = np.random.randint(low=0, high=defect_centre.shape[0])
+                sample = self.alattice*(np.random.rand(3) - 0.5) + defect_centre[rng]
 
-            sample = self.alattice*(np.random.rand(3) - 0.5) + defect_centre[rng]
+            else:
+
+                rng = None
+
+                sample = None
+
+            rng = self.comm.bcast(rng, root=0)
+
+            sample = self.comm.bcast(sample, root=0)
 
             if exclusion_centres is not None:
                 delta = exclusion_centres - sample
@@ -764,6 +818,252 @@ class LammpsParentClass:
 
         print(os.path.join(self.output_folder, 'Data_Files', output_filename))
 
+    def generate_edge_dislocation(self, output_filename, b = 3.14, core_centre=None, fix_cmd=None):
+        
+        C_voigt = np.array([[self.C11, self.C12, self.C12, 0, 0, 0],
+                            [self.C12, self.C11, self.C12, 0, 0, 0],
+                            [self.C12, self.C12, self.C11, 0, 0, 0],
+                            [0, 0, 0, self.C44, 0, 0],
+                            [0, 0, 0, 0, self.C44, 0],
+                            [0, 0, 0, 0, 0, self.C44]])
+
+        Cinv = np.linalg.inv(C_voigt)
+
+        shear = self.C44
+        v =  -Cinv[0,1]/Cinv[0,0]
+        youngs = 1/Cinv[0,0]
+
+        if core_centre is None:
+            core_centre =  np.zeros((3,))
+
+        lmp = lammps(name = self.machine, comm=self.comm, cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
+
+        lmp.command('units metal')
+
+        lmp.command('atom_style atomic')
+
+        lmp.command('atom_modify map array sort 0 0.0')
+
+        lmp.command('boundary p p p')
+
+
+        lmp.command('lattice bcc %f orient x %d %d %d orient y %d %d %d orient z %d %d %d' % 
+                    (self.alattice,
+                    self.orientx[0], self.orientx[1], self.orientx[2],
+                    self.orienty[0], self.orienty[1], self.orienty[2], 
+                    self.orientz[0], self.orientz[1], self.orientz[2]
+                    ) 
+                    )
+        
+        lmp.command('region r_simbox block %f %f %f %f %f %f units lattice' % (
+
+            -1e-9 - self.size/2 - 10, self.size/2 + 1e-9 + 10, -1e-9 - self.size/2 - 10, self.size/2 + 1e-9 + 10, -1e-9, self.size + 1e-9
+        ))
+
+        lmp.command('region r_atombox block %f %f %f %f %f %f units lattice' % (
+
+            -1e-4 - self.size/2, self.size/2 + 1e-4, -1e-4 - self.size/2, self.size/2 + 1e-4, -1e-4, self.size + 1e-4
+        ))
+
+        # lmp.command('region r_simbox block %d %d %d %d %d %f units lattice' % (-4*self.size, 4*self.size, -4*self.size, 4*self.size,  -1e-9, self.size//2 + 1e-9))
+
+        # lmp.command('region r_atombox cylinder z 0 0 %d %f %f units lattice' % (self.size, -1e-4, self.size//2 + 1e-4))
+
+
+        lmp.command('create_box 3 r_simbox')
+
+        lmp.command('create_atoms 1 region r_atombox')
+
+        lmp.command('mass 1 183.84')
+
+        lmp.command('mass 2 1.00784')
+
+        lmp.command('mass 3 4.002602')
+
+        lmp.command('pair_style eam/alloy' )
+
+        lmp.command('pair_coeff * * %s W H He' % self.potfile)
+        
+        self.cg_min(lmp, conv=100000)
+
+        if fix_cmd is not None:
+            lmp.commands_list(fix_cmd)
+
+        lmp.command('write_dump all custom test.atom id type x y z')
+
+        xyz = np.array(lmp.gather_atoms('x', 1, 3))
+
+        xyz = xyz.reshape(len(xyz)//3, 3)
+        
+        x = xyz[:,0]
+
+        y = xyz[:,1]
+
+        theta = np.arctan2(y - core_centre[1], x - core_centre[0])
+
+        ux = (b/(2*np.pi)) * (theta + (x*y)/(2*(1 - v)*(x**2 + y**2)))
+
+        uy = -(b/(2*np.pi)) * ( (1 - 2*v)/(4 - 4*v) * np.log(x**2 + y**2) + (x**2 - y**2)/(4*(1 - v)*(x**2 + y**2)))
+
+        xyz[:,0] += ux
+        
+        xyz[:,1] += uy        
+
+        xyz_c = xyz.astype(np.float64).ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+        
+        lmp.scatter_atoms('x', 1, 3, xyz_c)
+
+        self.cg_min(lmp, conv=100000) 
+
+        lmp.command('write_dump all custom %s id type x y z' % os.path.join(self.output_folder, 'Atom_Files','%s.atom' % output_filename))
+
+        lmp.command('write_data %s' % os.path.join(self.output_folder, 'Data_Files','%s.data' % output_filename))
+
+        self.stress_perfect = np.array([lmp.get_thermo('pxx'),
+                                        lmp.get_thermo('pyy'),
+                                        lmp.get_thermo('pzz'),
+                                        lmp.get_thermo('pxy'),
+                                        lmp.get_thermo('pxz'),
+                                        lmp.get_thermo('pyz')
+                                        ]) 
+        
+        # Update Lattice Constant after minimizing the box dimensions 
+        # self.alattice = lmp.get_thermo('xlat') / np.sqrt(np.dot(self.orientx, self.orientx))
+
+        self.E_cohesive = np.array([-8.94964, -2.121, 0])
+        
+        self.N_species = np.array([lmp.get_natoms(), 0, 0])
+        
+        self.pe_perfect = lmp.get_thermo('pe')
+
+        self.vol_perfect = lmp.get_thermo('vol')
+
+        bounds = np.array([
+            
+            [lmp.get_thermo('xlo'), lmp.get_thermo('xhi')],
+            [lmp.get_thermo('ylo'), lmp.get_thermo('yhi')],
+            [lmp.get_thermo('zlo'), lmp.get_thermo('zhi')],
+
+            ])
+
+        self.pbc = (bounds[:,1].flatten() - bounds[:,0].flatten()) 
+
+        self.offset = bounds[:,0].flatten()
+
+        self.N_species = np.array([lmp.get_natoms(), 0, 0])
+
+        ef = self.get_formation_energy(lmp)
+
+        return ef
+    
+    def generate_screw_dislocation(self, output_filename, b=3, fix_cmd=None):
+
+        lmp = lammps(name = self.machine, comm=self.comm, cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
+
+        lmp.command('units metal')
+
+        lmp.command('atom_style atomic')
+
+        lmp.command('atom_modify map array sort 0 0.0')
+
+        lmp.command('boundary p p p')
+
+
+        lmp.command('lattice bcc %f orient x %d %d %d orient y %d %d %d orient z %d %d %d' % 
+                    (self.alattice,
+                    self.orientx[0], self.orientx[1], self.orientx[2],
+                    self.orienty[0], self.orienty[1], self.orienty[2], 
+                    self.orientz[0], self.orientz[1], self.orientz[2]
+                    ) 
+                    )
+
+        lmp.command('region r_simbox block %d %d %d %d %d %f units lattice' % (-4*self.size, 4*self.size, -4*self.size, 4*self.size,  -1e-9, self.size + 1e-9))
+
+        lmp.command('region r_atombox cylinder z 0 0 %d %f %f units lattice' % (self.size, -1e-4, self.size + 1e-4))
+
+
+        lmp.command('create_box 3 r_simbox')
+
+        lmp.command('create_atoms 1 region r_atombox')
+
+        lmp.command('mass 1 183.84')
+
+        lmp.command('mass 2 1.00784')
+
+        lmp.command('mass 3 4.002602')
+
+        lmp.command('pair_style eam/alloy' )
+
+        lmp.command('pair_coeff * * %s W H He' % self.potfile)
+
+        self.cg_min(lmp, conv=100000)
+
+        if fix_cmd is not None:
+            lmp.commands_list(fix_cmd)
+        
+        lmp.command('write_dump all custom test.atom id type x y z')
+
+        xyz = np.array(lmp.gather_atoms('x', 1, 3))
+
+        xyz = xyz.reshape(len(xyz)//3, 3)
+        
+        x = xyz[:,0]
+
+        y = xyz[:,1]
+
+        theta = np.arctan2(y, x)
+
+        uz = (b/(2*np.pi)) * theta
+
+        xyz[:,2] += uz
+
+        xyz_c = xyz.astype(np.float64).ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+        
+        lmp.scatter_atoms('x', 1, 3, xyz_c)
+
+        self.cg_min(lmp, conv=100000)
+
+        lmp.command('write_dump all custom %s id type x y z' % os.path.join(self.output_folder, 'Atom_Files','%s.atom' % output_filename))
+
+        lmp.command('write_data %s' % os.path.join(self.output_folder, 'Data_Files','%s.data' % output_filename))
+
+        self.stress_perfect = np.array([lmp.get_thermo('pxx'),
+                                        lmp.get_thermo('pyy'),
+                                        lmp.get_thermo('pzz'),
+                                        lmp.get_thermo('pxy'),
+                                        lmp.get_thermo('pxz'),
+                                        lmp.get_thermo('pyz')
+                                        ]) 
+        
+        # Update Lattice Constant after minimizing the box dimensions 
+        # self.alattice = lmp.get_thermo('xlat') / np.sqrt(np.dot(self.orientx, self.orientx))
+
+        self.E_cohesive = np.array([-8.94964, -2.121, 0])
+        
+        self.N_species = np.array([lmp.get_natoms(), 0, 0])
+        
+        self.pe_perfect = lmp.get_thermo('pe')
+
+        self.vol_perfect = lmp.get_thermo('vol')
+
+        bounds = np.array([
+            
+            [lmp.get_thermo('xlo'), lmp.get_thermo('xhi')],
+            [lmp.get_thermo('ylo'), lmp.get_thermo('yhi')],
+            [lmp.get_thermo('zlo'), lmp.get_thermo('zhi')],
+
+            ])
+
+        self.pbc = (bounds[:,1].flatten() - bounds[:,0].flatten()) 
+
+        self.offset = bounds[:,0].flatten()
+        
+        self.N_species = np.array([lmp.get_natoms(), 0, 0])
+
+        ef = self.get_formation_energy(lmp)
+
+        return ef
+    
 class Monte_Carlo_Methods(LammpsParentClass):
 
     def monte_carlo(self, input_filepath, species_of_interest, N_steps, p_events_dict, 
@@ -909,15 +1209,30 @@ class Monte_Carlo_Methods(LammpsParentClass):
                 p_cumulative = np.cumsum(p_events)
 
 
-            # store the current state in memory to reset back to
-            xyz_reset = lmp.numpy.extract_atom('x')
+            # store the current state in memory to reset back to            
+            self.xyz_reset_c = lmp.gather_atoms('x', 1, 3)
             
-            self.xyz_reset_c = xyz_reset.astype(np.float64).ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-            
-            # randomly generate probabiltiy of event and shuffle the atomic indexes            
-            np.random.shuffle(slct_atom_idx)
+            xyz_reset = np.array(self.xyz_reset_c)
 
-            event = np.searchsorted(p_cumulative, np.random.rand(), side='left')
+            xyz_reset = xyz_reset.reshape(len(xyz_reset)//3, 3)
+
+            # randomly generate probabiltiy of event and shuffle the atomic indexes    
+
+            rng_event = None
+
+            if self.proc_id == 0:   
+
+                np.random.shuffle(slct_atom_idx)
+
+                rng_event = np.random.rand()
+
+            self.comm.barrier()
+
+            slct_atom_idx = self.comm.bcast(slct_atom_idx, root=0)
+
+            rng_event = self.comm.bcast(rng_event, root=0)
+
+            event = np.searchsorted(p_cumulative, rng_event, side='left')
 
             if event == key['exchange']:
 
@@ -944,10 +1259,25 @@ class Monte_Carlo_Methods(LammpsParentClass):
                 acceptance, pe_test, N_species_test = self.displace_atoms(lmp, idx_displace, max_displacement)
 
             elif event == key['create']:
-                            
-                species_create = species_of_interest[np.random.randint(0,len(species_of_interest))]
+                
+                rng_species = None
 
-                xyz_create = region_of_interest[1,:]*np.random.rand(3) + region_of_interest[0,:]
+                rng_pos = None
+
+                if self.proc_id == 0:
+                    rng_species = np.random.randint(0,len(species_of_interest))
+
+                    rng_pos = np.random.rand(3)
+                
+                self.comm.barrier()
+
+                rng_species = self.comm.bcast(rng_species, root=0)
+
+                rng_pos = self.comm.bcast(rng_pos, root=0)
+
+                species_create = species_of_interest[rng_species]
+
+                xyz_create = region_of_interest[1,:]*rng_pos + region_of_interest[0,:]
 
                 acceptance, pe_test, N_species_test = self.create_atoms(lmp, species_create, xyz_create)
 
@@ -1012,8 +1342,18 @@ class Monte_Carlo_Methods(LammpsParentClass):
     def displace_atoms(self, lmp, idx, displacement_coef):
 
         lmp.command('group displace id %d' % idx)
+        
+        rng_pos = None
 
-        disp = displacement_coef*self.alattice*(np.random.rand(3) - 0.5)
+        if self.proc_id == 0:
+
+            rng_pos = np.random.rand(3)
+
+        self.comm.barrier()
+
+        rng_pos = self.comm.bcast(rng_pos, root=0)
+
+        disp = displacement_coef*self.alattice*(rng_pos - 0.5)
         
         lmp.command('displace_atoms displace move %f %f %f' % (disp[0], disp[1], disp[2]) )
 
@@ -1074,8 +1414,6 @@ class Monte_Carlo_Methods(LammpsParentClass):
                     (species_create, xyz_optim[0], xyz_optim[1], xyz_optim[2])
                     )
         
-        print(xyz_optim)
-
         lmp.command('write_dump all custom %s id type x y z' % os.path.join(self.output_folder,'Atom_Files', 'test.atom'))
         
         min_dist, closest_n = kdtree.query(xyz_optim - self.offset, k = 1)
@@ -1275,15 +1613,30 @@ class Monte_Carlo_Methods(LammpsParentClass):
                 p_cumulative = np.cumsum(p_events)
 
 
-            # store the current state in memory to reset back to
-            xyz_reset = lmp.numpy.extract_atom('x')
+            # store the current state in memory to reset back to            
+            self.xyz_reset_c = lmp.gather_atoms('x', 1, 3)
             
-            self.xyz_reset_c = xyz_reset.astype(np.float64).ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-            
-            # randomly generate probabiltiy of event and shuffle the atomic indexes            
-            np.random.shuffle(slct_atom_idx)
-            
-            event = np.searchsorted(p_cumulative, np.random.rand(), side='left')
+            xyz_reset = np.array(self.xyz_reset_c)
+
+            xyz_reset = xyz_reset.reshape(len(xyz_reset)//3, 3)
+
+            # randomly generate probabiltiy of event and shuffle the atomic indexes    
+
+            rng_event = None
+
+            if self.proc_id == 0:   
+
+                np.random.shuffle(slct_atom_idx)
+
+                rng_event = np.random.rand()
+
+            self.comm.barrier()
+
+            slct_atom_idx = self.comm.bcast(slct_atom_idx, root=0)
+
+            rng_event = self.comm.bcast(rng_event, root=0)
+
+            event = np.searchsorted(p_cumulative, rng_event, side='left')
 
             if event == key['exchange']:
 
@@ -1311,9 +1664,24 @@ class Monte_Carlo_Methods(LammpsParentClass):
 
             elif event == key['create']:
                             
-                species_create = species_of_interest[np.random.randint(0,len(species_of_interest))]
+                rng_species = None
 
-                xyz_create = region_of_interest[1,:]*np.random.rand(3) + region_of_interest[0,:]
+                rng_pos = None
+
+                if self.proc_id == 0:
+                    rng_species = np.random.randint(0,len(species_of_interest))
+
+                    rng_pos = np.random.rand(3)
+                
+                self.comm.barrier()
+
+                rng_species = self.comm.bcast(rng_species, root=0)
+
+                rng_pos = self.comm.bcast(rng_pos, root=0)
+
+                species_create = species_of_interest[rng_species]
+
+                xyz_create = region_of_interest[1,:]*rng_pos + region_of_interest[0,:]
 
                 acceptance, pe_test, N_species_test = self.create_atoms(lmp, species_create, xyz_create)
 
@@ -1366,3 +1734,6 @@ class Monte_Carlo_Methods(LammpsParentClass):
 
         return pe_accept_arr, rvol_accept_arr, n_species_accept_arr, xyz_accept_lst, n_accept/n_iterations
     
+
+
+
