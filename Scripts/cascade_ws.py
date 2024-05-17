@@ -1,8 +1,9 @@
-# initialise
-import os, sys, shutil, json, glob
-import time
+import subprocess
+import os
+import glob
 import numpy as np
 from mpi4py import MPI
+import sys 
 
 sys.path.insert(0,'../..')
 
@@ -57,7 +58,7 @@ def announce(string):
     return 0
 
 
-def main():
+def lammps_dump2data(inputfile):
     mpiprint ('''
 Convert dump to restart file.
 
@@ -66,7 +67,6 @@ Max Boleininger 2020, mboleininger@gmail.com
     ''')
 
 
-    inputfile = sys.argv[1]
     exportfile = inputfile.split('/')[-1]
     exportfile = "%s.data" % exportfile.rpartition('.')[0]
 
@@ -77,15 +77,9 @@ Max Boleininger 2020, mboleininger@gmail.com
 
 
     massdict = {'Fe': 55.845, 'W': 183.84}
-    if len(sys.argv) == 3:
-        if sys.argv[2] in massdict:
-            mass = massdict[sys.argv[2]]
-        else:
-            mass = float(sys.argv[2])
-    else:
-        mass = 1.0
-        announce ('warning: no mass specified, using 1.0 as placeholder.')
-   
+    
+    mass = massdict['W']
+
     # get list of unique atomic types
     iraw = []
     with open(inputfile) as ifile:
@@ -124,10 +118,39 @@ Max Boleininger 2020, mboleininger@gmail.com
     lmp.close()
 
 
-    return 0
+    return exportfile
 
+comm = MPI.COMM_WORLD
 
-if __name__ == "__main__":
-    main()
-    if mode == 'MPI':
-        MPI.Finalize()
+proc_id = comm.Get_rank()
+
+n_procs = comm.Get_size()
+
+data_dir = '/home/ir-tiru1/rds/rds-ukaea-ap002-mOlK9qn0PlQ/CRAsimulations/Cascades/w_220_cascade'
+
+files = glob.glob('%s/w_220_cascade.*.dump.gz' % data_dir)
+
+dump_idx = sorted([int(file.split('.')[1]) for file in files])
+
+chosen_idx = int(np.linspace(0, len(files) - 1, n_procs)[proc_id])
+
+save_dir = '/home/ir-tiru1/Samanyu/Cascade_Simulations/w_220_cascade'
+
+if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+
+file_gz = files[chosen_idx]
+
+save_file = os.path.join(save_dir, os.path.basename(os.path.splitext(file_gz)[0]))
+
+with open(save_file, 'wb') as out_file:
+    subprocess.run(['gunzip', '-c', file_gz], stdout=out_file)
+
+work_file = lammps_dump2data(save_file)
+
+os.remove(save_file)
+
+subprocess.run(['mpiexec','-n','1','./git_PolyCrystal_Analysis/build/bin/ws', '-f', work_file, '-N',
+                 '0','220','220','220','0','220','220','220','0', '-a0', '3.1652'])
+
+os.remove(work_file)
