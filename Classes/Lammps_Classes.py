@@ -32,6 +32,9 @@ class LammpsParentClass:
         """
 
         # Initialize the set of parameters from a JSON file
+        self.E_cohesive = np.array([-8.94964, -2.121, 0])
+
+        self.N_species = np.array([0, 0, 0])
 
         self.comm = comm
         
@@ -39,6 +42,9 @@ class LammpsParentClass:
 
         for key in init_dict.keys():
             setattr(self, key, init_dict[key])
+
+        self.stress_perfect = np.zeros((6,))
+        self.vol_perfect = (self.alattice*self.size)**3
 
     def init_from_datafile(self, filepath):
         """
@@ -151,7 +157,7 @@ class LammpsParentClass:
 
         lmp.command('minimize 1e-12 1e-15 100 100')
 
-        lmp.command('minimize 1e-13 1e-16 %d %d' % (conv, conv))
+        lmp.command('minimize 1e-16 1e-18 %d %d' % (conv, conv))
 
         if fix_aniso:
 
@@ -412,7 +418,7 @@ class LammpsParentClass:
 
         return strain_tensor
 
-    def add_defect(self, input_filepath, output_filepath, target_species, action, defect_centre, fix_cmd = None, minimizer=None):
+    def add_defect(self, input_filepath, output_filepath, target_species, action, defect_centre, fix_cmd = None, minimizer=None, return_trials=False, run_MD=False):
         """
         Add a point defect to a given Simulation Box - aims to find the global minima but is not confirmed
 
@@ -462,6 +468,8 @@ class LammpsParentClass:
             
             pe_arr = np.zeros((len(target_idxs),))
 
+            sites = xyz[target_idxs]
+
             # Find the energy minima when each respective atom is removed 
             for i, idx in enumerate(target_idxs):
                 
@@ -504,10 +512,14 @@ class LammpsParentClass:
 
             # Place the atom in optimal test site
             if minimizer == 'geometric':
-                optim_site, min_pe  = self.geometric_config_minimizer(lmp, kdtree, xyz, species, defect_centre, target_species)
+                sites, pe_arr  = self.geometric_config_minimizer(lmp, kdtree, xyz, species, defect_centre, target_species,True)
 
             elif minimizer == 'random':
-                optim_site, min_pe  = self.random_config_minimizer(lmp, kdtree, xyz, species, defect_centre, target_species)
+                sites, pe_arr  = self.random_config_minimizer(lmp, kdtree, xyz, species, defect_centre, target_species,True)
+
+            min_idx = pe_arr.argmin()
+
+            optim_site = sites[min_idx]
 
             optim_site -= self.offset
             
@@ -520,6 +532,11 @@ class LammpsParentClass:
                         )
             self.cg_min(lmp)
         
+        if run_MD:
+            self.run_MD(lmp, 30, 1e-3, 1000)
+            
+            self.cg_min(lmp)
+
         rvol = self.get_rvol(lmp)
 
         # Save Data Files and Atom Files for diagnosis and restart purposes
@@ -529,7 +546,7 @@ class LammpsParentClass:
         
         delimiter = '/'
 
-        atom_filepath = os.path.join(delimiter.join(dir_lst[:-2]), 'Atom_Files', '%s.atom' % dir_lst[-1].split('.')[0])
+        atom_filepath = os.path.join(delimiter.join(dir_lst[:-2]), 'Atom_Files', '%s.atom' % '.'.join(dir_lst[-1].split('.')[:-1]))
 
         lmp.command('write_dump all custom %s id type x y z' % (atom_filepath))
 
@@ -540,10 +557,14 @@ class LammpsParentClass:
         # Calculate the relaxation volume and formation energy
 
         formation_energy = self.get_formation_energy(lmp)
+
+        if return_trials:
+            return sites, pe_arr
         
-        return formation_energy, rvol
+        else:
+            return formation_energy, rvol
     
-    def geometric_config_minimizer(self, lmp, kdtree, xyz, species, defect_centre, target_species):
+    def geometric_config_minimizer(self, lmp, kdtree, xyz, species, defect_centre, target_species, return_trials = False):
 
         # Find a set of nearest-neighbours 
         defect_centre = np.mean(defect_centre, axis = 0)
@@ -589,9 +610,13 @@ class LammpsParentClass:
         
         min_idx = pe_lst.argmin()
 
-        return sites_lst[min_idx], pe_lst[min_idx]
+        if return_trials:
+            return sites_lst, pe_lst
+        
+        else:
+            return sites_lst[min_idx], pe_lst[min_idx]
 
-    def random_config_minimizer(self, lmp, kdtree, xyz, species, defect_centre, target_species):
+    def random_config_minimizer(self, lmp, kdtree, xyz, species, defect_centre, target_species, return_trials = False):
         
         if defect_centre.ndim == 1:
             defect_centre = defect_centre.reshape(1, -1)
@@ -691,9 +716,13 @@ class LammpsParentClass:
 
                 min_idx = pe_lst.argmin()
 
-                return sites_lst[min_idx], pe_lst[min_idx]
-
-    def create_atoms_given_pos(self, input_filepath, output_filepath, target_species, target_xyz):
+                if return_trials:
+                    return sites_lst, pe_lst
+                
+                else:
+                    return sites_lst[min_idx], pe_lst[min_idx]
+                
+    def create_atoms_given_pos(self, input_filepath, output_filepath, target_species, target_xyz, run_MD = False, run_min=True):
         lmp = lammps(name = self.machine, comm=self.comm, cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
 
         lmp.commands_list(self.init_from_datafile(input_filepath))
@@ -701,18 +730,26 @@ class LammpsParentClass:
         lmp.command('run 0')
 
         for xyz, species in zip(target_xyz, target_species):
-
-            lmp.command('create_atoms 1 ')
-
+            
             lmp.command('create_atoms %d single %f %f %f units box' % 
                         (species, xyz[0], xyz[1], xyz[2])
                         )
-            
-        self.cg_min(lmp)
         
+        if run_min:
+            self.cg_min(lmp)
+
+        if run_MD:
+            self.run_MD(lmp, 300, 1e-3, 1000)
+
         xyz = np.array(lmp.gather_atoms('x', 1, 3))
 
-        pe = lmp.get_thermo('pe')
+        xyz = xyz.reshape(len(xyz)//3, 3)
+        
+        species = np.array(lmp.gather_atoms('type', 0, 1))
+
+        self.N_species = np.array([sum(species == k) for k in range(1, 4)])
+
+        pe = self.get_formation_energy(lmp)
 
         rvol = self.get_rvol(lmp)
 
@@ -723,7 +760,7 @@ class LammpsParentClass:
         
         delimiter = '/'
 
-        atom_filepath = os.path.join(delimiter.join(dir_lst[:-2]), 'Atom_Files', '%s.atom' % dir_lst[-1].split('.')[0])
+        atom_filepath = os.path.join(delimiter.join(dir_lst[:-2]), 'Atom_Files', '%s.atom' % '.'.join(dir_lst[-1].split('.')[:-1]))
 
         lmp.command('write_dump all custom %s id type x y z' % (atom_filepath))
 
@@ -930,7 +967,6 @@ class LammpsParentClass:
         # Update Lattice Constant after minimizing the box dimensions 
         # self.alattice = lmp.get_thermo('xlat') / np.sqrt(np.dot(self.orientx, self.orientx))
 
-        self.E_cohesive = np.array([-8.94964, -2.121, 0])
         
         self.N_species = np.array([lmp.get_natoms(), 0, 0])
         
