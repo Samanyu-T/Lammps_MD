@@ -595,9 +595,9 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
     if diag:
         t1 = time.perf_counter()    
 
-    # optim_class.sample_to_file(sample)
+    optim_class.sample_to_file(sample)
 
-    # write_pot(optim_class.pot_lammps, optim_class.potlines, optim_class.lammps_param['potfile'])
+    write_pot(optim_class.pot_lammps, optim_class.potlines, optim_class.lammps_param['potfile'])
 
     data_sample = sim_defect_set(optim_class)
  
