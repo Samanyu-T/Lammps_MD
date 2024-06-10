@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 import os
-sys.path.append(os.path.join('/Users/cd8607/Documents/Lammps_MD/', 'git_folder', 'Classes'))
+sys.path.append(os.path.join(os.getcwd(), 'git_folder', 'Classes'))
 import EAM_Fitting
 import Handle_PotFiles
 import time
