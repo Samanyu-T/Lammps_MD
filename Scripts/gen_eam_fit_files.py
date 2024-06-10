@@ -3,7 +3,6 @@ import os
 import json
 import numpy as np
 from mpi4py import MPI
-import pandas as pd
 import shutil
 sys.path.append(os.path.join(os.getcwd(), 'git_folder', 'Classes'))
 
