@@ -437,9 +437,6 @@ class Fit_EAM_Potential():
 
             self.knot_pts['He_p'] = x
             
-            print(x)
-            sys.stdout.flush()
-
             coef_dict['He_p'] = splinefit(x, y, dy, d2y)
 
         charge = [[74, 2],[2, 2],[1, 2]]
@@ -484,8 +481,6 @@ class Fit_EAM_Potential():
 
         coef_dict = self.fit_sample(sample)
         
-        print(self.knot_pts)
-
         rho = np.linspace(0, self.pot_params['rho_c'], self.pot_params['Nrho'])
 
         r = np.linspace(0, self.pot_params['rc'], self.pot_params['Nr'])
