@@ -11,6 +11,7 @@ from Lammps_Classes import LammpsParentClass
 from Handle_PotFiles import read_pot, write_pot
 from scipy.optimize import minimize
 import shutil
+import copy
 class ZBL():
 
     def __init__(self, Zi, Zj):
@@ -305,16 +306,16 @@ class Fit_EAM_Potential():
         ymax = 1
         dymax = 4
         d2ymax = 4
+        
+        x_bnds = np.linspace(0, self.pot_params['rho_c'], np.clip(self.n_knots['He_F'] - 1, a_min=2, a_max=np.inf).astype(int))
 
         if self.bool_fit['He_F']:
-            
-            x_bnds = np.linspace(0, self.pot_params['rho_c'], np.clip(self.n_knots['He_F'] - 1, a_min=2, a_max=np.inf).astype(int))
 
             sample[self.map['He_F']][0] = 20*(np.random.rand() - 0.5)
 
             for i in range(self.n_knots['He_F'] - 2):
-                xmin = self.knot_pts['He_F'][i]
-                xmax = self.knot_pts['He_F'][i + 1]
+                xmin = x_bnds[i]
+                xmax = x_bnds[i + 1]
 
                 sample[self.map['He_F']][4*i + 1] = (xmax - xmin)*np.random.rand() + xmin
                 sample[self.map['He_F']][4*i + 2] = ymax*np.random.rand()
@@ -333,11 +334,11 @@ class Fit_EAM_Potential():
             # Randomly Generate Knot Values for Rho(r)
             sample[self.map['He_p']][0] = 5*np.random.rand()
             sample[self.map['He_p']][1] = -5*np.random.rand() 
-
+            
             for i in range(self.n_knots['He_p'] - 2):
 
-                xmin = self.knot_pts['He_p'][i]
-                xmax = self.knot_pts['He_p'][i + 1]
+                xmin = x_bnds[i]
+                xmax = x_bnds[i + 1]
 
                 sample[self.map['He_p']][4*i + 2] = (xmax - xmin)*np.random.rand() + xmin
                 sample[self.map['He_p']][4*i + 3] = ymax*(np.random.rand())
@@ -436,6 +437,9 @@ class Fit_EAM_Potential():
 
             self.knot_pts['He_p'] = x
             
+            print(x)
+            sys.stdout.flush()
+
             coef_dict['He_p'] = splinefit(x, y, dy, d2y)
 
         charge = [[74, 2],[2, 2],[1, 2]]
@@ -480,6 +484,8 @@ class Fit_EAM_Potential():
 
         coef_dict = self.fit_sample(sample)
         
+        print(self.knot_pts)
+
         rho = np.linspace(0, self.pot_params['rho_c'], self.pot_params['Nrho'])
 
         r = np.linspace(0, self.pot_params['rc'], self.pot_params['Nr'])

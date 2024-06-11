@@ -19,7 +19,7 @@ init_dict = {}
 with open('init_param.json', 'r') as file:
     init_dict = json.load(file)
 
-output_folder = 'Lammps_Files_Pdefects'
+output_folder = 'Lammps_4x4'
 
 init_dict['orientx'] = [1, 0, 0]
 
@@ -27,7 +27,7 @@ init_dict['orienty'] = [0, 1, 0]
 
 init_dict['orientz'] = [0, 0, 1]
 
-init_dict['size'] = 7
+init_dict['size'] = 4
 
 init_dict['surface'] = 0
 
@@ -43,8 +43,8 @@ lmp = LammpsParentClass(init_dict, comm, proc_id)
 lmp.perfect_crystal()
 
 x = np.arange(3)
-y = np.arange(6)
-z = np.arange(6)
+y = np.arange(5)
+z = np.arange(5)
 
 xx, yy, zz = np.meshgrid(x, y, z, indexing='ij')
 
