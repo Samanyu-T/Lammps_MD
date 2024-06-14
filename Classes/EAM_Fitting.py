@@ -652,6 +652,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
     constraint = not (np.arange(sample_mat.shape[3]) == np.round(sample_mat[0, 0, 1, :, 0], 2).argsort()).all()
     
+    # print(sample_mat[0, 0, 1, :, :])
     loss += 100*constraint  
 
     '''
@@ -912,75 +913,85 @@ def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_
 
 
 def gmm(file_pattern, data_folder, iter):
-
     loss_lst = []  
 
+    # Load loss data from files
     for file in glob.glob(os.path.join(file_pattern, 'Filtered_Loss_*.txt')):
         if os.path.getsize(file) > 0:
             loss_lst.append(np.loadtxt(file))
+    
+    if not loss_lst:
+        raise ValueError("No loss data found.")
     
     loss = np.hstack([x for x in loss_lst])
 
     sample_lst = []  
 
+    # Load sample data from files
     for file in glob.glob(os.path.join(file_pattern, 'Filtered_Samples_*.txt')):
         if os.path.getsize(file) > 0:
             sample_lst.append(np.loadtxt(file))
     
+    if not sample_lst:
+        raise ValueError("No sample data found.")
+    
     samples = np.vstack([x for x in sample_lst])
 
-    print(loss.mean(), loss.min())
+    print("Mean Loss:", loss.mean(), "Min Loss:", loss.min())
 
+    # Sort samples based on loss values
     sort_idx = np.argsort(loss)
     loss = loss[sort_idx]
     samples = samples[sort_idx]
 
-    thresh_idx = np.where(loss < 2*loss.min())[0]
+    # Select samples with loss less than twice the minimum loss
+    thresh_idx = np.where(loss < 2 * loss.min())[0]
 
-    n = np.clip(10000, a_min = 0, a_max=len(thresh_idx)).astype(int)
-
-    print(thresh_idx , n)
+    # Limit the number of samples to a maximum of 10000
+    n = np.clip(10000, a_min=0, a_max=len(thresh_idx)).astype(int)
+    print("Threshold indices and number of samples:", thresh_idx, n)
+    
     data = samples[thresh_idx[:n]]
 
+    # Fit GMM and determine the optimal number of components using BIC
     cmp = 1
     gmm = GaussianMixture(n_components=cmp, covariance_type='full', reg_covar=1e-6)
     gmm.fit(data)
     bic_val = gmm.bic(data)
     bic_val_prev = bic_val
 
-    print(cmp, bic_val)
+    print("Initial components and BIC:", cmp, bic_val)
     sys.stdout.flush()  
 
     while True:
-
         cmp += 1
         bic_val_prev = bic_val
         gmm = GaussianMixture(n_components=cmp, covariance_type='full', reg_covar=1e-6)
         gmm.fit(data)
         bic_val = gmm.bic(data)
-        print(cmp, bic_val, bic_val_prev)
+        print("Components:", cmp, "BIC:", bic_val, "Previous BIC:", bic_val_prev)
 
-        if 1.01*bic_val > bic_val_prev:
+        if 1.01 * bic_val > bic_val_prev:
             break
 
-    print(cmp - 1)
+    final_components = cmp - 1
+    print("Optimal number of components:", final_components)
     sys.stdout.flush()
-      
-    gmm = GaussianMixture(n_components=cmp - 1 , covariance_type='full')
+
+    gmm = GaussianMixture(n_components=final_components, covariance_type='full')
     gmm.fit(data)
 
-    print(data.shape)
-    print(gmm.means_)
+    print("Data shape:", data.shape)
+    print("GMM means:", gmm.means_)
 
-    gmm_folder = '%s/GMM_%d' % (data_folder, iter)
+    # Create directory for GMM results if it doesn't exist
+    gmm_folder = os.path.join(data_folder, f'GMM_{iter}')
+    os.makedirs(gmm_folder, exist_ok=True)
 
-    if not os.path.exists(gmm_folder):
-        os.mkdir(gmm_folder)
-
-    np.savetxt(os.path.join(gmm_folder, 'Filtered_Loss.txt'),loss[thresh_idx])
-    np.savetxt(os.path.join(gmm_folder, 'Filtered_Samples.txt'),samples[thresh_idx])
-
-    np.save(os.path.join(gmm_folder, 'Cov.npy'),gmm.covariances_)
-    np.save(os.path.join(gmm_folder, 'Mean.npy'),gmm.means_)
+    # Save filtered loss, samples, and GMM parameters
+    np.savetxt(os.path.join(gmm_folder, 'Filtered_Loss.txt'), loss[thresh_idx])
+    np.savetxt(os.path.join(gmm_folder, 'Filtered_Samples.txt'), samples[thresh_idx])
+    np.save(os.path.join(gmm_folder, 'Cov.npy'), gmm.covariances_)
+    np.save(os.path.join(gmm_folder, 'Mean.npy'), gmm.means_)
 
     return gmm.means_, gmm.covariances_
