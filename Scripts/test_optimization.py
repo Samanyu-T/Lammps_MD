@@ -43,9 +43,6 @@ proc_id = comm.Get_rank()
 n_procs = comm.Get_size()
 
 
-os.chdir('/Users/cd8607/Documents/Lammps_MD')
-
-
 pot, potlines, pot_params = Handle_PotFiles.read_pot('git_folder/Potentials/test.eam.alloy')
 
 n_knots = {}
