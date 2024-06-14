@@ -650,7 +650,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
     ''' Constraint '''
 
-    constraint = not (np.arange(sample_mat.shape[3] - 1) == sample_mat[0, 0, 1, 1:, 0].argsort()).all()
+    constraint = not (np.arange(sample_mat.shape[3]) == np.round(sample_mat[0, 0, 1, :, 0], 2).argsort()).all()
     
     loss += 100*constraint  
 
