@@ -966,7 +966,7 @@ def gmm(file_pattern, data_folder, iter):
     while True:
         cmp += 1
         bic_val_prev = bic_val
-        gmm = GaussianMixture(n_components=cmp, covariance_type='full', reg_covar=1e-6)
+        gmm = GaussianMixture(n_components=cmp, covariance_type='full', reg_covar=1e-3)
         gmm.fit(data)
         bic_val = gmm.bic(data)
         print("Components:", cmp, "BIC:", bic_val, "Previous BIC:", bic_val_prev)
