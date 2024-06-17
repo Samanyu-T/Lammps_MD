@@ -254,6 +254,7 @@ class Fit_EAM_Potential():
         self.knot_pts['He_F'] = np.linspace(0, self.pot_params['rho_c'], n_knots['He_F'])
         self.knot_pts['He_p'] = np.linspace(0, self.pot_params['rc'], n_knots['He_p'])
         self.knot_pts['W-He'] = np.linspace(0, self.pot_params['rc'], n_knots['W-He'])
+        # self.knot_pts['W-He'][1:3] = np.array([1.7581,2.7236])
         self.knot_pts['He-He'] = np.linspace(0, self.pot_params['rc'], n_knots['He-He'])
         self.knot_pts['H-He'] = np.linspace(0, self.pot_params['rc'], n_knots['H-He'])
 
@@ -548,12 +549,24 @@ def sim_defect_set(optim_class:Fit_EAM_Potential):
 
         lmp.commands_list(lmp_class.init_from_datafile(file)) 
 
+        # xyz = np.array(lmp.gather_atoms('x', 1, 3))
+
+        # xyz = xyz.reshape(len(xyz)//3, 3)
+        # print(filename)
+
+        # print(xyz[-1]/lmp_class.alattice)
+
         lmp_class.cg_min(lmp)
 
         ef = lmp_class.get_formation_energy(lmp)
 
         rvol = lmp_class.get_rvol(lmp)
 
+        # xyz = np.array(lmp.gather_atoms('x', 1, 3))
+
+        # xyz = xyz.reshape(len(xyz)//3, 3)
+
+        # print(xyz[-1]/lmp_class.alattice)
         lmp.close()
 
         _data =  [vac, h, he, image, ef, rvol]
@@ -638,8 +651,8 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
     Image 5: <111> 
     
     '''
-    # Loss due to difference in Formation Energy
-    loss += np.abs(1 - sample_mat[0, 0, 1, 0, 0]/ref_mat[0, 0, 1, 0, 0])
+    # Loss due to difference in Tet Formation Energy
+    loss += np.abs(sample_mat[0, 0, 1, 0, 0] - ref_mat[0, 0, 1, 0, 0])
 
     loss += rel_abs_loss(sample_mat[0, 0, 1, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 1, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
 
@@ -915,8 +928,12 @@ def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_
 def gmm(file_pattern, data_folder, iter):
     loss_lst = []  
 
+    nfiles = len(glob.glob(os.path.join(file_pattern, 'Filtered_Loss_*.txt')))
+                         
     # Load loss data from files
-    for file in glob.glob(os.path.join(file_pattern, 'Filtered_Loss_*.txt')):
+    for i in range(nfiles):
+        file  = os.path.join(file_pattern, 'Filtered_Loss_%d.txt' % i)
+    
         if os.path.getsize(file) > 0:
             loss_lst.append(np.loadtxt(file))
     
@@ -928,7 +945,9 @@ def gmm(file_pattern, data_folder, iter):
     sample_lst = []  
 
     # Load sample data from files
-    for file in glob.glob(os.path.join(file_pattern, 'Filtered_Samples_*.txt')):
+    for i in range(nfiles):
+        file  = os.path.join(file_pattern, 'Filtered_Samples_%d.txt' % i)
+
         if os.path.getsize(file) > 0:
             sample_lst.append(np.loadtxt(file))
     
@@ -990,7 +1009,7 @@ def gmm(file_pattern, data_folder, iter):
 
     # Save filtered loss, samples, and GMM parameters
     np.savetxt(os.path.join(gmm_folder, 'Filtered_Loss.txt'), loss[thresh_idx[:n]])
-    np.savetxt(os.path.join(gmm_folder, 'Filtered_Samples.txt'), samples[thresh_idx[:n]])
+    np.savetxt(os.path.join(gmm_folder, 'Filtered_Samples.txt'), data)
     np.save(os.path.join(gmm_folder, 'Cov.npy'), gmm.covariances_)
     np.save(os.path.join(gmm_folder, 'Mean.npy'), gmm.means_)
 

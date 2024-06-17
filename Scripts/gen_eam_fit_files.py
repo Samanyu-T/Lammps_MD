@@ -59,17 +59,20 @@ lmp.perfect_crystal(True)
 
 dft_data = np.loadtxt('dft_data_new.txt')
 
-defect_centre = ( lmp.alattice*lmp.size/2 )*np.ones((3,))
+defect_centre = (lmp.size//2 )*np.ones((3,))
 
-pos_arr = defect_centre + lmp.alattice*np.array([[0.25, 0.5, 0], [0.15, 0.5, 0], [0.375, 0.375, 0], [0.5, 0.5, 0], [0.25, 0.25, 0.25]])
+pos_arr = defect_centre + np.array([[0.25, 0.5, 0], [0.35, 0.5, 0], [0.375, 0.375, 0], [0.5, 0.5, 0], [0.25, 0.25, 0.25]])
+
+print(pos_arr)
+pos_arr *= lmp.alattice
+
 
 for vac in range(3):
     for i, _pos in enumerate(pos_arr):
 
         lmp.create_atoms_given_pos('EAM_Fit_Files/Data_Files/V%dH0He0.data' % vac, 'EAM_Fit_Files/Data_Files/V%dH0He1.%d.data' % (vac, i),
-                                        [3], [_pos], run_MD=False, run_min=True)
+                                        [3], [_pos], run_MD=False, run_min=False)
 
-exit()
 for i in range(5):
     shutil.copy('EAM_Fit_Files/Data_Files/V0H0He0.data', 'EAM_Fit_Files/Data_Files/V0H0He0.%d.data' % i)
     shutil.copy('EAM_Fit_Files/Atom_Files/V0H0He0.atom', 'EAM_Fit_Files/Atom_Files/V0H0He0.%d.atom' % i)
