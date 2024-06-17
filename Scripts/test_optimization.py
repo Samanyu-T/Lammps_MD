@@ -47,8 +47,8 @@ pot, potlines, pot_params = Handle_PotFiles.read_pot('git_folder/Potentials/test
 
 n_knots = {}
 n_knots['He_F'] = 2
-n_knots['He_p'] = 3
-n_knots['W-He'] = 3
+n_knots['He_p'] = 0
+n_knots['W-He'] = 4
 n_knots['He-He'] = 0
 n_knots['H-He'] = 0
 
@@ -61,16 +61,17 @@ copy_files(True, False, False, param_dict['work_dir'], param_dict['data_dir'])
 
 eam_fit = EAM_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
 
-sample = np.array([1.130350965490571546e+01, 2.752972140971631898e+00, -2.072280818241628353e+00,
-                   7.097202368747449475e-01, -1.193421854629756140e+00, -3.655969179503565925e-01,
-                     1.360741995181738329e+00, -3.153228806122611694e+00, -1.194795420738169689e+00])
+sample = np.array([2.347136710906646329e+00, -2.259697375630945082e+00, 6.180591387041593165e+00,
+                    -7.047143276296621295e+00, -6.863739119716810722e-02, 8.137515892980995424e-01, -3.564944458418953133e+00
+
+
+])
 
 data_ref = np.loadtxt('dft_data_new.txt')
 
 t1 = time.perf_counter()
 
-print(EAM_Fitting.loss_func(sample,data_ref,eam_fit))
+EAM_Fitting.simplex(n_knots, comm, proc_id, sample, 100, param_dict['work_dir'], param_dict['save_dir'])
 
 t2 = time.perf_counter()
-
 print(t2 - t1)

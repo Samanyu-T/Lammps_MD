@@ -165,7 +165,7 @@ class LammpsParentClass:
 
             lmp.command('unfix zero_pressure')
     
-    def perfect_crystal(self):
+    def perfect_crystal(self, update_alat=False):
         """
         Generate a perfect Tungsten crystal to use as reference for the rest of the point defects
         """
@@ -191,8 +191,9 @@ class LammpsParentClass:
                                         ]) 
         
         # Update Lattice Constant after minimizing the box dimensions 
-        # self.alattice = lmp.get_thermo('xlat') / np.sqrt(np.dot(self.orientx, self.orientx))
-
+        if update_alat:
+            self.alattice = lmp.get_thermo('xlat') / np.sqrt(np.dot(self.orientx, self.orientx))
+            
         self.E_cohesive = np.array([-8.94964, -2.121, 0])
         
         self.N_species = np.array([lmp.get_natoms(), 0, 0])

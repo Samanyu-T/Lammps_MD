@@ -55,7 +55,7 @@ if not os.path.exists(output_folder):
     os.mkdir(os.path.join(output_folder,'Atom_Files'))
 
 lmp = LammpsParentClass(init_dict, comm, proc_id)
-lmp.perfect_crystal()
+lmp.perfect_crystal(True)
 
 dft_data = np.loadtxt('dft_data_new.txt')
 
@@ -67,9 +67,9 @@ for vac in range(3):
     for i, _pos in enumerate(pos_arr):
 
         lmp.create_atoms_given_pos('EAM_Fit_Files/Data_Files/V%dH0He0.data' % vac, 'EAM_Fit_Files/Data_Files/V%dH0He1.%d.data' % (vac, i),
-                                        [3], [_pos], run_MD=False, run_min=False)
+                                        [3], [_pos], run_MD=False, run_min=True)
 
-
+exit()
 for i in range(5):
     shutil.copy('EAM_Fit_Files/Data_Files/V0H0He0.data', 'EAM_Fit_Files/Data_Files/V0H0He0.%d.data' % i)
     shutil.copy('EAM_Fit_Files/Atom_Files/V0H0He0.atom', 'EAM_Fit_Files/Atom_Files/V0H0He0.%d.atom' % i)

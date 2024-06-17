@@ -989,8 +989,8 @@ def gmm(file_pattern, data_folder, iter):
     os.makedirs(gmm_folder, exist_ok=True)
 
     # Save filtered loss, samples, and GMM parameters
-    np.savetxt(os.path.join(gmm_folder, 'Filtered_Loss.txt'), loss[thresh_idx])
-    np.savetxt(os.path.join(gmm_folder, 'Filtered_Samples.txt'), samples[thresh_idx])
+    np.savetxt(os.path.join(gmm_folder, 'Filtered_Loss.txt'), loss[thresh_idx[:n]])
+    np.savetxt(os.path.join(gmm_folder, 'Filtered_Samples.txt'), samples[thresh_idx[:n]])
     np.save(os.path.join(gmm_folder, 'Cov.npy'), gmm.covariances_)
     np.save(os.path.join(gmm_folder, 'Mean.npy'), gmm.means_)
 
