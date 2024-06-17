@@ -621,6 +621,14 @@ def rel_abs_loss(y1, y2):
             loss += np.abs(1 - y1[i]/y2[i])
     return loss
 
+
+def abs_loss(y1, y2):
+    loss = 0
+    for i in range(min(len(y1), len(y2))):
+        if y2[i] != 0:
+            loss += np.abs(y1[i] - y2[i])
+    return loss
+
 def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
     if diag:
@@ -654,7 +662,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
     # Loss due to difference in Tet Formation Energy
     loss += np.abs(sample_mat[0, 0, 1, 0, 0] - ref_mat[0, 0, 1, 0, 0])
 
-    loss += rel_abs_loss(sample_mat[0, 0, 1, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 1, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
+    loss += abs_loss(sample_mat[0, 0, 1, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 1, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
 
     # Loss due to difference in Relaxation Volume
     loss += np.abs(1 - sample_mat[0, 0, 1, 0, 1]/ref_mat[0, 0, 1, 0, 1])
@@ -682,7 +690,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
         
         binding_ref = subtract_lst(np.min(ref_mat[v, 0, 1:, :, 0], axis = 1), np.min(ref_mat[v, 0, :-1, :, 0], axis = 1))
 
-        loss += rel_abs_loss(binding_sample, binding_ref)
+        loss += abs_loss(binding_sample, binding_ref)
     
         # print(v, 0 ,np.abs(subtract_lst(binding_sample, binding_ref) ) )
 
@@ -704,7 +712,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
             
             # print(v, h ,np.abs(subtract_lst(binding_sample, binding_ref) ) )
 
-            loss += rel_abs_loss(binding_sample, binding_ref)
+            loss += abs_loss(binding_sample, binding_ref)
 
     ''' Loss from Relaxation Volumes '''
 
