@@ -19,7 +19,7 @@ init_dict = {}
 with open('init_param.json', 'r') as file:
     init_dict = json.load(file)
 
-output_folder = 'Lammps_4x4'
+output_folder = 'EAM_Fit_Files'
 
 init_dict['orientx'] = [1, 0, 0]
 
@@ -30,6 +30,8 @@ init_dict['orientz'] = [0, 0, 1]
 init_dict['size'] = 4
 
 init_dict['surface'] = 0
+
+init_dict['potfile'] = 'git_folder/Potentials/bonny.eam.alloy'
 
 init_dict['output_folder'] = output_folder
 
@@ -54,12 +56,14 @@ ef_arr = np.zeros((len(points), ))
 
 rvol_arr = np.zeros((len(points), ))
 
-for i, pt in enumerate(points[1:]):
+dft_data = np.loadtxt('dft_data_new.txt')
+
+for i, pt in enumerate(dft_data[5:, :3]):
     
     defect_centre = ( lmp.alattice*lmp.size/2 )*np.ones((3,))
     
     if pt[0] == 2:
-        defect_centre = np.vstack([defect_centre, ( lmp.alattice* (lmp.size/2 + 0.5) )*np.ones((3,))])
+        defect_centre = np.vstack([defect_centre, ( lmp.alattice* (lmp.size/2 - 0.5) )*np.ones((3,))])
 
     target_species = 2
     action = 1
@@ -89,11 +93,4 @@ for i, pt in enumerate(points[1:]):
     
     ef, rvol = lmp.add_defect(input_filepath, output_filepath, target_species, action, defect_centre)
     
-    ef_arr[i + 1] = ef
-    
-    rvol_arr[i + 1] = rvol
-
-    print(ef_arr[i + 1], rvol_arr[i + 1])
-
-np.save('Numpy_Files/Point_Defects/ef_test_7.npy', ef_arr)
-np.save('Numpy_Files/Point_Defects/rvol_test_7.npy', rvol_arr)
+    print(output_filepath, ef, rvol)

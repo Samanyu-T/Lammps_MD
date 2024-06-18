@@ -19,17 +19,17 @@ def copy_files(w_he, he_he, h_he, work_dir, data_dir):
 
     files_to_copy = []
     
-    files_to_copy.extend(glob.glob('%s/V*H0He0.0.data' % data_dir))
+    files_to_copy.extend(glob.glob('%s/V*H0He0.0.txt' % data_dir))
 
     if w_he:
-        files_to_copy.extend(glob.glob('%s/V0H0He1.*.data' % data_dir))
-        files_to_copy.extend(glob.glob('%s/V*H0He1.0.data' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V0H0He1.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H0He1.0.txt' % data_dir))
 
     if he_he:
-        files_to_copy.extend(glob.glob('%s/V*H0He*.*.data' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H0He*.*.txt' % data_dir))
 
     if h_he:
-        files_to_copy.extend(glob.glob('%s/V*H*He*.*.data' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H*He*.*.txt' % data_dir))
 
     files_to_copy = list(set(files_to_copy))
 

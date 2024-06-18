@@ -118,6 +118,20 @@ class LammpsParentClass:
         )
         )
 
+        # cmdlist.append('region r_simbox block %f %f %f %f %f %f units lattice' % (
+        #     0, self.size,
+        #     0, self.size,
+        #     - 0.5*self.surface, self.size + 0.5*self.surface
+        # )
+        # )
+
+        # cmdlist.append('region r_atombox block %f %f %f %f %f %f units lattice' % (
+        #     0, self.size,
+        #     0, self.size,
+        #     0, self.size
+        # )
+        # )
+
         cmdlist.append('create_box 3 r_simbox')
         
         cmdlist.append('create_atoms 1 region r_atombox')
@@ -452,7 +466,7 @@ class LammpsParentClass:
         # If the defect centre is not specified simply use the centre of the simulation box - offset is added to bias the neighbours in a direction
         if defect_centre is None:
 
-            defect_centre = ( self.offset + self.pbc/2 + np.array([1e-2, 1e-2, 0]) )
+            defect_centre = ( self.offset + self.pbc/2 + np.array([1e-2, 1e-2, 1e-2]) )
         
         if defect_centre.ndim == 1:
 

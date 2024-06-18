@@ -41,7 +41,7 @@ init_dict['orienty'] = [0, 1, 0]
 
 init_dict['orientz'] = [0, 0, 1]
 
-init_dict['size'] = 7
+init_dict['size'] = 4
 
 init_dict['surface'] = 0
 
@@ -63,7 +63,6 @@ defect_centre = (lmp.size//2 )*np.ones((3,))
 
 pos_arr = defect_centre + np.array([[0.25, 0.5, 0], [0.35, 0.5, 0], [0.375, 0.375, 0], [0.5, 0.5, 0], [0.25, 0.25, 0.25]])
 
-print(pos_arr)
 pos_arr *= lmp.alattice
 
 

@@ -181,8 +181,8 @@ def create_init_file(filepath):
         1,
         0
     ],
-    "size": 7,
-    "surface": 20,
+    "size": 4,
+    "surface": 0,
     "potfile": "git_folder/Potentials/test.eam.alloy",
     "conv": 100,
     "machine": "",
@@ -211,28 +211,28 @@ class Fit_EAM_Potential():
         self.lammps_param = {
                 
         "lattice_type": "bcc",
-        "alattice": 3.144237931,
+        "alattice": 3.14421,
         "C11": 3.201,
         "C12": 1.257,
         "C44": 1.020,
         "orientx": [
             1,
-            1,
+            0,
             0
         ],
         "orienty": [
             0,
-            0,
-            -1
-        ],
-        "orientz": [
-            -1,
             1,
             0
         ],
-        "size": 7,
-        "surface": 20,
-        "potfile": os.path.join(self.pot_folder, 'optim.%d.eam.alloy' % self.proc_id), #"git_folder/Potentials/test.eam.alloy",
+        "orientz": [
+            0,
+            0,
+            1
+        ],
+        "size": 4,
+        "surface": 0,
+        "potfile": os.path.join(self.pot_folder, 'optim.%d.eam.alloy' % self.proc_id), #"git_folder/Potentials/test.eam.alloy"
         "conv": 1000,
         "machine": "",
         "save_folder": self.lammps_folder
@@ -527,9 +527,9 @@ def sim_defect_set(optim_class:Fit_EAM_Potential):
     lmp_class = LammpsParentClass(optim_class.lammps_param, optim_class.comm, optim_class.proc_id)
 
     data = []
-    
-    files = glob.glob('%s/*.data' % optim_class.lammps_folder)
-    
+
+    files = glob.glob('%s/*.txt' % optim_class.lammps_folder)
+
     for file in files:
         
         # V(1)H(3)He(6).(8).data
@@ -547,14 +547,34 @@ def sim_defect_set(optim_class:Fit_EAM_Potential):
 
         lmp = lammps(comm=optim_class.comm, cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
 
-        lmp.commands_list(lmp_class.init_from_datafile(file)) 
+        lmp.commands_list(lmp_class.init_from_box()) 
 
-        # xyz = np.array(lmp.gather_atoms('x', 1, 3))
+        if os.path.getsize(file) > 0:
+            xyz = np.loadtxt(file)
+        else:
+            xyz = np.empty((0,3))
 
-        # xyz = xyz.reshape(len(xyz)//3, 3)
-        # print(filename)
+        if xyz.ndim == 1 and len(xyz) > 0:
+            xyz = xyz.reshape(1, -1)
 
-        # print(xyz[-1]/lmp_class.alattice)
+        for _v in range(vac):
+            
+            vac_pos = (2 - _v/2)*np.ones((3, ))
+
+            lmp.command('region sphere_remove_%d sphere %f %f %f 0.1 units lattice' % 
+                        (_v,vac_pos[0], vac_pos[1], vac_pos[2]))
+            
+            lmp.command('group del_atoms region sphere_remove_%d' % _v)
+
+            lmp.command('delete_atoms group del_atoms')
+            
+            lmp.command('group del_atoms clear')
+        
+        if len(xyz) > 0:
+            for _x in xyz:
+                lmp.command('create_atoms %d single %f %f %f units lattice' % 
+                            (_x[0], _x[1], _x[2], _x[3])
+                            )
 
         lmp_class.cg_min(lmp)
 
@@ -562,20 +582,15 @@ def sim_defect_set(optim_class:Fit_EAM_Potential):
 
         rvol = lmp_class.get_rvol(lmp)
 
-        # xyz = np.array(lmp.gather_atoms('x', 1, 3))
-
-        # xyz = xyz.reshape(len(xyz)//3, 3)
-
-        # print(xyz[-1]/lmp_class.alattice)
-        lmp.close()
+        # lmp.command('write_dump all custom test_sim/V%dH%dHe%d.%d.atom id type x y z' % (vac, h, he, image))
 
         _data =  [vac, h, he, image, ef, rvol]
-                
+        
         data.append(_data)
 
     data = np.array(data)
 
-    sort_idx = np.lexsort((data[:, 2], data[:, 1], data[:, 0], data[:, 3]))
+    sort_idx = np.lexsort((data[:, 3],data[:, 2], data[:, 1], data[:, 0]))
 
     data = data[sort_idx]
 
@@ -673,7 +688,6 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
     constraint = not (np.arange(sample_mat.shape[3]) == np.round(sample_mat[0, 0, 1, :, 0], 2).argsort()).all()
     
-    # print(sample_mat[0, 0, 1, :, :])
     loss += 100*constraint  
 
     '''
