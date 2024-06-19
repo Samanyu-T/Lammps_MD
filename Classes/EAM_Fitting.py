@@ -659,7 +659,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
     sample_mat = lst2matrix(data_sample)
 
-    np.savetxt('test_sample.txt', data_sample, fmt='%.2f')
+    # np.savetxt('test_sample.txt', data_sample, fmt='%.2f')
 
     loss = 0
 
@@ -683,17 +683,19 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
     loss += np.abs(1 - sample_mat[0, 0, 1, 0, 1]/ref_mat[0, 0, 1, 0, 1])
 
     loss += np.abs(1 - sample_mat[0, 0, 1, 3, 1]/ref_mat[0, 0, 1, 3, 1])
-
+    
+    print(sample_mat[0, 0, 1, :, :], ref_mat[0, 0, 1, :, :])
     # print(sample_mat[0, 0, 1, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 1, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
     ''' Constraint '''
 
     constraint = not (np.arange(sample_mat.shape[3]) == np.round(sample_mat[0, 0, 1, :, 0], 2).argsort()).all()
     
-    # print(sample_mat[0, 0, 1, :, :], ref_mat[0, 0, 1, :, :])
-    
     loss += 100*constraint  
 
-    '''
+    if sample_mat.shape[2]  > 2:
+        loss += rel_abs_loss(sample_mat[0, 0, 2, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 2, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
+
+    ''' 
     Loss from He-He Binding
 
     Interstital 
@@ -705,10 +707,14 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
             
         binding_sample = subtract_lst(np.min(sample_mat[v, 0, 1:, :, 0], axis = 1), np.min(sample_mat[v, 0, :-1, :, 0], axis = 1))
         
+        binding_sample = sample_mat[0, 0, 1, 0, 0] - binding_sample
+
         binding_ref = subtract_lst(np.min(ref_mat[v, 0, 1:, :, 0], axis = 1), np.min(ref_mat[v, 0, :-1, :, 0], axis = 1))
+        
+        binding_ref = ref_mat[0, 0, 1, 0, 0] - binding_ref
 
         loss += abs_loss(binding_sample, binding_ref)
-    
+
         # print(v, 0 ,np.abs(subtract_lst(binding_sample, binding_ref) ) )
 
     '''
@@ -725,8 +731,12 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
             binding_sample = subtract_lst(np.min(sample_mat[v, h, :, :, 0], axis = 1), np.min(sample_mat[v, h-1, :, :, 0], axis = 1))
             
+            binding_sample = sample_mat[0, 1, 0, 0, 0] - binding_sample
+
             binding_ref = subtract_lst(np.min(ref_mat[v, h, :, :, 0], axis = 1), np.min(ref_mat[v, h-1, :, :, 0], axis = 1))
             
+            binding_ref = ref_mat[0, 1, 0, 0, 0] - binding_ref
+
             # print(v, h ,np.abs(subtract_lst(binding_sample, binding_ref) ) )
 
             loss += abs_loss(binding_sample, binding_ref)
