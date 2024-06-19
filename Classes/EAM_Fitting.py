@@ -582,7 +582,7 @@ def sim_defect_set(optim_class:Fit_EAM_Potential):
 
         rvol = lmp_class.get_rvol(lmp)
 
-        # lmp.command('write_dump all custom test_sim/V%dH%dHe%d.%d.atom id type x y z' % (vac, h, he, image))
+        lmp.command('write_dump all custom test_sim/V%dH%dHe%d.%d.atom id type x y z' % (vac, h, he, image))
 
         _data =  [vac, h, he, image, ef, rvol]
         
@@ -677,16 +677,19 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
     # Loss due to difference in Tet Formation Energy
     loss += np.abs(sample_mat[0, 0, 1, 0, 0] - ref_mat[0, 0, 1, 0, 0])
 
-    loss += abs_loss(sample_mat[0, 0, 1, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 1, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
+    loss += rel_abs_loss(sample_mat[0, 0, 1, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 1, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
 
     # Loss due to difference in Relaxation Volume
     loss += np.abs(1 - sample_mat[0, 0, 1, 0, 1]/ref_mat[0, 0, 1, 0, 1])
 
     loss += np.abs(1 - sample_mat[0, 0, 1, 3, 1]/ref_mat[0, 0, 1, 3, 1])
 
+    # print(sample_mat[0, 0, 1, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 1, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
     ''' Constraint '''
 
     constraint = not (np.arange(sample_mat.shape[3]) == np.round(sample_mat[0, 0, 1, :, 0], 2).argsort()).all()
+    
+    # print(sample_mat[0, 0, 1, :, :], ref_mat[0, 0, 1, :, :])
     
     loss += 100*constraint  
 
@@ -769,7 +772,7 @@ def random_sampling(n_knots, comm, proc_id, max_time=3, work_dir = '../Optim_Loc
     # Call the main fitting class
     fitting_class = Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, work_dir)
 
-    data_ref = np.loadtxt('dft_data_new.txt')
+    data_ref = np.loadtxt('dft_update.txt')
 
     # Init Optimization Parameter
     t1 = time.perf_counter()
@@ -847,7 +850,7 @@ def gaussian_sampling(n_knots, comm, proc_id, mean, cov, max_time=3, work_dir = 
     # Call the main fitting class
     fitting_class = Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, work_dir)
 
-    data_ref = np.loadtxt('dft_data_new.txt')
+    data_ref = np.loadtxt('dft_update.txt')
 
     # Init Optimization Parameter
     t1 = time.perf_counter()
@@ -929,7 +932,7 @@ def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_
     # Call the main fitting class
     fitting_class = Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, work_dir)
 
-    data_ref = np.loadtxt('dft_data_new.txt')
+    data_ref = np.loadtxt('dft_update.txt')
 
     # Init Optimization Parameter
     t1 = time.perf_counter()

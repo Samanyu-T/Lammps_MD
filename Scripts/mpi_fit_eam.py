@@ -40,7 +40,6 @@ def random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, m
 
     ### END RANDOM SAMPLING ###
 
-
     mean = None
     cov = None
 

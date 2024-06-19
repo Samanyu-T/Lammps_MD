@@ -72,7 +72,7 @@ data_ref = np.loadtxt('dft_update.txt')
 
 t1 = time.perf_counter()
 
-EAM_Fitting.simplex(n_knots, comm, proc_id, sample, 100, param_dict['work_dir'], param_dict['save_dir'])
+EAM_Fitting.simplex(n_knots, comm, proc_id, sample, 1000, param_dict['work_dir'], param_dict['save_dir'])
 
 t2 = time.perf_counter()
 print(t2 - t1)
