@@ -684,7 +684,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
     loss += np.abs(1 - sample_mat[0, 0, 1, 3, 1]/ref_mat[0, 0, 1, 3, 1])
     
-    print(sample_mat[0, 0, 1, :, :], ref_mat[0, 0, 1, :, :])
+    # print(sample_mat[0, 0, 1, :, :], ref_mat[0, 0, 1, :, :])
     # print(sample_mat[0, 0, 1, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 1, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
     ''' Constraint '''
 
