@@ -193,7 +193,7 @@ def main(json_file):
     n_knots = {}
     n_knots['He_F'] = 2
     n_knots['He_p'] = 3
-    n_knots['W-He'] = 3
+    n_knots['W-He'] = 4
     n_knots['He-He'] = 0
     n_knots['H-He'] = 0
 
