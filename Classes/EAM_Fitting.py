@@ -582,7 +582,7 @@ def sim_defect_set(optim_class:Fit_EAM_Potential):
 
         rvol = lmp_class.get_rvol(lmp)
 
-        lmp.command('write_dump all custom test_sim/V%dH%dHe%d.%d.atom id type x y z' % (vac, h, he, image))
+        # lmp.command('write_dump all custom test_sim/V%dH%dHe%d.%d.atom id type x y z' % (vac, h, he, image))
 
         _data =  [vac, h, he, image, ef, rvol]
         
