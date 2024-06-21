@@ -113,11 +113,11 @@ def gaussian_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir,
 
 
 def extend_gmm(mean, cov):
-    cov_append = np.diag([0.5, 4, 8, 16])
+    cov_append = np.diag([4, 8, 16])
 
     cov_new = np.zeros((cov.shape[0], cov.shape[1] + cov_append.shape[0], cov.shape[1] + cov_append.shape[0]))
 
-    mean_append = np.array([2.75, 0, 0, 0])
+    mean_append = np.array([0, 0, 0])
 
     mean_new = np.zeros((mean.shape[0], mean.shape[1] + mean_append.shape[0]))
 
