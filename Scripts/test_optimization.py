@@ -2,10 +2,9 @@ import numpy as np
 import sys
 import os
 sys.path.append(os.path.join(os.getcwd(), 'git_folder', 'Classes'))
-import EAM_Fitting
+import EAM_Fitting_Serial
 import Handle_PotFiles
 import time
-from mpi4py import MPI
 import json, glob, shutil
 
 def copy_files(w_he, he_he, h_he, work_dir, data_dir):
@@ -36,12 +35,11 @@ def copy_files(w_he, he_he, h_he, work_dir, data_dir):
     for file in files_to_copy:
         shutil.copy(file, data_files_folder)
     
-comm = MPI.COMM_WORLD
+comm = 0
 
-proc_id = comm.Get_rank()
+proc_id = 0
 
-n_procs = comm.Get_size()
-
+n_procs = 1
 
 pot, potlines, pot_params = Handle_PotFiles.read_pot('git_folder/Potentials/test.eam.alloy')
 
@@ -49,22 +47,16 @@ n_knots = {}
 n_knots['He_F'] = 2
 n_knots['He_p'] = 3
 n_knots['W-He'] = 4
-n_knots['He-He'] = 0
-n_knots['H-He'] = 0
+n_knots['He-He'] = 4
+n_knots['H-He'] = 4
 
 
 with open('fitting.json', 'r') as file:
     param_dict = json.load(file)
 
-copy_files(True, False, False, param_dict['work_dir'], param_dict['data_dir'])
+copy_files(True, True, True, param_dict['work_dir'], param_dict['data_dir'])
 
-
-eam_fit = EAM_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
-
-# sample = np.array([9.838063255423060482e+00/pot_params['rho_c'], -1.475368087283128071e+00, 4.839760854196728523e+00,
-#                     -6.336139370483222066e+00, -1.813077019600225770e-01, 5.130695524515130890e-01, -1.086846396868119680e+00
-
-# ])
+eam_fit = EAM_Fitting_Serial.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
 
 sample = np.loadtxt('sample.txt')
 
@@ -72,7 +64,7 @@ data_ref = np.loadtxt('dft_update.txt')
 
 t1 = time.perf_counter()
 
-EAM_Fitting.simplex(n_knots, comm, proc_id, sample, 1000, param_dict['work_dir'], param_dict['save_dir'])
+EAM_Fitting_Serial.simplex(n_knots, comm, proc_id, sample, 1000, param_dict['work_dir'], param_dict['save_dir'])
 
 t2 = time.perf_counter()
 print(t2 - t1)

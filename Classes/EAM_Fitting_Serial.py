@@ -7,7 +7,7 @@ import sys
 import glob
 sys.path.append(os.path.join(os.getcwd(), 'git_folder','Classes'))
 from sklearn.mixture import GaussianMixture
-from Lammps_Classes import LammpsParentClass
+from Lammps_Classes_Serial import LammpsParentClass
 from Handle_PotFiles import read_pot, write_pot
 from scipy.optimize import minimize
 import shutil
@@ -545,7 +545,7 @@ def sim_defect_set(optim_class:Fit_EAM_Potential):
         
         lmp_class.N_species = np.array([2*lmp_class.size**3 - vac, h, he])
 
-        lmp = lammps(comm=optim_class.comm, cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
+        lmp = lammps( cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
 
         lmp.commands_list(lmp_class.init_from_box()) 
 
@@ -582,7 +582,7 @@ def sim_defect_set(optim_class:Fit_EAM_Potential):
 
         rvol = lmp_class.get_rvol(lmp)
 
-        # lmp.command('write_dump all custom test_sim/V%dH%dHe%d.%d.atom id type x y z' % (vac, h, he, image))
+        lmp.command('write_dump all custom test_sim/V%dH%dHe%d.%d.atom id type x y z' % (vac, h, he, image))
 
         _data =  [vac, h, he, image, ef, rvol]
         
@@ -684,7 +684,8 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
     loss += np.abs(1 - sample_mat[0, 0, 1, 3, 1]/ref_mat[0, 0, 1, 3, 1])
     
-    # print(sample_mat[0, 0, 1, :, :], ref_mat[0, 0, 1, :, :])
+    print(sample_mat[0, 0, 1, :, :], ref_mat[0, 0, 1, :, :])
+
     # print(sample_mat[0, 0, 1, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 1, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
     ''' Constraint '''
 
@@ -715,7 +716,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         loss += abs_loss(binding_sample, binding_ref)
 
-        # print(v, 0 ,np.abs(subtract_lst(binding_sample, binding_ref) ) )
+        print(v, 0 ,np.abs(subtract_lst(binding_sample, binding_ref) ) )
 
     '''
     Loss from H-He Binding
@@ -725,19 +726,22 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
     Di-Vacancy
 
     '''
+
     for v in range(sample_mat.shape[0]):
 
         for h in range(1, min(sample_mat.shape[1], ref_mat.shape[1])):
-
+                        
             binding_sample = subtract_lst(np.min(sample_mat[v, h, :, :, 0], axis = 1), np.min(sample_mat[v, h-1, :, :, 0], axis = 1))
             
             binding_sample = sample_mat[0, 1, 0, 0, 0] - binding_sample
 
             binding_ref = subtract_lst(np.min(ref_mat[v, h, :, :, 0], axis = 1), np.min(ref_mat[v, h-1, :, :, 0], axis = 1))
-            
-            binding_ref = ref_mat[0, 1, 0, 0, 0] - binding_ref
 
-            # print(v, h ,np.abs(subtract_lst(binding_sample, binding_ref) ) )
+            binding_ref = ref_mat[0, 1, 0, 0, 0] - binding_ref
+            
+            print(binding_ref)
+
+            print(v, h ,np.abs(subtract_lst(binding_sample, binding_ref) ) )
 
             loss += abs_loss(binding_sample, binding_ref)
 
