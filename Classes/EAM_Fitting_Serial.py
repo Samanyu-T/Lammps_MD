@@ -577,12 +577,12 @@ def sim_defect_set(optim_class:Fit_EAM_Potential):
                             )
 
         lmp_class.cg_min(lmp)
+        
+        lmp.command('write_dump all custom test_sim/V%dH%dHe%d.%d.atom id type x y z' % (vac, h, he, image))
 
         ef = lmp_class.get_formation_energy(lmp)
 
         rvol = lmp_class.get_rvol(lmp)
-
-        lmp.command('write_dump all custom test_sim/V%dH%dHe%d.%d.atom id type x y z' % (vac, h, he, image))
 
         _data =  [vac, h, he, image, ef, rvol]
         
@@ -739,8 +739,6 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
             binding_ref = ref_mat[0, 1, 0, 0, 0] - binding_ref
             
-            print(binding_ref)
-
             print(v, h ,np.abs(subtract_lst(binding_sample, binding_ref) ) )
 
             loss += abs_loss(binding_sample, binding_ref)
