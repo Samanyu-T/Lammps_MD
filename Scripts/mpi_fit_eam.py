@@ -122,8 +122,8 @@ def extend_gmm(mean, cov, n):
 
     mean_base = np.hstack([mean_base for i in range(n)]).flatten()
 
-    cov_append = np.diag([cov_base])
-
+    cov_append = np.diag(cov_base)
+        
     mean_append = mean_base
 
     cov_new = np.zeros((cov.shape[0], cov.shape[1] + cov_append.shape[0], cov.shape[1] + cov_append.shape[0]))
