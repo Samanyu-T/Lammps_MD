@@ -124,7 +124,7 @@ def extend_gmm(mean, cov, n):
 
     cov_append = np.diag([cov_base])
 
-    mean_append = np.array([mean_base])
+    mean_append = mean_base
 
     cov_new = np.zeros((cov.shape[0], cov.shape[1] + cov_append.shape[0], cov.shape[1] + cov_append.shape[0]))
 
