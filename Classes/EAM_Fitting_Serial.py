@@ -254,11 +254,11 @@ class Fit_EAM_Potential():
         self.knot_pts['He_F'] = np.linspace(0, self.pot_params['rho_c'], n_knots['He_F'])
         self.knot_pts['He_p'] = np.linspace(0, self.pot_params['rc'], n_knots['He_p'])
         self.knot_pts['W-He'] = np.linspace(0, self.pot_params['rc'], n_knots['W-He'])
-        # self.knot_pts['W-He'][1:3] = np.array([1.7581,2.7236])
+        self.knot_pts['W-He'][1:3] = np.array([1.7581, 2.7236])
         self.knot_pts['He-He'] = np.linspace(0, self.pot_params['rc'], n_knots['He-He'])
-        # self.knot_pts['He-He'][1:3] = np.array([1.7581,2.7236])
+        self.knot_pts['He-He'][1:3] = np.array([1.7581,2.7236])
         self.knot_pts['H-He'] = np.linspace(0, self.pot_params['rc'], n_knots['H-He'])
-
+        
         self.map = {}
 
         # full_map_idx = [4*(n_knots['He_F'] - 2) + 1] + [4*(n_knots['He_p'] - 2) + 2] + [4*(n_knots['W-He'] - 2)] + [4*(n_knots['He-He'] - 2)] + [4*(n_knots['H-He'] - 2)]
@@ -417,7 +417,7 @@ class Fit_EAM_Potential():
                 d2y[i + 1] = sample[self.map['He_F']][3*i + 3] 
 
             # self.knot_pts['He_F'] = x
-
+            
             coef_dict['He_F'] = splinefit(x, y, dy, d2y)
 
         if self.bool_fit['He_p']:
@@ -489,7 +489,7 @@ class Fit_EAM_Potential():
                 d2y[-1] = -zbl_class.eval_hess(x[-1])[0]
 
                 # self.knot_pts[key] = x
-
+                
                 coef_dict[key] = splinefit(x, y, dy, d2y)
 
         return coef_dict
@@ -503,8 +503,9 @@ class Fit_EAM_Potential():
         r = np.linspace(0, self.pot_params['rc'], self.pot_params['Nr'])
 
         if self.bool_fit['He_F']:
-            self.pot_lammps['He_F'] = sample[0] * np.sqrt(rho) + \
+            self.pot_lammps['He_F'] = sample[0] * (rho/self.pot_params['rho_c']) + \
             splineval(rho, coef_dict['He_F'], self.knot_pts['He_F'], func = True, grad = False, hess = False)
+
 
         if self.bool_fit['He_p']:
             self.pot_lammps['He_p'] = splineval(r, coef_dict['He_p'], self.knot_pts['He_p'], func = True, grad = False, hess = False)

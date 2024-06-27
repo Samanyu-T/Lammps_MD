@@ -314,7 +314,7 @@ class Fit_EAM_Potential():
 
         if self.bool_fit['He_F']:
 
-            sample[self.map['He_F']][0] = 20*np.random.rand()
+            sample[self.map['He_F']][0] = 2*(np.random.rand() - 1)
 
             for i in range(self.n_knots['He_F'] - 2):
                 # xmin = x_bnds[i]
