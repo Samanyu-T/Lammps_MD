@@ -43,7 +43,7 @@ application="python git_folder/Scripts/he_diffusion_parallel.py"
 options=""
 
 #! Work directory (i.e. where the job will run):
-workdir=/home/ir-tiru1/Samanyu/Lammps_MD
+workdir=/home/ir-tiru1/Samanyu/Pot_Fitting_Testing
  
 #! Are you using OpenMP (NB this is unrelated to OpenMPI)? If so increase this
 #! safe value to no more than 228:
