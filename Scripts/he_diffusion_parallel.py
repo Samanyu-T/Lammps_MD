@@ -42,7 +42,7 @@ for i in range(10):
 
     save_folder = os.path.join(output_folder,'Temp_%d' % temp , 'Iteration_%d' % replica_id)
     if not os.path.exists(save_folder):
-        os.mkdir(save_folder)
+        os.makedirs(save_folder,exist_ok=True)
 
     init_dict['orientx'] = [1, 0, 0]
 
