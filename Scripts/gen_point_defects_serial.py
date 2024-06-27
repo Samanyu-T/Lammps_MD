@@ -2,17 +2,16 @@ import sys
 import os
 import json
 import numpy as np
-from mpi4py import MPI
 
 sys.path.append(os.path.join(os.getcwd(), 'git_folder', 'Classes'))
 
-from Lammps_Classes import LammpsParentClass
+from Lammps_Classes_Serial import LammpsParentClass
 
-comm = MPI.COMM_WORLD
+comm = 0
 
-proc_id = comm.Get_rank()
+proc_id = 0
 
-n_procs = comm.Get_size()
+n_procs = 1
 
 init_dict = {}
 

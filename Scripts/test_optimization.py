@@ -45,7 +45,7 @@ pot, potlines, pot_params = Handle_PotFiles.read_pot('git_folder/Potentials/test
 
 n_knots = {}
 n_knots['He_F'] = 2
-n_knots['He_p'] = 3
+n_knots['He_p'] = 0
 n_knots['W-He'] = 4
 n_knots['He-He'] = 3
 n_knots['H-He'] = 0
@@ -58,8 +58,11 @@ copy_files(True, True, False, param_dict['work_dir'], param_dict['data_dir'])
 
 eam_fit = EAM_Fitting_Serial.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
 
+sample2 = eam_fit.gen_rand()
+
 sample = np.loadtxt('sample.txt')
 
+print(sample2.shape, sample.shape)
 data_ref = np.loadtxt('dft_update.txt')
 
 t1 = time.perf_counter()

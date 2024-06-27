@@ -305,10 +305,6 @@ class LammpsParentClass:
         # else:
         #     id_new_atom = 0
 
-        # id_new_gather = self.comm.gather(id_new_atom, root=0)
-
-        # id_new_gather = self.comm.bcast(id_new_gather, root=0)
-
         # id_new_gather = np.array(id_new_gather)
 
         # id_new_atom = id_new_gather.argmax()
@@ -679,10 +675,6 @@ class LammpsParentClass:
                 rng = None
 
                 sample = None
-
-            rng = self.comm.bcast(rng, root=0)
-
-            sample = self.comm.bcast(sample, root=0)
 
             if exclusion_centres is not None:
                 delta = exclusion_centres - sample
@@ -1275,12 +1267,7 @@ class Monte_Carlo_Methods(LammpsParentClass):
                 np.random.shuffle(slct_atom_idx)
 
                 rng_event = np.random.rand()
-
-            self.comm.barrier()
-
-            slct_atom_idx = self.comm.bcast(slct_atom_idx, root=0)
-
-            rng_event = self.comm.bcast(rng_event, root=0)
+            
 
             event = np.searchsorted(p_cumulative, rng_event, side='left')
 
@@ -1319,11 +1306,6 @@ class Monte_Carlo_Methods(LammpsParentClass):
 
                     rng_pos = np.random.rand(3)
                 
-                self.comm.barrier()
-
-                rng_species = self.comm.bcast(rng_species, root=0)
-
-                rng_pos = self.comm.bcast(rng_pos, root=0)
 
                 species_create = species_of_interest[rng_species]
 
@@ -1399,9 +1381,6 @@ class Monte_Carlo_Methods(LammpsParentClass):
 
             rng_pos = np.random.rand(3)
 
-        self.comm.barrier()
-
-        rng_pos = self.comm.bcast(rng_pos, root=0)
 
         disp = displacement_coef*self.alattice*(rng_pos - 0.5)
         
@@ -1680,12 +1659,6 @@ class Monte_Carlo_Methods(LammpsParentClass):
 
                 rng_event = np.random.rand()
 
-            self.comm.barrier()
-
-            slct_atom_idx = self.comm.bcast(slct_atom_idx, root=0)
-
-            rng_event = self.comm.bcast(rng_event, root=0)
-
             event = np.searchsorted(p_cumulative, rng_event, side='left')
 
             if event == key['exchange']:
@@ -1722,12 +1695,7 @@ class Monte_Carlo_Methods(LammpsParentClass):
                     rng_species = np.random.randint(0,len(species_of_interest))
 
                     rng_pos = np.random.rand(3)
-                
-                self.comm.barrier()
-
-                rng_species = self.comm.bcast(rng_species, root=0)
-
-                rng_pos = self.comm.bcast(rng_pos, root=0)
+            
 
                 species_create = species_of_interest[rng_species]
 

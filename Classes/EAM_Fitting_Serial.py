@@ -256,6 +256,7 @@ class Fit_EAM_Potential():
         self.knot_pts['W-He'] = np.linspace(0, self.pot_params['rc'], n_knots['W-He'])
         # self.knot_pts['W-He'][1:3] = np.array([1.7581,2.7236])
         self.knot_pts['He-He'] = np.linspace(0, self.pot_params['rc'], n_knots['He-He'])
+        # self.knot_pts['He-He'][1:3] = np.array([1.7581,2.7236])
         self.knot_pts['H-He'] = np.linspace(0, self.pot_params['rc'], n_knots['H-He'])
 
         self.map = {}
@@ -326,7 +327,6 @@ class Fit_EAM_Potential():
                 # sample[self.map['He_F']][4*i + 4] = d2ymax*(np.random.rand() - 0.5)
 
 
-                sample[self.map['He_F']][3*i + 1] = ymax*np.random.rand()
                 sample[self.map['He_F']][3*i + 2] = dymax*(np.random.rand() - 0.5)
                 sample[self.map['He_F']][3*i + 3] = d2ymax*(np.random.rand() - 0.5)
 

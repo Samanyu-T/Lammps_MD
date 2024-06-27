@@ -112,12 +112,21 @@ def gaussian_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir,
     return mean, cov
 
 
-def extend_gmm(mean, cov):
-    cov_append = np.diag([4, 8, 16, 4, 8, 16])
+def extend_gmm(mean, cov, n):
+
+    cov_base = np.array([4, 8, 16])
+
+    mean_base = np.array([0 ,0, 0])
+
+    cov_base = np.hstack([cov_base for i in range(n)])
+
+    mean_base = np.hstack([mean_base for i in range(n)])
+
+    cov_append = np.diag([cov_base])
+
+    mean_append = np.array([mean_base])
 
     cov_new = np.zeros((cov.shape[0], cov.shape[1] + cov_append.shape[0], cov.shape[1] + cov_append.shape[0]))
-
-    mean_append = np.array([0, 0, 0, 0, 0, 0])
 
     mean_new = np.zeros((mean.shape[0], mean.shape[1] + mean_append.shape[0]))
 
@@ -237,7 +246,7 @@ def main(json_file):
 
     # Edit a new Covariance Matrix for the He-He potential
     if proc_id == 0:
-        mean, cov = extend_gmm(mean, cov)
+        mean, cov = extend_gmm(mean, cov, n_knots['He-He'] - 2)
     comm.barrier()
 
 
@@ -270,7 +279,7 @@ def main(json_file):
 
     # Edit a new Covariance Matrix for the He-He potential
     if proc_id == 0:
-        mean, cov = extend_gmm(mean, cov)
+        mean, cov = extend_gmm(mean, cov, n_knots['H-He'] - 2)
     comm.barrier()
 
     mean = comm.bcast(mean , root = 0)
