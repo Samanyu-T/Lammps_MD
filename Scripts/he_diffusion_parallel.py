@@ -13,7 +13,7 @@ proc_id = comm.Get_rank()
 
 n_procs = comm.Get_size()
 
-comm_split = comm.split(proc_id, n_procs)
+comm_split = comm.Split(proc_id, n_procs)
 
 n_temp = 14
 
