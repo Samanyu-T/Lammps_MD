@@ -503,7 +503,7 @@ class Fit_EAM_Potential():
         r = np.linspace(0, self.pot_params['rc'], self.pot_params['Nr'])
 
         if self.bool_fit['He_F']:
-            self.pot_lammps['He_F'] = sample[0] * np.sqrt(rho) + \
+            self.pot_lammps['He_F'] = sample[0] * rho + \
             splineval(rho, coef_dict['He_F'], self.knot_pts['He_F'], func = True, grad = False, hess = False)
 
         if self.bool_fit['He_p']:

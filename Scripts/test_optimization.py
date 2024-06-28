@@ -6,6 +6,7 @@ import EAM_Fitting_Serial
 import Handle_PotFiles
 import time
 import json, glob, shutil
+import matplotlib.pyplot as plt
 
 def copy_files(w_he, he_he, h_he, work_dir, data_dir):
     
@@ -41,13 +42,14 @@ proc_id = 0
 
 n_procs = 1
 
-pot, potlines, pot_params = Handle_PotFiles.read_pot('git_folder/Potentials/test.0.eam.alloy')
+pot, potlines, pot_params = Handle_PotFiles.read_pot('git_folder/Potentials/test.eam.alloy')
+
 
 n_knots = {}
 n_knots['He_F'] = 2
 n_knots['He_p'] = 0
 n_knots['W-He'] = 4
-n_knots['He-He'] = 4
+n_knots['He-He'] = 0
 n_knots['H-He'] = 0
 
 

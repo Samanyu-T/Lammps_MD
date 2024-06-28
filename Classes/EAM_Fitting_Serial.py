@@ -12,6 +12,8 @@ from Handle_PotFiles import read_pot, write_pot
 from scipy.optimize import minimize
 import shutil
 import copy
+from scipy.integrate import simpson
+
 class ZBL():
 
     def __init__(self, Zi, Zj):
@@ -489,7 +491,7 @@ class Fit_EAM_Potential():
                 d2y[-1] = -zbl_class.eval_hess(x[-1])[0]
 
                 # self.knot_pts[key] = x
-                
+
                 coef_dict[key] = splinefit(x, y, dy, d2y)
 
         return coef_dict
@@ -663,6 +665,27 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
     # np.savetxt('test_sample.txt', data_sample, fmt='%.2f')
 
     loss = 0
+
+    if optim_class.bool_fit['He-He']:
+        pot = optim_class.pot_lammps['He-He'][1:]
+        r_pot = np.linspace(0, optim_class.pot_params['rc'], optim_class.pot_params['Nr'])[1:]
+
+        phi = pot/r_pot
+        phi = np.clip(phi, a_min=-20, a_max = 20)
+
+        kb = 8.6173303e-5
+
+        beta = 1 / (300 * kb)
+
+        f = (np.exp( - phi * beta) - 1)* r_pot ** 2
+
+        B2_pot = -2 * np.pi * simpson(f, r_pot)
+
+        B2_ref = 11.6
+
+        loss += abs(B2_pot - B2_ref)/B2_ref 
+
+        print(loss)
 
     ''' 
 
