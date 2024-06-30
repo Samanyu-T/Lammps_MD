@@ -256,9 +256,9 @@ class Fit_EAM_Potential():
         self.knot_pts['He_F'] = np.linspace(0, self.pot_params['rho_c'], n_knots['He_F'])
         self.knot_pts['He_p'] = np.linspace(0, self.pot_params['rc'], n_knots['He_p'])
         self.knot_pts['W-He'] = np.linspace(0, self.pot_params['rc'], n_knots['W-He'])
-        self.knot_pts['W-He'][1:3] = np.array([1.7581, 2.7236])
+        # self.knot_pts['W-He'][1:3] = np.array([1.7581, 2.7236])
         self.knot_pts['He-He'] = np.linspace(0, self.pot_params['rc'], n_knots['He-He'])
-        self.knot_pts['He-He'][1:3] = np.array([1.7581,2.7236])
+        # self.knot_pts['He-He'][1:3] = np.array([1.7581,2.7236])
         self.knot_pts['H-He'] = np.linspace(0, self.pot_params['rc'], n_knots['H-He'])
         
         self.map = {}
@@ -505,7 +505,7 @@ class Fit_EAM_Potential():
         r = np.linspace(0, self.pot_params['rc'], self.pot_params['Nr'])
 
         if self.bool_fit['He_F']:
-            self.pot_lammps['He_F'] = sample[0] * (rho/self.pot_params['rho_c']) + \
+            self.pot_lammps['He_F'] = sample[0] * (rho) + \
             splineval(rho, coef_dict['He_F'], self.knot_pts['He_F'], func = True, grad = False, hess = False)
 
 
@@ -685,7 +685,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         loss += abs(B2_pot - B2_ref)/B2_ref 
 
-        print(loss)
+        print(B2_pot)
 
     ''' 
 
