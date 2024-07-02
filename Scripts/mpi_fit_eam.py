@@ -114,6 +114,9 @@ def gaussian_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir,
 
 def extend_gmm(mean, cov, n):
 
+    if n < 1:
+        return mean, cov
+    
     cov_base = np.array([4, 8, 16])
 
     mean_base = np.array([0 ,0, 0])
