@@ -384,7 +384,7 @@ class LammpsParentClass:
         stress_voigt = np.array([pxx, pyy, pzz, pxy, pxz, pyz]) - self.stress_perfect
 
         strain_tensor = self.find_strain(stress_voigt)
-        
+                
         relaxation_volume = 2*np.trace(strain_tensor)*self.vol_perfect/self.alattice**3
 
         return relaxation_volume

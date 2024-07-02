@@ -185,7 +185,7 @@ def create_init_file(filepath):
     ],
     "size": 4,
     "surface": 0,
-    "potfile": "git_folder/Potentials/test.eam.alloy",
+    "potfile": "git_folder/Potentials/beck.eam.alloy",
     "conv": 100,
     "machine": "",
     "save_folder": "Monte_Carlo_HSurface"
@@ -234,7 +234,7 @@ class Fit_EAM_Potential():
         ],
         "size": 4,
         "surface": 0,
-        "potfile": os.path.join(self.pot_folder, 'optim.%d.eam.alloy' % self.proc_id), #"git_folder/Potentials/test.eam.alloy"
+        "potfile": os.path.join(self.pot_folder, 'optim.%d.eam.alloy' % self.proc_id), #"git_folder/Potentials/beck.eam.alloy"
         "conv": 1000,
         "machine": "",
         "save_folder": self.lammps_folder
@@ -667,26 +667,61 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
     loss = 0
 
     if optim_class.bool_fit['He-He']:
-        pot = optim_class.pot_lammps['He-He'][1:]
-        r_pot = np.linspace(0, optim_class.pot_params['rc'], optim_class.pot_params['Nr'])[1:]
+        
+        virial_coef= np.array([
+        # [2.47734287e+01, 5.94121916e-01],
+        # [2.92941502e+01, 2.40776488e+00],
+        # [3.07958539e+01, 3.83040639e+00],
+        # [3.68588657e+01, 5.40986938e+00],
+        # [4.17479885e+01, 6.53497823e+00],
+        # [4.46858331e+01, 7.17968070e+00],
+        # [4.75019178e+01, 8.38570392e+00],
+        # [5.37647405e+01, 9.02532656e+00],
+        # [6.15199008e+01, 9.93664731e+00],
+        # [6.60125239e+01, 1.03170537e+01],
+        # [7.25313543e+01, 1.06944122e+01],
+        # [8.24001392e+01, 1.14797533e+01],
+        # [9.07328778e+01, 1.17820755e+01],
+        [1.17039231e+02, 1.21403483e+01],
+        [1.41069613e+02, 1.20965893e+01],
+        [1.67450895e+02, 1.21365022e+01],
+        [1.93516850e+02, 1.21478229e+01],
+        [2.41917917e+02, 1.21190856e+01],
+        [2.67315755e+02, 1.20323657e+01],
+        [2.91396089e+02, 1.19211176e+01],
+        [2.68130785e+02, 1.18153354e+01],
+        [3.17493260e+02, 1.16470198e+01],
+        [3.69327808e+02, 1.14298383e+01],
+        [4.19601366e+02, 1.11111245e+01],
+        [4.67439296e+02, 1.10837355e+01],
+        [5.70002943e+02, 1.08218509e+01],
+        [6.68648934e+02, 1.04696549e+01],
+        [7.63553410e+02, 1.01675917e+01],
+        [8.72549304e+02, 9.91475627e+00],
+        [1.07102569e+03, 9.29054054e+00],
+        [1.26456401e+03, 8.73262548e+00],
+        [1.47116726e+03, 8.23063465e+00]
+        ])
 
-        phi = pot/r_pot
-        phi = np.clip(phi, a_min=-20, a_max = 20)
+        for T, B2_ref in virial_coef:
 
-        kb = 8.6173303e-5
+            pot = optim_class.pot_lammps['He-He'][1:]
 
-        beta = 1 / (300 * kb)
+            r_pot = np.linspace(0, optim_class.pot_params['rc'], optim_class.pot_params['Nr'])[1:]
 
-        f = (np.exp( - phi * beta) - 1)* r_pot ** 2
+            phi = pot/r_pot
+            phi = np.clip(phi, a_min=-10, a_max = 10)
 
-        B2_pot = -2 * np.pi * simpson(f, r_pot)
+            kb = 8.6173303e-5
 
-        B2_ref = 11.6
+            beta = 1 / (T * kb)
 
-        loss += abs(B2_pot - B2_ref)/B2_ref 
+            f = (np.exp( - phi * beta) - 1)* r_pot ** 2
 
-        print(B2_pot)
+            B2_pot = -2 * np.pi * simpson(f, r_pot)
 
+            loss += 0.1 * abs(B2_pot - B2_ref)/B2_ref 
+    
     ''' 
 
     Loss from Helium Interstitial
@@ -801,7 +836,7 @@ def random_sampling(n_knots, comm, proc_id, max_time=3, work_dir = '../Optim_Loc
     shutil.copytree(data_files_folder, lammps_folder)
 
     # Read Daniel's potential to initialize the W-H potential and the params for writing a .eam.alloy file
-    pot, potlines, pot_params = read_pot('git_folder/Potentials/test.eam.alloy')
+    pot, potlines, pot_params = read_pot('git_folder/Potentials/beck.eam.alloy')
 
     pot_params['rho_c'] = pot_params['Nrho']*pot_params['drho']
     
@@ -879,7 +914,7 @@ def gaussian_sampling(n_knots, comm, proc_id, mean, cov, max_time=3, work_dir = 
     shutil.copytree(data_files_folder, lammps_folder)
 
     # Read Daniel's potential to initialize the W-H potential and the params for writing a .eam.alloy file
-    pot, potlines, pot_params = read_pot('git_folder/Potentials/test.eam.alloy')
+    pot, potlines, pot_params = read_pot('git_folder/Potentials/beck.eam.alloy')
 
     pot_params['rho_c'] = pot_params['Nrho']*pot_params['drho']
     
@@ -963,7 +998,7 @@ def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_
 
 
     # Read Daniel's potential to initialize the W-H potential and the params for writing a .eam.alloy file
-    pot, potlines, pot_params = read_pot('git_folder/Potentials/test.eam.alloy')
+    pot, potlines, pot_params = read_pot('git_folder/Potentials/beck.eam.alloy')
 
     pot_params['rho_c'] = pot_params['Nrho']*pot_params['drho']
     

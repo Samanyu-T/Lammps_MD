@@ -211,7 +211,7 @@ def main(json_file):
 
     comm.barrier()
 
-    mean, cov = random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time)
+    # mean, cov = random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time)
 
     ## START GAUSSIAN SAMPLING LOOP ###
     g_iteration = 0
@@ -221,7 +221,7 @@ def main(json_file):
 
     N_gaussian = 3
  
-    mean, cov = gaussian_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time, g_iteration, N_gaussian, mean, cov)
+    # mean, cov = gaussian_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time, g_iteration, N_gaussian, mean, cov)
     
     ## END GAUSSIAN SAMPLING LOOP ###
 
@@ -234,7 +234,7 @@ def main(json_file):
     n_knots['He_F'] = 2
     n_knots['He_p'] = 0
     n_knots['W-He'] = 4
-    n_knots['He-He'] = 3
+    n_knots['He-He'] = 0
     n_knots['H-He'] = 0
 
     if proc_id == 0:

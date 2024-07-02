@@ -42,14 +42,14 @@ proc_id = 0
 
 n_procs = 1
 
-pot, potlines, pot_params = Handle_PotFiles.read_pot('git_folder/Potentials/test.eam.alloy')
+pot, potlines, pot_params = Handle_PotFiles.read_pot('git_folder/Potentials/beck.eam.alloy')
 
 
 n_knots = {}
 n_knots['He_F'] = 2
 n_knots['He_p'] = 0
 n_knots['W-He'] = 4
-n_knots['He-He'] = 3
+n_knots['He-He'] = 0
 n_knots['H-He'] = 0
 
 
