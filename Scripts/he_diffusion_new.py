@@ -38,9 +38,9 @@ init_dict['output_folder'] = output_folder
 
 lmp_class = LammpsParentClass(init_dict, comm, proc_id)
 
-lmp = lammps()# cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
+lmp = lammps( cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
 
-temp = 300 
+temp = 1000 
 
 init_file = 'Lammps_Files_7x7/Data_Files/V0H0He1.data'
 
@@ -54,8 +54,15 @@ lmp.command('velocity all create %f %d rot no dist gaussian' % (2*temp, rng))
 
 lmp.command('fix fix_temp all nve')
 
-lmp.command('dump mydump mobile custom 1000 %s/Iteration_0/cascade.*.atom id type x y z'  % output_folder)
+lmp.command('compute msd_mobile mobile msd com yes average yes')
+
 
 lmp.command('timestep 1e-3')
 
-lmp.command('run %d' % (5e6))
+for i in range(100):
+    
+    lmp.command('run %d' % (1e3))
+
+    msd = lmp.numpy.extract_compute('msd_mobile', 0, 1)
+
+    print(msd)

@@ -210,7 +210,7 @@ def main(json_file):
     n_knots['H-He'] = 0
 
     if proc_id == 0:
-        copy_files(True, False, False, work_dir, data_dir)
+        copy_files(True, True, False, work_dir, data_dir)
 
     comm.barrier()
 
