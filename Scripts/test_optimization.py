@@ -56,7 +56,7 @@ n_knots['H-He'] = 0
 with open('fitting.json', 'r') as file:
     param_dict = json.load(file)
 
-copy_files(True, True, True, param_dict['work_dir'], param_dict['data_dir'])
+copy_files(True, True, False, param_dict['work_dir'], param_dict['data_dir'])
 
 eam_fit = EAM_Fitting_Serial.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
 
