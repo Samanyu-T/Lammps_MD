@@ -203,7 +203,7 @@ def main(json_file):
     comm.Barrier()
 
     n_knots = {}
-    n_knots['He_F'] = 2
+    n_knots['He_F'] = 3
     n_knots['He_p'] = 3
     n_knots['W-He'] = 4
     n_knots['He-He'] = 0
@@ -214,7 +214,19 @@ def main(json_file):
 
     comm.barrier()
 
-    mean, cov = random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time)
+    # mean, cov = random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time)
+
+    mean = np.array([0.5, 0, 0, 0,
+                     2, 2, 0, 0, 0,
+                     -3.652e-01 , -2.126e-01 , -2.837e-02 , -9.380e-02 , 1.733e-01 , -3.249e-01
+                    ])
+    
+    cov_diag = np.array([0.25, 1e-1, 1e-1, 1e-1,
+                         1, 1, 2e-1, 2e-1, 2e-1,
+                         1e-1 , 1e-1 , 1e-1 , 1e-1 , 1e-1 , 1e-1
+    ])
+
+    cov = np.diag(cov_diag)
 
     ## START GAUSSIAN SAMPLING LOOP ###
     g_iteration = 0
