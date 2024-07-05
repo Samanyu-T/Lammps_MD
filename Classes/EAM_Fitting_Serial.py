@@ -14,6 +14,16 @@ import shutil
 import copy
 from scipy.integrate import simpson
 
+def gauss(x, A, sigma):
+    return A * np.exp(-0.5*(x/sigma)**2)
+
+def dgauss(x, A, sigma):
+    return - (A * x / sigma ** 2) * np.exp(-0.5*(x/sigma)**2)
+
+def d2gauss(x, A, sigma):
+    return (A / sigma ** 4) * (x**2 - sigma**2) * np.exp(-0.5*(x/sigma)**2)
+
+
 class ZBL():
 
     def __init__(self, Zi, Zj):
@@ -332,9 +342,9 @@ class Fit_EAM_Potential():
                 sample[self.map['He_F']][3*i + 2] = dymax*(np.random.rand() - 0.5)
                 sample[self.map['He_F']][3*i + 3] = d2ymax*(np.random.rand() - 0.5)
 
-        ymax = 2
-        dymax = 2
-        d2ymax = 8
+        ymax = 0.5
+        dymax = 1
+        d2ymax = 2
 
         x_bnds = np.linspace(0, self.pot_params['rc'], np.clip(self.n_knots['He_p'] - 1, a_min=2, a_max=np.inf).astype(int))
 
@@ -342,7 +352,7 @@ class Fit_EAM_Potential():
 
             # Randomly Generate Knot Values for Rho(r)
             sample[self.map['He_p']][0] = 5*np.random.rand()
-            sample[self.map['He_p']][1] = -5*np.random.rand() 
+            sample[self.map['He_p']][1] = 2*np.random.rand() 
             
             for i in range(self.n_knots['He_p'] - 2):
 
@@ -354,8 +364,8 @@ class Fit_EAM_Potential():
                 # sample[self.map['He_p']][4*i + 4] = -dymax*(np.random.rand())
                 # sample[self.map['He_p']][4*i + 5] = d2ymax*(np.random.rand() - 0.5)
 
-                sample[self.map['He_p']][3*i + 2] = ymax*(np.random.rand())
-                sample[self.map['He_p']][3*i + 3] = -dymax*(np.random.rand())
+                sample[self.map['He_p']][3*i + 2] = ymax*(np.random.rand() - 0.5)
+                sample[self.map['He_p']][3*i + 3] = dymax*(np.random.rand() - 0.5)
                 sample[self.map['He_p']][3*i + 4] = d2ymax*(np.random.rand() - 0.5)
 
         ymax = 4
@@ -432,17 +442,17 @@ class Fit_EAM_Potential():
 
             d2y = np.full(y.shape, None, dtype=object)
 
-            y[0] = sample[self.map['He_p']][0]
+            y[0] = 0
 
             dy[0] = 0
 
-            d2y[0] = sample[self.map['He_p']][1]
+            d2y[0] = 0
 
-            y[-1] = 0
+            y[-1] = - gauss(x[-1], sample[self.map['He_p']][0], sample[self.map['He_p']][1] )
 
-            dy[-1] = 0
+            dy[-1] = - dgauss(x[-1], sample[self.map['He_p']][0], sample[self.map['He_p']][1] )
 
-            d2y[-1] = 0
+            d2y[-1] = - d2gauss(x[-1], sample[self.map['He_p']][0], sample[self.map['He_p']][1] )
 
             for i in range(self.n_knots['He_p'] - 2):
                 
@@ -510,7 +520,8 @@ class Fit_EAM_Potential():
 
 
         if self.bool_fit['He_p']:
-            self.pot_lammps['He_p'] = splineval(r, coef_dict['He_p'], self.knot_pts['He_p'], func = True, grad = False, hess = False)
+            self.pot_lammps['He_p'] = gauss(r, sample[self.map['He_p']][0], sample[self.map['He_p']][1] ) + \
+                splineval(r, coef_dict['He_p'], self.knot_pts['He_p'], func = True, grad = False, hess = False) 
 
         charge = [[74, 2],[2, 2],[1, 2]]
 
@@ -663,18 +674,11 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
             return loss
         
     if optim_class.bool_fit['He_p']:
-
         he_p = optim_class.pot_lammps['He_p']
-
-        sort_idx = np.argsort(he_p)
-
-        if (he_p < 0).any():
+        if (he_p < 1e-3).any():
             loss = 1000
             return loss
-        
-        if not (sort_idx == np.arange(len(he_p))).all():
-            loss = 1000
-            return loss
+
         
     data_sample = sim_defect_set(optim_class)
  
