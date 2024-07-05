@@ -238,6 +238,8 @@ def main(json_file):
  
     mean, cov = gaussian_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time, g_iteration, N_gaussian, mean, cov)
     
+    exit()
+    
     ## END GAUSSIAN SAMPLING LOOP ###
 
     ### OPTIMIZE FOR HE-HE POTENTIAL BY USING THE FINAL CLUSTER OF THE W-HE GMM AS A STARTING POINT ###
