@@ -664,8 +664,6 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
     optim_class.sample_to_file(sample)
 
-    write_pot(optim_class.pot_lammps, optim_class.potlines, optim_class.lammps_param['potfile'])
-
     if optim_class.bool_fit['He_F']:
         he_f = optim_class.pot_lammps['He_F']
         if (he_f < 0).any():
@@ -685,7 +683,9 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
         # if not (sort_idx[::-1] == np.arange(len(he_p))).all():
         #     loss = 1000
         #     return loss
-        
+
+    write_pot(optim_class.pot_lammps, optim_class.potlines, optim_class.lammps_param['potfile'])
+
     data_sample = sim_defect_set(optim_class)
  
     ref_mat = lst2matrix(data_ref)
