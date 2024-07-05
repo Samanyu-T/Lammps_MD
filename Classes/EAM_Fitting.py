@@ -349,8 +349,8 @@ class Fit_EAM_Potential():
         if self.bool_fit['He_p']:
 
             # Randomly Generate Knot Values for Rho(r)
-            sample[self.map['He_p']][0] = 5*np.random.rand()
-            sample[self.map['He_p']][1] = -5*np.random.rand() 
+            sample[self.map['He_p']][0] = 4*np.random.rand()
+            sample[self.map['He_p']][1] = np.random.rand() 
             
             for i in range(self.n_knots['He_p'] - 2):
 
@@ -676,15 +676,15 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         he_p = optim_class.pot_lammps['He_p']
 
-        sort_idx = np.argsort(he_p)
+        # sort_idx = np.argsort(he_p)
 
-        if (he_p < 0).any():
+        if (he_p < -1e-3).any():
             loss = 1000
             return loss
         
-        if not (sort_idx[::-1] == np.arange(len(he_p))).all():
-            loss = 1000
-            return loss
+        # if not (sort_idx[::-1] == np.arange(len(he_p))).all():
+        #     loss = 1000
+        #     return loss
         
     data_sample = sim_defect_set(optim_class)
  

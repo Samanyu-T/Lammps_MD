@@ -342,7 +342,7 @@ class Fit_EAM_Potential():
                 sample[self.map['He_F']][3*i + 2] = dymax*(np.random.rand() - 0.5)
                 sample[self.map['He_F']][3*i + 3] = d2ymax*(np.random.rand() - 0.5)
 
-        ymax = 0.5
+        ymax = 1
         dymax = 1
         d2ymax = 2
 
@@ -352,7 +352,7 @@ class Fit_EAM_Potential():
 
             # Randomly Generate Knot Values for Rho(r)
             sample[self.map['He_p']][0] = 5*np.random.rand()
-            sample[self.map['He_p']][1] = 2*np.random.rand() 
+            sample[self.map['He_p']][1] = np.random.rand() 
             
             for i in range(self.n_knots['He_p'] - 2):
 
@@ -675,7 +675,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
         
     if optim_class.bool_fit['He_p']:
         he_p = optim_class.pot_lammps['He_p']
-        if (he_p < 1e-3).any():
+        if (he_p < -1e-3).any():
             loss = 1000
             return loss
 

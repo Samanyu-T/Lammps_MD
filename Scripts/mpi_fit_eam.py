@@ -204,7 +204,7 @@ def main(json_file):
 
     n_knots = {}
     n_knots['He_F'] = 2
-    n_knots['He_p'] = 4
+    n_knots['He_p'] = 3
     n_knots['W-He'] = 4
     n_knots['He-He'] = 0
     n_knots['H-He'] = 0
@@ -235,7 +235,7 @@ def main(json_file):
     N_gaussian = 4
 
     n_knots['He_F'] = 2
-    n_knots['He_p'] = 0
+    n_knots['He_p'] = 3
     n_knots['W-He'] = 4
     n_knots['He-He'] = 0
     n_knots['H-He'] = 0
@@ -265,7 +265,7 @@ def main(json_file):
     ### OPTIMIZE FOR H-HE POTENTIAL BY USING THE FINAL CLUSTER OF THE W-HE GMM AS A STARTING POINT ###
             
     n_knots['He_F'] = 2
-    n_knots['He_p'] = 0
+    n_knots['He_p'] = 3
     n_knots['W-He'] = 4
     n_knots['He-He'] = 3
     n_knots['H-He'] = 4
