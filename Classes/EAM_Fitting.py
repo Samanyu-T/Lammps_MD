@@ -270,7 +270,7 @@ class Fit_EAM_Potential():
         self.knot_pts = {}
         self.comm = comm
 
-        self.knot_pts['He_F'] = np.linspace(0, self.pot_params['rho_c'], n_knots['He_F'])
+        self.knot_pts['He_F'] = np.linspace(0, self.pot_params['rho_c']/2, n_knots['He_F'])
         self.knot_pts['He_p'] = np.linspace(0, self.pot_params['rc'], n_knots['He_p'])
         self.knot_pts['W-He'] = np.linspace(0, self.pot_params['rc'], n_knots['W-He'])
         # self.knot_pts['W-He'][1:3] = np.array([1.7581,2.7236])
