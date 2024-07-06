@@ -456,9 +456,9 @@ class Fit_EAM_Potential():
 
             y[0] = 0
 
-            dy[0] = 0
+            # dy[0] = 0
 
-            d2y[0] = 0
+            # d2y[0] = 0
 
             y[-1] = - exp(x[-1], sample[self.map['He_p']][0], sample[self.map['He_p']][1] )
 
