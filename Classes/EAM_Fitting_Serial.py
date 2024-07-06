@@ -13,6 +13,7 @@ from scipy.optimize import minimize
 import shutil
 import copy
 from scipy.integrate import simpson
+from scipy.signal import find_peaks
 
 def gauss(x, A, sigma):
     return A * np.exp(-0.5*(x/sigma)**2)
@@ -672,47 +673,68 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
     optim_class.sample_to_file(sample)
 
-    write_pot(optim_class.pot_lammps, optim_class.potlines, optim_class.lammps_param['potfile'])
+    loss = 0
 
     if optim_class.bool_fit['He_F']:
         he_f = optim_class.pot_lammps['He_F']
         if (he_f < 0).any():
-            loss = 1000
+            loss += 1000
             return loss
         
     if optim_class.bool_fit['He_p']:
+
         he_p = optim_class.pot_lammps['He_p']
+
+        peaks, _ = find_peaks(he_p)
+
         if (he_p < -1e-3).any():
-            loss = 1000
+            loss += 1000
+            return loss
+        
+        elif len(peaks) > 0:
+            loss += 1000
             return loss
 
+
+    if optim_class.bool_fit['W-He']:
+
+        whe = optim_class.pot_lammps['W-He']
+
+        dr = optim_class.pot_params['rc']/optim_class.pot_params['Nrho']
+
+        min_idx = whe.argmin()
         
+        if min_idx == 0:
+            loss += 100
+
+        else:
+            min_whe = whe.min() / (min_idx * dr)
+            loss += abs(min_whe - -5e-3)/5e-3
+
+    write_pot(optim_class.pot_lammps, optim_class.potlines, optim_class.lammps_param['potfile'])
+
     data_sample = sim_defect_set(optim_class)
  
     ref_mat = lst2matrix(data_ref)
 
     sample_mat = lst2matrix(data_sample)
 
-    # np.savetxt('test_sample.txt', data_sample, fmt='%.2f')
-
-    loss = 0
-
     if optim_class.bool_fit['He-He']:
         
         virial_coef= np.array([
-        # [2.47734287e+01, 5.94121916e-01],
-        # [2.92941502e+01, 2.40776488e+00],
-        # [3.07958539e+01, 3.83040639e+00],
-        # [3.68588657e+01, 5.40986938e+00],
-        # [4.17479885e+01, 6.53497823e+00],
-        # [4.46858331e+01, 7.17968070e+00],
-        # [4.75019178e+01, 8.38570392e+00],
-        # [5.37647405e+01, 9.02532656e+00],
-        # [6.15199008e+01, 9.93664731e+00],
-        # [6.60125239e+01, 1.03170537e+01],
-        # [7.25313543e+01, 1.06944122e+01],
-        # [8.24001392e+01, 1.14797533e+01],
-        # [9.07328778e+01, 1.17820755e+01],
+        [2.47734287e+01, 5.94121916e-01],
+        [2.92941502e+01, 2.40776488e+00],
+        [3.07958539e+01, 3.83040639e+00],
+        [3.68588657e+01, 5.40986938e+00],
+        [4.17479885e+01, 6.53497823e+00],
+        [4.46858331e+01, 7.17968070e+00],
+        [4.75019178e+01, 8.38570392e+00],
+        [5.37647405e+01, 9.02532656e+00],
+        [6.15199008e+01, 9.93664731e+00],
+        [6.60125239e+01, 1.03170537e+01],
+        [7.25313543e+01, 1.06944122e+01],
+        [8.24001392e+01, 1.14797533e+01],
+        [9.07328778e+01, 1.17820755e+01],
         [1.17039231e+02, 1.21403483e+01],
         [1.41069613e+02, 1.20965893e+01],
         [1.67450895e+02, 1.21365022e+01],
@@ -751,8 +773,8 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
             B2_pot = -2 * np.pi * simpson(f, r_pot)
 
-            loss += 0.1 * abs(B2_pot - B2_ref)/B2_ref 
-    
+            loss += 0.1 * abs(B2_pot - B2_ref)/B2_ref
+
     ''' 
 
     Loss from Helium Interstitial
@@ -775,11 +797,14 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
     loss += np.abs(1 - sample_mat[0, 0, 1, 3, 1]/ref_mat[0, 0, 1, 3, 1])
     
     print(sample_mat[0, 0, 1, :, :], ref_mat[0, 0, 1, :, :])
-
     # print(sample_mat[0, 0, 1, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 1, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
     ''' Constraint '''
 
     constraint = not (np.arange(sample_mat.shape[3]) == np.round(sample_mat[0, 0, 1, :, 0], 2).argsort()).all()
+    
+    loss += 100*constraint  
+
+    constraint = not len(np.unique(np.round(sample_mat[0, 0, 1, :, 0], 3))) == sample_mat.shape[3]
     
     loss += 100*constraint  
 
@@ -806,7 +831,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         loss += abs_loss(binding_sample, binding_ref)
 
-        print(v, 0 ,np.abs(subtract_lst(binding_sample, binding_ref) ) )
+        # print(v, 0 ,np.abs(subtract_lst(binding_sample, binding_ref) ) )
 
     '''
     Loss from H-He Binding
@@ -816,20 +841,19 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
     Di-Vacancy
 
     '''
-
     for v in range(sample_mat.shape[0]):
 
         for h in range(1, min(sample_mat.shape[1], ref_mat.shape[1])):
-                        
+
             binding_sample = subtract_lst(np.min(sample_mat[v, h, :, :, 0], axis = 1), np.min(sample_mat[v, h-1, :, :, 0], axis = 1))
             
             binding_sample = sample_mat[0, 1, 0, 0, 0] - binding_sample
 
             binding_ref = subtract_lst(np.min(ref_mat[v, h, :, :, 0], axis = 1), np.min(ref_mat[v, h-1, :, :, 0], axis = 1))
-
-            binding_ref = ref_mat[0, 1, 0, 0, 0] - binding_ref
             
-            print(v, h ,np.abs(subtract_lst(binding_sample, binding_ref) ) )
+            binding_ref = ref_mat[0, 1, 0, 0, 0] - binding_ref
+
+            # print(v, h ,np.abs(subtract_lst(binding_sample, binding_ref) ) )
 
             loss += abs_loss(binding_sample, binding_ref)
 

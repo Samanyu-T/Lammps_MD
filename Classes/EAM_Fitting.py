@@ -12,6 +12,7 @@ from Handle_PotFiles import read_pot, write_pot
 from scipy.optimize import minimize
 import shutil
 from scipy.integrate import simpson
+from scipy.signal import find_peaks
 
 def gauss(x, A, sigma):
     return A * np.exp(-0.5*(x/sigma)**2)
@@ -673,25 +674,43 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
     optim_class.sample_to_file(sample)
 
+    loss = 0
+
     if optim_class.bool_fit['He_F']:
         he_f = optim_class.pot_lammps['He_F']
         if (he_f < 0).any():
-            loss = 1000
+            loss += 1000
             return loss
         
     if optim_class.bool_fit['He_p']:
 
         he_p = optim_class.pot_lammps['He_p']
 
-        # sort_idx = np.argsort(he_p)
+        peaks, _ = find_peaks(he_p)
 
         if (he_p < -1e-3).any():
-            loss = 1000
+            loss += 1000
             return loss
         
-        # if not (sort_idx[::-1] == np.arange(len(he_p))).all():
-        #     loss = 1000
-        #     return loss
+        elif len(peaks) > 0:
+            loss += 1000
+            return loss
+
+
+    if optim_class.bool_fit['W-He']:
+
+        whe = optim_class.pot_lammps['W-He']
+
+        dr = optim_class.pot_params['rc']/optim_class.pot_params['Nrho']
+
+        min_idx = whe.argmin()
+        
+        if min_idx == 0:
+            loss += 100
+
+        else:
+            min_whe = whe.min() / (min_idx * dr)
+            loss += abs(min_whe - -5e-3)/5e-3
 
     write_pot(optim_class.pot_lammps, optim_class.potlines, optim_class.lammps_param['potfile'])
 
@@ -701,28 +720,24 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
     sample_mat = lst2matrix(data_sample)
 
-    # np.savetxt('test_sample.txt', data_sample, fmt='%.2f')
-
-    loss = 0
-
     if optim_class.bool_fit['He-He']:
         
         virial_coef= np.array([
-        # [2.47734287e+01, 5.94121916e-01],
-        # [2.92941502e+01, 2.40776488e+00],
-        # [3.07958539e+01, 3.83040639e+00],
-        # [3.68588657e+01, 5.40986938e+00],
-        # [4.17479885e+01, 6.53497823e+00],
-        # [4.46858331e+01, 7.17968070e+00],
-        # [4.75019178e+01, 8.38570392e+00],
-        # [5.37647405e+01, 9.02532656e+00],
-        # [6.15199008e+01, 9.93664731e+00],
-        # [6.60125239e+01, 1.03170537e+01],
-        # [7.25313543e+01, 1.06944122e+01],
-        # [8.24001392e+01, 1.14797533e+01],
-        # [9.07328778e+01, 1.17820755e+01],
-        # [1.17039231e+02, 1.21403483e+01],
-        # [1.41069613e+02, 1.20965893e+01],
+        [2.47734287e+01, 5.94121916e-01],
+        [2.92941502e+01, 2.40776488e+00],
+        [3.07958539e+01, 3.83040639e+00],
+        [3.68588657e+01, 5.40986938e+00],
+        [4.17479885e+01, 6.53497823e+00],
+        [4.46858331e+01, 7.17968070e+00],
+        [4.75019178e+01, 8.38570392e+00],
+        [5.37647405e+01, 9.02532656e+00],
+        [6.15199008e+01, 9.93664731e+00],
+        [6.60125239e+01, 1.03170537e+01],
+        [7.25313543e+01, 1.06944122e+01],
+        [8.24001392e+01, 1.14797533e+01],
+        [9.07328778e+01, 1.17820755e+01],
+        [1.17039231e+02, 1.21403483e+01],
+        [1.41069613e+02, 1.20965893e+01],
         [1.67450895e+02, 1.21365022e+01],
         [1.93516850e+02, 1.21478229e+01],
         [2.41917917e+02, 1.21190856e+01],
@@ -788,6 +803,10 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
     constraint = not (np.arange(sample_mat.shape[3]) == np.round(sample_mat[0, 0, 1, :, 0], 2).argsort()).all()
     
+    loss += 100*constraint  
+
+    constraint = not len(np.unique(np.round(sample_mat[0, 0, 1, :, 0], 3))) == sample_mat.shape[3]
+
     loss += 100*constraint  
 
     if sample_mat.shape[2]  > 2:

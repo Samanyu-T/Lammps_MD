@@ -216,9 +216,9 @@ def main(json_file):
 
     # mean, cov = random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time)
 
-    mean = np.array([0.5, 0, 0, 0,
-                     2, 2, 0, 0, 0,
-                     -3.652e-01 , -2.126e-01 , -2.837e-02 , -9.380e-02 , 1.733e-01 , -3.249e-01
+    mean = np.array([0.5, -0.1, 0, 0,
+                     2, 2, -0.1, 0, 0,
+                     0, 0, 0, 0, 0, 0
                     ])
     
     cov_diag = np.array([0.25, 1e-1, 1e-1, 1e-1,
