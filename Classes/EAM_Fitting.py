@@ -714,7 +714,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         else:
             min_whe = whe.min() / (min_idx * dr)
-            loss += abs(min_whe - -5e-3)/5e-3
+            loss += abs(min_whe - -5e-3)
 
     write_pot(optim_class.pot_lammps, optim_class.potlines, optim_class.lammps_param['potfile'])
 
