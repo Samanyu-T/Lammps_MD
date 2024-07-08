@@ -203,8 +203,8 @@ def main(json_file):
     comm.Barrier()
 
     n_knots = {}
-    n_knots['He_F'] = 3
-    n_knots['He_p'] = 3
+    n_knots['He_F'] = 2
+    n_knots['He_p'] = 2
     n_knots['W-He'] = 4
     n_knots['He-He'] = 0
     n_knots['H-He'] = 0
@@ -214,16 +214,16 @@ def main(json_file):
 
     comm.barrier()
 
-    # mean, cov = random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time)
+    mean, cov = random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time)
 
-    mean = np.array([0.5, -0.5, 0, 0,
-                     2, 2, 0, 0, 0,
-                     0, 0, 0, 0, 0, 0
+    mean = np.array([0.5,
+                     0, 0, 
+                    -1.4, 3, 0, -1e-1, 1e-1, 0
                     ])
     
-    cov_diag = np.array([0.25, 2e-1, 1e-2, 1e-2,
-                         1, 1, 1e-1, 1e-1, 1e-1,
-                         2 , 4 , 8 , 1 , 2 , 4
+    cov_diag = np.array([0.25,
+                        2, 2, 
+                        0.5 , 2 , 8 , 2e-1 , 1, 4
     ])
 
     cov = np.diag(cov_diag)

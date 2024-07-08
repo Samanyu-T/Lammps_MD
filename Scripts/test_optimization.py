@@ -64,6 +64,8 @@ sample2 = eam_fit.gen_rand()
 
 sample = np.loadtxt('sample.txt')
 
+sample[0] /= eam_fit.pot_params['rho_c']
+
 print(sample2.shape, sample.shape)
 data_ref = np.loadtxt('dft_update.txt')
 

@@ -25,14 +25,19 @@ def d2gauss(x, A, sigma):
     return (A / sigma ** 4) * (x**2 - sigma**2) * np.exp(-0.5*(x/sigma)**2)
 
 def exp(x, A, b):
+    A = abs(A)
+    b = abs(b)
     return A * np.exp(-b * x)
 
 def dexp(x, A, b):
+    A = abs(A)
+    b = abs(b)
     return -b * A * np.exp(-b * x)
 
 def d2exp(x, A, b):
+    A = abs(A)
+    b = abs(b)
     return b**2 * A * np.exp(-b * x)
-
 class ZBL():
 
     def __init__(self, Zi, Zj):
@@ -279,7 +284,7 @@ class Fit_EAM_Potential():
 
         self.knot_pts['He_p'] = np.linspace(0, self.pot_params['rc'], n_knots['He_p'])
         self.knot_pts['W-He'] = np.linspace(0, self.pot_params['rc'], n_knots['W-He'])
-        # self.knot_pts['W-He'][1:3] = np.array([1.7581, 2.7236])
+        self.knot_pts['W-He'][1:3] = np.array([1.7581, 2.7236])
         self.knot_pts['He-He'] = np.linspace(0, self.pot_params['rc'], n_knots['He-He'])
         # self.knot_pts['He-He'][1:3] = np.array([1.7581,2.7236])
         self.knot_pts['H-He'] = np.linspace(0, self.pot_params['rc'], n_knots['H-He'])
