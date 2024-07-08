@@ -214,7 +214,7 @@ def main(json_file):
 
     comm.barrier()
 
-    mean, cov = random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time)
+    # mean, cov = random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time)
 
     mean = np.array([0.5,
                      0, 0, 
