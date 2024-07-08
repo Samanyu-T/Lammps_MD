@@ -15,6 +15,24 @@ import copy
 from scipy.integrate import simpson
 from scipy.signal import find_peaks
 
+def eval_virial(phi, T_arr, r):
+
+    virial_coef = np.zeros(T_arr.shape)
+    
+    kb = 8.6173303e-5
+    
+    conv = 6.02214e-1
+
+    for i, T in enumerate(T_arr):
+
+        beta = 1 / (kb * T)
+
+        y = ( 1 - np.exp(-beta * phi) ) * r**2
+
+        virial_coef[i] = 2* np.pi * conv * simpson(y,x=r)
+
+    return virial_coef
+
 def gauss(x, A, sigma):
     return A * np.exp(-0.5*(x/sigma)**2)
 
@@ -284,7 +302,8 @@ class Fit_EAM_Potential():
 
         self.knot_pts['He_p'] = np.linspace(0, self.pot_params['rc'], n_knots['He_p'])
         self.knot_pts['W-He'] = np.linspace(0, self.pot_params['rc'], n_knots['W-He'])
-        self.knot_pts['W-He'][1:3] = np.array([1.7581, 2.7236])
+        if n_knots['W-He'] == 4:
+            self.knot_pts['W-He'][1:3] = np.array([1.7581, 2.7236])
         self.knot_pts['He-He'] = np.linspace(0, self.pot_params['rc'], n_knots['He-He'])
         # self.knot_pts['He-He'][1:3] = np.array([1.7581,2.7236])
         self.knot_pts['H-He'] = np.linspace(0, self.pot_params['rc'], n_knots['H-He'])
@@ -718,16 +737,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         else:
             min_whe = whe.min() / (min_idx * dr)
-
             loss += abs(min_whe - -5e-3)
-
-    write_pot(optim_class.pot_lammps, optim_class.potlines, optim_class.lammps_param['potfile'])
-
-    data_sample = sim_defect_set(optim_class)
- 
-    ref_mat = lst2matrix(data_ref)
-
-    sample_mat = lst2matrix(data_sample)
 
     if optim_class.bool_fit['He-He']:
         
@@ -766,24 +776,71 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
         [1.47116726e+03, 8.23063465e+00]
         ])
 
-        for T, B2_ref in virial_coef:
 
-            pot = optim_class.pot_lammps['He-He'][1:]
+        pot = optim_class.pot_lammps['He-He'][1:]
 
-            r_pot = np.linspace(0, optim_class.pot_params['rc'], optim_class.pot_params['Nr'])[1:]
+        r_pot = np.linspace(0, optim_class.pot_params['rc'], optim_class.pot_params['Nr'])[1:]
 
-            phi = pot/r_pot
-            phi = np.clip(phi, a_min=-10, a_max = 10)
+        phi = pot/r_pot
 
-            kb = 8.6173303e-5
+        B2_pot = eval_virial(phi, virial_coef[:, 0], r_pot)
 
-            beta = 1 / (T * kb)
+        loss += 0.1 * np.sum( (B2_pot - virial_coef[:, 1]) ** 2, axis = 0)
 
-            f = (np.exp( - phi * beta) - 1)* r_pot ** 2
+        he_he_ref = np.array([
+                        [ 1.58931000e+00,  3.28492631e-01],
+                        [ 2.38396500e+00,  5.17039818e-03],
+                        [ 2.64885000e+00, -3.53310542e-05],
+                        [ 2.96671200e+00, -9.48768066e-04],
+                        [ 3.49648200e+00, -5.38583144e-04],
+                        [ 3.97327500e+00, -2.62828574e-04],
+                        [ 4.76793000e+00, -8.27263709e-05]
+                        ])
+        
+        coef_dict = optim_class.fit_sample(sample)
 
-            B2_pot = -2 * np.pi * simpson(f, r_pot)
+        zbl_class = ZBL(2, 2)
 
-            loss += 0.1 * abs(B2_pot - B2_ref)/B2_ref
+        poly = splineval(he_he_ref[:, 0], coef_dict['He-He'], optim_class.knot_pts['He-He'])
+
+        zbl = zbl_class.eval_zbl(he_he_ref[:, 0])
+
+        phi_pot = poly + zbl
+        
+        loss += 0.1 * np.sum((phi_pot - he_he_ref[:, 1])**2, axis=0)
+
+    if optim_class.bool_fit['H-He']:
+        
+        h_he_ref = np.array([
+                    [ 2.64885000e+00,  5.92872325e-03],
+                    [ 2.91373500e+00,  1.38739018e-03],
+                    [ 3.17862000e+00, -3.86056397e-04],
+                    [ 3.44350500e+00, -5.48062207e-04],
+                    [ 3.70839000e+00, -5.85978460e-04],
+                    [ 3.97327500e+00, -4.22249185e-04],
+                    [ 4.23816000e+00, -3.75715601e-04],
+                    [ 4.76793000e+00, -1.68037941e-04],
+                   ])
+        
+        coef_dict = optim_class.fit_sample(sample)
+
+        zbl_class = ZBL(2, 1)
+
+        poly = splineval(h_he_ref[:, 0], coef_dict['H-He'], optim_class.knot_pts['H-He'])
+
+        phi_pot = poly + zbl_class.eval_zbl(h_he_ref[:, 0])
+        
+        loss = 0.1 * np.sum((phi_pot - h_he_ref[:, 1])**2, axis=0)
+
+
+    write_pot(optim_class.pot_lammps, optim_class.potlines, optim_class.lammps_param['potfile'])
+
+    data_sample = sim_defect_set(optim_class)
+ 
+    ref_mat = lst2matrix(data_ref)
+
+    sample_mat = lst2matrix(data_sample)
+
 
     ''' 
 
@@ -815,7 +872,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
     loss += 100*constraint  
 
     constraint = not len(np.unique(np.round(sample_mat[0, 0, 1, :, 0], 3))) == sample_mat.shape[3]
-    
+
     loss += 100*constraint  
 
     if sample_mat.shape[2]  > 2:
@@ -841,7 +898,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         loss += abs_loss(binding_sample, binding_ref)
 
-        # print(v, 0 ,np.abs(subtract_lst(binding_sample, binding_ref) ) )
+        print(v, 0 ,np.abs(subtract_lst(binding_sample, binding_ref) ) )
 
     '''
     Loss from H-He Binding
@@ -863,7 +920,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
             
             binding_ref = ref_mat[0, 1, 0, 0, 0] - binding_ref
 
-            # print(v, h ,np.abs(subtract_lst(binding_sample, binding_ref) ) )
+            print( v, h ,np.abs(subtract_lst(binding_sample, binding_ref) ) )
 
             loss += abs_loss(binding_sample, binding_ref)
 
@@ -886,6 +943,84 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
         print(sample,loss, t2 - t1)
 
     return loss
+
+
+def random_sampling(n_knots, comm, proc_id, max_time=3, work_dir = '../Optim_Local', save_folder = '../Fitting_Output'):
+
+    data_files_folder = os.path.join(work_dir, 'Data_Files')
+
+    lammps_folder = os.path.join(work_dir, 'Data_Files_%d' % proc_id)
+
+    if os.path.exists(lammps_folder):
+
+        shutil.rmtree(lammps_folder)
+    
+    shutil.copytree(data_files_folder, lammps_folder)
+
+    # Read Daniel's potential to initialize the W-H potential and the params for writing a .eam.alloy file
+    pot, potlines, pot_params = read_pot('git_folder/Potentials/beck.eam.alloy')
+
+    pot_params['rho_c'] = pot_params['Nrho']*pot_params['drho']
+    
+    # Call the main fitting class
+    fitting_class = Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, work_dir)
+
+    data_ref = np.loadtxt('dft_update.txt')
+
+    # Init Optimization Parameter
+    t1 = time.perf_counter()
+
+    sample = fitting_class.gen_rand()
+
+    _ = loss_func(sample, data_ref, fitting_class)
+
+    t2 = time.perf_counter()
+
+    # if proc_id == 0:
+    print('Average Time: %.2f s' % (t2 - t1))
+    sys.stdout.flush()    
+    
+    lst_loss = []
+
+    lst_samples = []
+
+    t_init = time.perf_counter()
+
+    idx = 0
+
+    while True:
+
+        sample = fitting_class.gen_rand()
+
+        loss = loss_func(sample, data_ref, fitting_class)
+
+        idx += 1
+
+        lst_loss.append(loss)
+        lst_samples.append(sample)
+        
+        t_end = time.perf_counter()
+        
+        if t_end - t_init > max_time:
+            break
+
+        if idx % 1000 == 0 and fitting_class.proc_id == 0:
+            print(t_end - t_init)
+            sys.stdout.flush()  
+
+    lst_loss = np.array(lst_loss)
+    lst_samples = np.array(lst_samples)
+
+    idx = np.argsort(lst_loss)
+
+    lst_loss = lst_loss[idx]
+    lst_samples = lst_samples[idx]
+
+    n = int( len(lst_loss) * 0.1 )
+
+    np.savetxt(os.path.join(save_folder, 'Filtered_Samples_%d.txt' % proc_id), lst_samples[:n])
+    np.savetxt(os.path.join(save_folder, 'Filtered_Loss_%d.txt' % proc_id), lst_loss[:n])
+
 
 
 def random_sampling(n_knots, comm, proc_id, max_time=3, work_dir = '../Optim_Local', save_folder = '../Fitting_Output'):
@@ -1083,7 +1218,7 @@ def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_
         print('Average Time: %.2f s' % (t2 - t1))
         sys.stdout.flush()    
     
-    res = minimize(loss_func, x_init, args=(data_ref, fitting_class, True), method='Nelder-Mead', options={"maxiter":maxiter}, tol=1e-4)
+    res = minimize(loss_func, x_init, args=(data_ref, fitting_class, True), options={"maxiter":maxiter}, tol=1e-4)
 
     return res.x
 

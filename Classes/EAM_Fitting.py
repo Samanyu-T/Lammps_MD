@@ -14,6 +14,25 @@ import shutil
 from scipy.integrate import simpson
 from scipy.signal import find_peaks
 
+def eval_virial(phi, T_arr, r):
+
+    virial_coef = np.zeros(T_arr.shape)
+    
+    kb = 8.6173303e-5
+    
+    conv = 6.02214e-1
+
+    for i, T in enumerate(T_arr):
+
+        beta = 1 / (kb * T)
+
+        y = ( 1 - np.exp(-beta * phi) ) * r**2
+
+        virial_coef[i] = 2* np.pi * conv * simpson(y,x=r)
+
+    return virial_coef
+
+
 def gauss(x, A, sigma):
     return A * np.exp(-0.5*(x/sigma)**2)
 
@@ -722,14 +741,6 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
             min_whe = whe.min() / (min_idx * dr)
             loss += abs(min_whe - -5e-3)
 
-    write_pot(optim_class.pot_lammps, optim_class.potlines, optim_class.lammps_param['potfile'])
-
-    data_sample = sim_defect_set(optim_class)
- 
-    ref_mat = lst2matrix(data_ref)
-
-    sample_mat = lst2matrix(data_sample)
-
     if optim_class.bool_fit['He-He']:
         
         virial_coef= np.array([
@@ -767,24 +778,71 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
         [1.47116726e+03, 8.23063465e+00]
         ])
 
-        for T, B2_ref in virial_coef:
 
-            pot = optim_class.pot_lammps['He-He'][1:]
+        pot = optim_class.pot_lammps['He-He'][1:]
 
-            r_pot = np.linspace(0, optim_class.pot_params['rc'], optim_class.pot_params['Nr'])[1:]
+        r_pot = np.linspace(0, optim_class.pot_params['rc'], optim_class.pot_params['Nr'])[1:]
 
-            phi = pot/r_pot
-            phi = np.clip(phi, a_min=-10, a_max = 10)
+        phi = pot/r_pot
 
-            kb = 8.6173303e-5
+        B2_pot = eval_virial(phi, virial_coef[:, 0], r_pot)
 
-            beta = 1 / (T * kb)
+        loss += 0.1 * np.sum( (B2_pot - virial_coef[:, 1]) ** 2, axis = 0)
 
-            f = (np.exp( - phi * beta) - 1)* r_pot ** 2
+        he_he_ref = np.array([
+                        [ 1.58931000e+00,  3.28492631e-01],
+                        [ 2.38396500e+00,  5.17039818e-03],
+                        [ 2.64885000e+00, -3.53310542e-05],
+                        [ 2.96671200e+00, -9.48768066e-04],
+                        [ 3.49648200e+00, -5.38583144e-04],
+                        [ 3.97327500e+00, -2.62828574e-04],
+                        [ 4.76793000e+00, -8.27263709e-05]
+                        ])
+        
+        coef_dict = optim_class.fit_sample(sample)
 
-            B2_pot = -2 * np.pi * simpson(f, r_pot)
+        zbl_class = ZBL(2, 2)
 
-            loss += 0.1 * abs(B2_pot - B2_ref)/B2_ref
+        poly = splineval(he_he_ref[:, 0], coef_dict['He-He'], optim_class.knot_pts['He-He'])
+
+        zbl = zbl_class.eval_zbl(he_he_ref[:, 0])
+
+        phi_pot = poly + zbl
+        
+        loss += 0.1 * np.sum((phi_pot - he_he_ref[:, 1])**2, axis=0)
+
+    if optim_class.bool_fit['H-He']:
+        
+        h_he_ref = np.array([
+                    [ 2.64885000e+00,  5.92872325e-03],
+                    [ 2.91373500e+00,  1.38739018e-03],
+                    [ 3.17862000e+00, -3.86056397e-04],
+                    [ 3.44350500e+00, -5.48062207e-04],
+                    [ 3.70839000e+00, -5.85978460e-04],
+                    [ 3.97327500e+00, -4.22249185e-04],
+                    [ 4.23816000e+00, -3.75715601e-04],
+                    [ 4.76793000e+00, -1.68037941e-04],
+                   ])
+        
+        coef_dict = optim_class.fit_sample(sample)
+
+        zbl_class = ZBL(2, 1)
+
+        poly = splineval(h_he_ref[:, 0], coef_dict['H-He'], optim_class.knot_pts['H-He'])
+
+        phi_pot = poly + zbl_class.eval_zbl(h_he_ref[:, 0])
+        
+        loss = 0.1 * np.sum((phi_pot - h_he_ref[:, 1])**2, axis=0)
+
+
+    write_pot(optim_class.pot_lammps, optim_class.potlines, optim_class.lammps_param['potfile'])
+
+    data_sample = sim_defect_set(optim_class)
+ 
+    ref_mat = lst2matrix(data_ref)
+
+    sample_mat = lst2matrix(data_sample)
+
 
     ''' 
 

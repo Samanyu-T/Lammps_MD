@@ -46,26 +46,25 @@ pot, potlines, pot_params = Handle_PotFiles.read_pot('git_folder/Potentials/beck
 
 
 n_knots = {}
-n_knots['He_F'] = 3
-n_knots['He_p'] = 3
+n_knots['He_F'] = 2
+n_knots['He_p'] = 2
 n_knots['W-He'] = 4
-n_knots['He-He'] = 0
-n_knots['H-He'] = 0
+n_knots['He-He'] = 4
+n_knots['H-He'] = 4
 
 
 with open('fitting.json', 'r') as file:
     param_dict = json.load(file)
 
-copy_files(True, False, False, param_dict['work_dir'], param_dict['data_dir'])
+copy_files(True, True, False, param_dict['work_dir'], param_dict['data_dir'])
 
 eam_fit = EAM_Fitting_Serial.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
 
 sample2 = eam_fit.gen_rand()
 
-sample = np.loadtxt('sample.txt')
+sample = np.loadtxt('sample.txt') 
 
-sample[0] /= eam_fit.pot_params['rho_c']
-
+# sample += 1e-2*np.random.random(sample.shape)
 print(sample2.shape, sample.shape)
 data_ref = np.loadtxt('dft_update.txt')
 
