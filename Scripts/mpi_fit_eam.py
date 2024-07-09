@@ -216,12 +216,12 @@ def main(json_file):
 
     # mean, cov = random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time)
 
-    mean = np.array([0.5,
+    mean = np.array([1.5,
                      0, 0, 
                     -1.4, 3, 0, -1e-1, 1e-1, 0
                     ])
     
-    cov_diag = np.array([0.25,
+    cov_diag = np.array([0.5,
                         2, 2, 
                         0.5 , 2 , 8 , 2e-1 , 1, 4
     ])
@@ -231,8 +231,8 @@ def main(json_file):
     ## START GAUSSIAN SAMPLING LOOP ###
     g_iteration = 0
 
-    mean = np.load(os.path.join(save_folder, 'GMM_%d' % g_iteration, 'Mean.npy'))
-    cov = np.load(os.path.join(save_folder, 'GMM_%d' % g_iteration, 'Cov.npy'))
+    # mean = np.load(os.path.join(save_folder, 'GMM_%d' % g_iteration, 'Mean.npy'))
+    # cov = np.load(os.path.join(save_folder, 'GMM_%d' % g_iteration, 'Cov.npy'))
 
     N_gaussian = 3
  
