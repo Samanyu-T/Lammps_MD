@@ -228,8 +228,8 @@ def main(json_file):
 
     cov = np.diag(cov_diag)
 
-    mean = mean.reshape(-1, 1)
-    cov = cov.reshape(-1, 1)
+    mean = mean.reshape(1, -1)
+    cov = cov.reshape(1, -1)
     print(mean.shape, cov.shape)
     exit()
     ## START GAUSSIAN SAMPLING LOOP ###
