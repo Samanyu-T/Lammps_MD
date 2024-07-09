@@ -898,7 +898,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         loss += abs_loss(binding_sample, binding_ref)
 
-        print(v, 0 ,np.abs(subtract_lst(binding_sample, binding_ref) ) )
+        print(v, 0 ,binding_sample, binding_ref)
 
     '''
     Loss from H-He Binding
@@ -1218,7 +1218,7 @@ def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_
         print('Average Time: %.2f s' % (t2 - t1))
         sys.stdout.flush()    
     
-    res = minimize(loss_func, x_init, args=(data_ref, fitting_class, True), options={"maxiter":maxiter}, tol=1e-4)
+    res = minimize(loss_func, x_init, args=(data_ref, fitting_class, True), method='Powell',options={"maxiter":maxiter}, tol=1e-4)
 
     return res.x
 
