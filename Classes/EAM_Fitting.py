@@ -1057,7 +1057,7 @@ def gaussian_sampling(n_knots, comm, proc_id, mean, cov, max_time=3, work_dir = 
     t2 = time.perf_counter()
 
     if proc_id == 0:
-        print('Average Time: %.2f s' % (t2 - t1))
+        print('Average Time: %.2f s, Shape' % (t2 - t1), sample.shape)
         sys.stdout.flush()    
     
     lst_loss = []
