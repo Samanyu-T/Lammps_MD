@@ -231,7 +231,6 @@ def main(json_file):
     mean = mean[np.newaxis, :]
     cov = cov[np.newaxis, :, :]
 
-    print(mean.shape, cov.shape)
     ## START GAUSSIAN SAMPLING LOOP ###
     g_iteration = 0
 

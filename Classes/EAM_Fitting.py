@@ -727,9 +727,9 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
             loss += 1000
             return loss
         
-        elif len(peaks) > 0:
-            loss += 1000
-            return loss
+        # elif len(peaks) > 0:
+        #     loss += 1000
+        #     return loss
 
 
     if optim_class.bool_fit['W-He']:
