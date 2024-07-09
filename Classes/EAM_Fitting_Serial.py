@@ -9,7 +9,7 @@ sys.path.append(os.path.join(os.getcwd(), 'git_folder','Classes'))
 from sklearn.mixture import GaussianMixture
 from Lammps_Classes_Serial import LammpsParentClass
 from Handle_PotFiles import read_pot, write_pot
-from scipy.optimize import minimize
+from scipy.optimize import minimize, basinhopping
 import shutil
 import copy
 from scipy.integrate import simpson
@@ -305,9 +305,11 @@ class Fit_EAM_Potential():
         if n_knots['W-He'] == 4:
             self.knot_pts['W-He'][1:3] = np.array([1.7581, 2.7236])
         self.knot_pts['He-He'] = np.linspace(0, self.pot_params['rc'], n_knots['He-He'])
-        # self.knot_pts['He-He'][1:3] = np.array([1.7581,2.7236])
+        if n_knots['He-He'] == 4:
+            self.knot_pts['He-He'][1:3] = np.array([1.7581, 2.7236])
         self.knot_pts['H-He'] = np.linspace(0, self.pot_params['rc'], n_knots['H-He'])
-        
+        if n_knots['H-He'] == 4:
+            self.knot_pts['H-He'][1:3] = np.array([1.7581, 2.7236])
         self.map = {}
 
         # full_map_idx = [4*(n_knots['He_F'] - 2) + 1] + [4*(n_knots['He_p'] - 2) + 2] + [4*(n_knots['W-He'] - 2)] + [4*(n_knots['He-He'] - 2)] + [4*(n_knots['H-He'] - 2)]
@@ -741,6 +743,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
     if optim_class.bool_fit['He-He']:
         
+
         virial_coef= np.array([
         [2.47734287e+01, 5.94121916e-01],
         [2.92941502e+01, 2.40776488e+00],
@@ -779,6 +782,11 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         pot = optim_class.pot_lammps['He-He'][1:]
 
+        # peaks, _ = find_peaks(pot)
+
+        # if len(peaks) > 0:
+        #     return 1000
+        
         r_pot = np.linspace(0, optim_class.pot_params['rc'], optim_class.pot_params['Nr'])[1:]
 
         phi = pot/r_pot
@@ -854,7 +862,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
     
     '''
     # Loss due to difference in Tet Formation Energy
-    loss += np.abs(sample_mat[0, 0, 1, 0, 0] - ref_mat[0, 0, 1, 0, 0])
+    loss += np.abs(sample_mat[0, 0, 1, 0, 0] - ref_mat[0, 0, 1, 0, 0]) ** 2
 
     loss += rel_abs_loss(sample_mat[0, 0, 1, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 1, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
 
@@ -896,7 +904,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
         
         binding_ref = ref_mat[0, 0, 1, 0, 0] - binding_ref
 
-        loss += abs_loss(binding_sample, binding_ref)
+        loss += rel_abs_loss(binding_sample, binding_ref)
 
         print(v, 0 ,binding_sample, binding_ref)
 
@@ -922,7 +930,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
             print( v, h ,np.abs(subtract_lst(binding_sample, binding_ref) ) )
 
-            loss += abs_loss(binding_sample, binding_ref)
+            loss += rel_abs_loss(binding_sample, binding_ref)
 
     ''' Loss from Relaxation Volumes '''
 
@@ -1218,7 +1226,15 @@ def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_
         print('Average Time: %.2f s' % (t2 - t1))
         sys.stdout.flush()    
     
-    res = minimize(loss_func, x_init, args=(data_ref, fitting_class, True), method='Nelder-Mead',options={"maxiter":maxiter}, tol=1e-4)
+    res = minimize(loss_func, x_init, args=(data_ref, fitting_class, True), method='COBYLA',options={"maxiter":maxiter}, tol=1e-4)
+
+    # local_minimizer = {
+    #     'method': 'COBYLA',
+    #     'args': (data_ref, fitting_class, True),
+    #     'options': {"maxiter": 25},
+    #     'tol': 1e-4
+    # }
+    # res = basinhopping(loss_func, x_init, minimizer_kwargs=local_minimizer, niter=maxiter)
 
     return res.x
 

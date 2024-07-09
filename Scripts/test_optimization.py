@@ -53,6 +53,8 @@ n_knots['He-He'] = 4
 n_knots['H-He'] = 0
 
 
+
+
 with open('fitting.json', 'r') as file:
     param_dict = json.load(file)
 
@@ -60,9 +62,13 @@ copy_files(True, True, False, param_dict['work_dir'], param_dict['data_dir'])
 
 eam_fit = EAM_Fitting_Serial.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
 
+print(eam_fit.pot_params['rho_c'])
+
 sample2 = eam_fit.gen_rand()
 
 sample = np.loadtxt('sample.txt') 
+
+sample[0] /= eam_fit.pot_params['rho_c']
 
 # sample += 1e-2*np.random.random(sample.shape)
 print(sample2.shape, sample.shape)
