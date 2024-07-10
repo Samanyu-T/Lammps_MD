@@ -820,6 +820,9 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
         
         loss += 10 * np.sum((phi_pot - he_he_ref[:, 1])**2, axis=0)
 
+        if loss > 1000:
+            return loss
+        
     if optim_class.bool_fit['H-He']:
         
         h_he_ref = np.array([
@@ -843,7 +846,9 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
         
         loss = 10 * np.sum((phi_pot - h_he_ref[:, 1])**2, axis=0)
 
-
+        if loss > 1000:
+            return loss
+        
     write_pot(optim_class.pot_lammps, optim_class.potlines, optim_class.lammps_param['potfile'])
 
     data_sample = sim_defect_set(optim_class)
