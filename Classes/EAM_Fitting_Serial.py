@@ -34,12 +34,18 @@ def eval_virial(phi, T_arr, r):
     return virial_coef
 
 def gauss(x, A, sigma):
+    A = abs(A)
+    sigma = abs(sigma)
     return A * np.exp(-0.5*(x/sigma)**2)
 
 def dgauss(x, A, sigma):
+    A = abs(A)
+    sigma = abs(sigma)
     return - (A * x / sigma ** 2) * np.exp(-0.5*(x/sigma)**2)
 
 def d2gauss(x, A, sigma):
+    A = abs(A)
+    sigma = abs(sigma)
     return (A / sigma ** 4) * (x**2 - sigma**2) * np.exp(-0.5*(x/sigma)**2)
 
 def exp(x, A, b):
@@ -56,6 +62,7 @@ def d2exp(x, A, b):
     A = abs(A)
     b = abs(b)
     return b**2 * A * np.exp(-b * x)
+
 class ZBL():
 
     def __init__(self, Zi, Zj):
@@ -305,11 +312,8 @@ class Fit_EAM_Potential():
         if n_knots['W-He'] == 4:
             self.knot_pts['W-He'][1:3] = np.array([1.7581, 2.7236])
         self.knot_pts['He-He'] = np.linspace(0, self.pot_params['rc'], n_knots['He-He'])
-        if n_knots['He-He'] == 4:
-            self.knot_pts['He-He'][1:3] = np.array([1.7581, 2.7236])
         self.knot_pts['H-He'] = np.linspace(0, self.pot_params['rc'], n_knots['H-He'])
-        if n_knots['H-He'] == 4:
-            self.knot_pts['H-He'][1:3] = np.array([1.7581, 2.7236])
+
         self.map = {}
 
         # full_map_idx = [4*(n_knots['He_F'] - 2) + 1] + [4*(n_knots['He_p'] - 2) + 2] + [4*(n_knots['W-He'] - 2)] + [4*(n_knots['He-He'] - 2)] + [4*(n_knots['H-He'] - 2)]
@@ -366,7 +370,7 @@ class Fit_EAM_Potential():
 
         if self.bool_fit['He_F']:
 
-            sample[self.map['He_F']][0] = 20*np.random.rand()
+            sample[self.map['He_F']][0] = np.random.rand()
 
             for i in range(self.n_knots['He_F'] - 2):
                 # xmin = x_bnds[i]
@@ -376,6 +380,8 @@ class Fit_EAM_Potential():
                 # sample[self.map['He_F']][4*i + 2] = ymax*np.random.rand()
                 # sample[self.map['He_F']][4*i + 3] = dymax*(np.random.rand() - 0.5)
                 # sample[self.map['He_F']][4*i + 4] = d2ymax*(np.random.rand() - 0.5)
+
+
                 sample[self.map['He_F']][3*i + 1] = ymax*(np.random.rand() - 0.5)
                 sample[self.map['He_F']][3*i + 2] = dymax*(np.random.rand() - 0.5)
                 sample[self.map['He_F']][3*i + 3] = d2ymax*(np.random.rand() - 0.5)
@@ -467,7 +473,7 @@ class Fit_EAM_Potential():
                 d2y[i + 1] = sample[self.map['He_F']][3*i + 3] 
 
             # self.knot_pts['He_F'] = x
-            
+
             coef_dict['He_F'] = splinefit(x, y, dy, d2y)
 
         if self.bool_fit['He_p']:
@@ -486,11 +492,13 @@ class Fit_EAM_Potential():
 
             # d2y[0] = 0
 
-            y[-1] = - exp(x[-1], sample[self.map['He_p']][0], sample[self.map['He_p']][1] )
 
-            dy[-1] = - dexp(x[-1], sample[self.map['He_p']][0], sample[self.map['He_p']][1] )
+            y[-1] = - gauss(x[-1], sample[self.map['He_p']][0], sample[self.map['He_p']][1] )
 
-            d2y[-1] = - d2exp(x[-1], sample[self.map['He_p']][0], sample[self.map['He_p']][1] )
+            dy[-1] = - dgauss(x[-1], sample[self.map['He_p']][0], sample[self.map['He_p']][1] )
+
+            d2y[-1] = - d2gauss(x[-1], sample[self.map['He_p']][0], sample[self.map['He_p']][1] )
+
 
             for i in range(self.n_knots['He_p'] - 2):
                 
@@ -553,12 +561,11 @@ class Fit_EAM_Potential():
         r = np.linspace(0, self.pot_params['rc'], self.pot_params['Nr'])
 
         if self.bool_fit['He_F']:
-            self.pot_lammps['He_F'] = sample[0] * (rho) + \
+            self.pot_lammps['He_F'] = sample[0] * rho + \
             splineval(rho, coef_dict['He_F'], self.knot_pts['He_F'], func = True, grad = False, hess = False)
 
-
         if self.bool_fit['He_p']:
-            self.pot_lammps['He_p'] = exp(r, sample[self.map['He_p']][0], sample[self.map['He_p']][1] ) + \
+            self.pot_lammps['He_p'] = gauss(r, sample[self.map['He_p']][0], sample[self.map['He_p']][1] ) + \
                 splineval(r, coef_dict['He_p'], self.knot_pts['He_p'], func = True, grad = False, hess = False) 
 
         charge = [[74, 2],[2, 2],[1, 2]]
@@ -782,11 +789,6 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         pot = optim_class.pot_lammps['He-He'][1:]
 
-        # peaks, _ = find_peaks(pot)
-
-        # if len(peaks) > 0:
-        #     return 1000
-        
         r_pot = np.linspace(0, optim_class.pot_params['rc'], optim_class.pot_params['Nr'])[1:]
 
         phi = pot/r_pot
@@ -815,7 +817,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         phi_pot = poly + zbl
         
-        loss += 0.1 * np.sum((phi_pot - he_he_ref[:, 1])**2, axis=0)
+        loss += 10 * np.sum((phi_pot - he_he_ref[:, 1])**2, axis=0)
 
     if optim_class.bool_fit['H-He']:
         
@@ -838,7 +840,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         phi_pot = poly + zbl_class.eval_zbl(h_he_ref[:, 0])
         
-        loss = 0.1 * np.sum((phi_pot - h_he_ref[:, 1])**2, axis=0)
+        loss = 10 * np.sum((phi_pot - h_he_ref[:, 1])**2, axis=0)
 
 
     write_pot(optim_class.pot_lammps, optim_class.potlines, optim_class.lammps_param['potfile'])

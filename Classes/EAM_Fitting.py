@@ -309,7 +309,8 @@ class Fit_EAM_Potential():
 
         self.knot_pts['He_p'] = np.linspace(0, self.pot_params['rc'], n_knots['He_p'])
         self.knot_pts['W-He'] = np.linspace(0, self.pot_params['rc'], n_knots['W-He'])
-        self.knot_pts['W-He'][1:3] = np.array([1.7581, 2.7236])
+        if n_knots['W-He'] == 4:
+            self.knot_pts['W-He'][1:3] = np.array([1.7581, 2.7236])
         self.knot_pts['He-He'] = np.linspace(0, self.pot_params['rc'], n_knots['He-He'])
         self.knot_pts['H-He'] = np.linspace(0, self.pot_params['rc'], n_knots['H-He'])
 
@@ -815,7 +816,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         phi_pot = poly + zbl
         
-        loss += 0.1 * np.sum((phi_pot - he_he_ref[:, 1])**2, axis=0)
+        loss += 10 * np.sum((phi_pot - he_he_ref[:, 1])**2, axis=0)
 
     if optim_class.bool_fit['H-He']:
         
@@ -838,7 +839,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         phi_pot = poly + zbl_class.eval_zbl(h_he_ref[:, 0])
         
-        loss = 0.1 * np.sum((phi_pot - h_he_ref[:, 1])**2, axis=0)
+        loss = 10 * np.sum((phi_pot - h_he_ref[:, 1])**2, axis=0)
 
 
     write_pot(optim_class.pot_lammps, optim_class.potlines, optim_class.lammps_param['potfile'])

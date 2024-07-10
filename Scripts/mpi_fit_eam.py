@@ -112,18 +112,20 @@ def gaussian_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir,
     return mean, cov
 
 
-def extend_gmm(mean, cov, n):
+def extend_gmm(mean, cov, n, mean_base = None, cov_base = None):
 
     if n < 1:
         return mean, cov
     
-    cov_base = np.array([4, 8, 16])
+    if cov_base is None:
+        cov_base = np.array([4, 8, 16])
 
-    mean_base = np.array([0 ,0, 0])
+        cov_base = np.hstack([cov_base for i in range(n)]).flatten()
 
-    cov_base = np.hstack([cov_base for i in range(n)]).flatten()
+    if mean_base is None:
+        mean_base = np.array([0 ,0, 0])
 
-    mean_base = np.hstack([mean_base for i in range(n)]).flatten()
+        mean_base = np.hstack([mean_base for i in range(n)]).flatten()
 
     cov_append = np.diag(cov_base)
         
@@ -216,20 +218,20 @@ def main(json_file):
 
     # mean, cov = random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time)
 
-    mean = np.array([1.5,
-                     0, 0, 
-                    -1.4, 3, 0, -1e-1, 1e-1, 0
-                    ])
+    # mean = np.array([1.5,
+    #                  0, 0, 
+    #                 -1.4, 3, 0, -1e-1, 1e-1, 0
+    #                 ])
     
-    cov_diag = np.array([0.5,
-                        2, 2, 
-                        0.5 , 2 , 8 , 2e-1 , 1, 4
-    ])
+    # cov_diag = np.array([0.5,
+    #                     2, 2, 
+    #                     0.5 , 2 , 8 , 2e-1 , 1, 4
+    # ])
 
-    cov = np.diag(cov_diag)
+    # cov = np.diag(cov_diag)
 
-    mean = mean[np.newaxis, :]
-    cov = cov[np.newaxis, :, :]
+    # mean = mean[np.newaxis, :]
+    # cov = cov[np.newaxis, :, :]
 
     ## START GAUSSIAN SAMPLING LOOP ###
     g_iteration = 0
@@ -239,9 +241,8 @@ def main(json_file):
 
     N_gaussian = 3
  
-    mean, cov = gaussian_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time, g_iteration, N_gaussian, mean, cov)
+    # mean, cov = gaussian_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time, g_iteration, N_gaussian, mean, cov)
     
-    exit()
 
     ## END GAUSSIAN SAMPLING LOOP ###
 
@@ -252,21 +253,29 @@ def main(json_file):
     N_gaussian = 4
 
     n_knots['He_F'] = 2
-    n_knots['He_p'] = 3
+    n_knots['He_p'] = 2
     n_knots['W-He'] = 4
-    n_knots['He-He'] = 0
-    n_knots['H-He'] = 0
+    n_knots['He-He'] = 4
+    n_knots['H-He'] = 4
 
     if proc_id == 0:
-        copy_files(True, True, False, work_dir, data_dir)
+        copy_files(True, True, True, work_dir, data_dir)
     comm.barrier()
 
     mean = np.load(os.path.join(save_folder, 'GMM_%d' % g_iteration, 'Mean.npy'))
     cov = np.load(os.path.join(save_folder, 'GMM_%d' % g_iteration, 'Cov.npy'))
 
+    mean_base = np.array([-3.405e-01,  4.133e-01, -3.159e-01, -2.680e-02, 4.164e-02, -7.452e-02,
+                          -2.672e-02, -1.622e-01,  4.671e-01, -1.844e-02,  2.524e-02, -3.426e-02
+                        ])
+    
+    cov_base  = np.array([3e-01, 4e-01, 3e-01, 3e-02, 4e-02, 8e-02,
+                          3e-02, 2e-01, 5e-01, 2e-02,  3e-02, 4e-02
+                        ])
+    
     # Edit a new Covariance Matrix for the He-He potential
     if proc_id == 0:
-        mean, cov = extend_gmm(mean, cov, n_knots['He-He'] - 2)
+        mean, cov = extend_gmm(mean, cov, n_knots['He-He'] - 2, mean_base, cov_base)
     comm.barrier()
 
 
