@@ -25,8 +25,10 @@ def eval_virial(phi, T_arr, r):
     for i, T in enumerate(T_arr):
 
         beta = 1 / (kb * T)
+        
+        exponenet = np.clip(beta * phi, a_min = -10, a_max = 10)
 
-        y = ( 1 - np.exp(-beta * phi) ) * r**2
+        y = ( 1 - np.exp(- exponenet) ) * r**2
 
         virial_coef[i] = 2* np.pi * conv * simpson(y,x=r)
 
