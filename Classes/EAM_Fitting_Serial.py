@@ -315,7 +315,8 @@ class Fit_EAM_Potential():
             self.knot_pts['W-He'][1:3] = np.array([1.7581, 2.7236])
         self.knot_pts['He-He'] = np.linspace(0, self.pot_params['rc'], n_knots['He-He'])
         self.knot_pts['H-He'] = np.linspace(0, self.pot_params['rc'], n_knots['H-He'])
-
+        # if n_knots['H-He'] == 4:
+            # self.knot_pts['H-He'][1:3] = np.array([1.7581, 2.7236])
         self.map = {}
 
         # full_map_idx = [4*(n_knots['He_F'] - 2) + 1] + [4*(n_knots['He_p'] - 2) + 2] + [4*(n_knots['W-He'] - 2)] + [4*(n_knots['He-He'] - 2)] + [4*(n_knots['H-He'] - 2)]
@@ -697,13 +698,17 @@ def rel_abs_loss(y1, y2):
             loss += np.abs(1 - y1[i]/y2[i])
     return loss
 
+def max_abs_loss(y1, y2):
+    loss = 0
+    for i in range(min(len(y1), len(y2))):
+        loss = max( abs(y1[i] - y2[i]), loss)
+    return loss
 
 def abs_loss(y1, y2):
     loss = 0
     for i in range(min(len(y1), len(y2))):
-        if y2[i] != 0:
-            loss += np.abs(y1[i] - y2[i])
-    return loss
+        loss += np.abs(y1[i] - y2[i])
+    return loss 
 
 def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
@@ -797,7 +802,9 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         B2_pot = eval_virial(phi, virial_coef[:, 0], r_pot)
 
-        loss += 0.1 * np.sum( (B2_pot - virial_coef[:, 1]) ** 2, axis = 0)
+        # loss += 0.1 * np.sum( (B2_pot - virial_coef[:, 1]) ** 2, axis = 0)
+
+        print('He-He Virial Loss ',  0.1 * np.sum( (B2_pot - virial_coef[:, 1]) ** 2, axis = 0))
 
         he_he_ref = np.array([
                         [ 1.58931000e+00,  3.28492631e-01],
@@ -818,8 +825,10 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
         zbl = zbl_class.eval_zbl(he_he_ref[:, 0])
 
         phi_pot = poly + zbl
-        
-        loss += 10 * np.sum((phi_pot - he_he_ref[:, 1])**2, axis=0)
+
+        loss += 100 * np.sum((phi_pot - he_he_ref[:, 1])**2, axis=0)
+
+        print('He-He Gas Loss ', loss)
 
     if optim_class.bool_fit['H-He']:
         
@@ -842,7 +851,9 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         phi_pot = poly + zbl_class.eval_zbl(h_he_ref[:, 0])
         
-        loss = 10 * np.sum((phi_pot - h_he_ref[:, 1])**2, axis=0)
+        loss += 100 * np.sum((phi_pot - h_he_ref[:, 1])**2, axis=0)
+
+        print('H-He Gas Loss: ', loss)
 
 
     write_pot(optim_class.pot_lammps, optim_class.potlines, optim_class.lammps_param['potfile'])
@@ -910,7 +921,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         loss += rel_abs_loss(binding_sample, binding_ref)
 
-        print(v, 0 ,binding_sample, binding_ref)
+        print(v, 0 ,binding_sample, binding_ref, loss)
 
     '''
     Loss from H-He Binding
@@ -932,9 +943,10 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
             
             binding_ref = ref_mat[0, 1, 0, 0, 0] - binding_ref
 
-            print( v, h ,np.abs(subtract_lst(binding_sample, binding_ref) ) )
-
             loss += rel_abs_loss(binding_sample, binding_ref)
+
+            print( v, h ,binding_sample, binding_ref, loss )
+
 
     ''' Loss from Relaxation Volumes '''
 
@@ -947,8 +959,8 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
                     r_ref = ref_mat[i, j, k, l, 1]
 
-                    if not (np.isinf(r_ref) or np.isinf(r_sample) or r_ref == 0):
-                        loss += abs(1 - (r_sample/r_ref))
+                    if not (np.isinf(r_ref) or np.isinf(r_sample)):
+                        loss += 0.1*abs(r_sample - r_ref)
     if diag:
         t2 = time.perf_counter()
         

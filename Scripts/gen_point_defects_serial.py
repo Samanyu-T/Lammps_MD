@@ -47,8 +47,8 @@ lmp = LammpsParentClass(init_dict, comm, proc_id)
 lmp.perfect_crystal()
 
 x = np.arange(3)
-y = np.arange(5)
-z = np.arange(5)
+y = np.arange(8)
+z = np.arange(8)
 
 xx, yy, zz = np.meshgrid(x, y, z, indexing='ij')
 
@@ -60,7 +60,9 @@ rvol_arr = np.zeros((len(points), ))
 
 dft_data = np.loadtxt('dft_data_new.txt')
 
-for i, pt in enumerate(dft_data[5:, :3]):
+data = [[0, 0, 0, 0, 0]]
+
+for i, pt in enumerate(points[1:]):
     
     defect_centre = ( lmp.alattice*lmp.size/2 )*np.ones((3,))
     
@@ -95,4 +97,10 @@ for i, pt in enumerate(dft_data[5:, :3]):
     
     ef, rvol = lmp.add_defect(input_filepath, output_filepath, target_species, action, defect_centre)
     
-    print(output_filepath, ef, rvol)
+    data.append([pt[0], pt[1], pt[2], ef, rvol])
+
+    print(input_filepath, defect_centre, pt, ef, rvol)
+
+data = np.array(data)
+
+np.savetxt('new_pot_data.txt', data)

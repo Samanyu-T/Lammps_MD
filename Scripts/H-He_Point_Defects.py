@@ -58,7 +58,7 @@ rvol_arr = np.zeros((len(points), ))
 
 dft_data = np.loadtxt('dft_data_new.txt')
 
-for i, pt in enumerate(dft_data[5:, :3]):
+for i, pt in enumerate(points[1:]):
     
     defect_centre = ( lmp.alattice*lmp.size/2 )*np.ones((3,))
     

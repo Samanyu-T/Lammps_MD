@@ -269,8 +269,8 @@ def main(json_file):
                           -2.672e-02, -1.622e-01,  4.671e-01, -1.844e-02,  2.524e-02, -3.426e-02
                         ])
     
-    cov_base  = np.array([3e-01, 4e-01, 3e-01, 3e-02, 4e-02, 8e-02,
-                          3e-02, 2e-01, 5e-01, 2e-02,  3e-02, 4e-02
+    cov_base  = np.array([1e-01, 1e-01, 1e-01, 1e-02, 1e-02, 2e-02,
+                          1, 2, 4, 1,  2, 4
                         ])
     
     # Edit a new Covariance Matrix for the He-He potential

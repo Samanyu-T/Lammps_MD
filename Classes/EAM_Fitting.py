@@ -697,13 +697,17 @@ def rel_abs_loss(y1, y2):
             loss += np.abs(1 - y1[i]/y2[i])
     return loss
 
+def max_abs_loss(y1, y2):
+    loss = 0
+    for i in range(min(len(y1), len(y2))):
+        loss = max( abs(y1[i] - y2[i]), loss)
+    return loss
 
 def abs_loss(y1, y2):
     loss = 0
     for i in range(min(len(y1), len(y2))):
-        if y2[i] != 0:
-            loss += np.abs(y1[i] - y2[i])
-    return loss
+        loss += np.abs(y1[i] - y2[i])
+    return loss 
 
 def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
@@ -844,7 +848,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         phi_pot = poly + zbl_class.eval_zbl(h_he_ref[:, 0])
         
-        loss = 10 * np.sum((phi_pot - h_he_ref[:, 1])**2, axis=0)
+        loss += 10 * np.sum((phi_pot - h_he_ref[:, 1])**2, axis=0)
 
         if loss > 1000:
             return loss
@@ -912,7 +916,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
         
         binding_ref = ref_mat[0, 0, 1, 0, 0] - binding_ref
 
-        loss += abs_loss(binding_sample, binding_ref)
+        loss += rel_abs_loss(binding_sample, binding_ref)
 
         # print(v, 0 ,np.abs(subtract_lst(binding_sample, binding_ref) ) )
 
@@ -938,7 +942,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
             # print(v, h ,np.abs(subtract_lst(binding_sample, binding_ref) ) )
 
-            loss += abs_loss(binding_sample, binding_ref)
+            loss += rel_abs_loss(binding_sample, binding_ref)
 
     ''' Loss from Relaxation Volumes '''
 
@@ -951,8 +955,8 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
                     r_ref = ref_mat[i, j, k, l, 1]
 
-                    if not (np.isinf(r_ref) or np.isinf(r_sample) or r_ref == 0):
-                        loss += abs(1 - (r_sample/r_ref))
+                    if not (np.isinf(r_ref) or np.isinf(r_sample)):
+                        loss += abs(r_sample - r_ref)
     if diag:
         t2 = time.perf_counter()
         
