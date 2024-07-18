@@ -890,13 +890,13 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
     # print(sample_mat[0, 0, 1, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 1, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
     ''' Constraint '''
 
-    constraint = not (np.arange(sample_mat.shape[3]) == np.round(sample_mat[0, 0, 1, :, 0], 2).argsort()).all()
+    constraint = not (np.arange(sample_mat.shape[3]) == np.round(sample_mat[0, 0, 1, :, 0], 3).argsort()).all()
     
-    loss += 100*constraint  
+    # loss += 100*constraint  
 
     constraint = not len(np.unique(np.round(sample_mat[0, 0, 1, :, 0], 3))) == sample_mat.shape[3]
 
-    loss += 100*constraint  
+    # loss += 100*constraint  
 
     if sample_mat.shape[2]  > 2:
         loss += rel_abs_loss(sample_mat[0, 0, 2, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 2, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
@@ -1245,9 +1245,9 @@ def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_
     res = minimize(loss_func, x_init, args=(data_ref, fitting_class, True), method='COBYLA',options={"maxiter":maxiter}, tol=1e-4)
 
     # local_minimizer = {
-    #     'method': 'COBYLA',
+    #     'method': 'BFGS',
     #     'args': (data_ref, fitting_class, True),
-    #     'options': {"maxiter": 25},
+    #     'options': {"maxiter": 20},
     #     'tol': 1e-4
     # }
     # res = basinhopping(loss_func, x_init, minimizer_kwargs=local_minimizer, niter=maxiter)

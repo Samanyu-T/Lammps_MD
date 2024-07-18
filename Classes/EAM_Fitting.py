@@ -800,7 +800,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         B2_pot = eval_virial(phi, virial_coef[:, 0], r_pot)
 
-        loss += 0.1 * np.sum( (B2_pot - virial_coef[:, 1]) ** 2, axis = 0)
+        loss += 1e-3 * np.sum( (B2_pot - virial_coef[:, 1]) ** 2, axis = 0)
 
         he_he_ref = np.array([
                         [ 1.58931000e+00,  3.28492631e-01],
@@ -889,11 +889,11 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
     constraint = not (np.arange(sample_mat.shape[3]) == np.round(sample_mat[0, 0, 1, :, 0], 2).argsort()).all()
     
-    loss += 100*constraint  
+    # loss += 100*constraint  
 
     constraint = not len(np.unique(np.round(sample_mat[0, 0, 1, :, 0], 3))) == sample_mat.shape[3]
 
-    loss += 100*constraint  
+    # loss += 100*constraint  
 
     if sample_mat.shape[2]  > 2:
         loss += rel_abs_loss(sample_mat[0, 0, 2, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 2, 1:, 0] - ref_mat[0, 0, 1, 0, 0])

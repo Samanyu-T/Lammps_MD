@@ -30,9 +30,9 @@ init_dict['size'] = 7
 
 init_dict['surface'] = 0
 
-init_dict['potfile'] = 'git_folder/Potentials/test.eam.alloy'
+init_dict['potfile'] = 'git_folder/Potentials/WHHe_test.eam.alloy'
 
-init_dict['potfile'] = 'Fitting_Runtime/Potentials/optim.0.eam.alloy'
+# init_dict['potfile'] = 'Fitting_Runtime/Potentials/optim.0.eam.alloy'
 
 
 init_dict['output_folder'] = output_folder
@@ -103,4 +103,4 @@ for i, pt in enumerate(points[1:]):
 
 data = np.array(data)
 
-np.savetxt('new_pot_data.txt', data)
+np.savetxt('juslin_beck.txt', data)
