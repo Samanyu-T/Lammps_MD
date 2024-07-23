@@ -42,12 +42,12 @@ proc_id = 0
 
 n_procs = 1
 
-pot, potlines, pot_params = Handle_PotFiles.read_pot('git_folder/Potentials/beck.eam.alloy')
+pot, potlines, pot_params = Handle_PotFiles.read_pot('Fitting_Runtime/Potentials/optim.0.eam.alloy' )
 
 
 n_knots = {}
-n_knots['He_F'] = 2
-n_knots['He_p'] = 2
+n_knots['He_F'] = 0
+n_knots['He_p'] = 0
 n_knots['W-He'] = 4
 n_knots['He-He'] = 0
 n_knots['H-He'] = 0
@@ -58,11 +58,10 @@ n_knots['H-He'] = 0
 with open('fitting.json', 'r') as file:
     param_dict = json.load(file)
 
-copy_files(True, True, False, param_dict['work_dir'], param_dict['data_dir'])
+copy_files(True, False, False, param_dict['work_dir'], param_dict['data_dir'])
 
 eam_fit = EAM_Fitting_Serial.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
 
-print(eam_fit.pot_params['rho_c'])
 
 sample2 = eam_fit.gen_rand()
 

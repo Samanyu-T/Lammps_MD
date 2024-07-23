@@ -236,7 +236,7 @@ def create_init_file(filepath):
     ],
     "size": 4,
     "surface": 0,
-    "potfile": "git_folder/Potentials/beck.eam.alloy",
+    "potfile": "git_folder/Potentials/init.eam.alloy",
     "conv": 100,
     "machine": "",
     "save_folder": "Monte_Carlo_HSurface"
@@ -285,7 +285,7 @@ class Fit_EAM_Potential():
         ],
         "size": 4,
         "surface": 0,
-        "potfile": os.path.join(self.pot_folder, 'optim.%d.eam.alloy' % self.proc_id), #"git_folder/Potentials/beck.eam.alloy"
+        "potfile": os.path.join(self.pot_folder, 'optim.%d.eam.alloy' % self.proc_id), #"git_folder/Potentials/init.eam.alloy"
         "conv": 1000,
         "machine": "",
         "save_folder": self.lammps_folder
@@ -529,9 +529,14 @@ class Fit_EAM_Potential():
 
                 y = np.zeros((len(x),))
 
-                dy = np.zeros((len(x),))
 
-                d2y = np.zeros((len(x),))
+                dy = np.full(y.shape, None, dtype=object)
+
+                d2y = np.full(y.shape, None, dtype=object)
+
+                # dy = np.zeros((len(x),))
+
+                # d2y = np.zeros((len(x),))
 
                 for i in range(self.n_knots[key] - 2):
 
@@ -563,7 +568,7 @@ class Fit_EAM_Potential():
         r = np.linspace(0, self.pot_params['rc'], self.pot_params['Nr'])
 
         if self.bool_fit['He_F']:
-            self.pot_lammps['He_F'] = sample[0] * rho + \
+            self.pot_lammps['He_F'] = sample[0] * rho * (1 - np.exp(- 2 * sample[0] * rho**3)) + \
             splineval(rho, coef_dict['He_F'], self.knot_pts['He_F'], func = True, grad = False, hess = False)
 
         if self.bool_fit['He_p']:
@@ -874,7 +879,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
     
     '''
     # Loss due to difference in Tet Formation Energy
-    loss += np.abs(sample_mat[0, 0, 1, 0, 0] - ref_mat[0, 0, 1, 0, 0])
+    loss += np.abs(sample_mat[0, 0, 1, 0, 0] - ref_mat[0, 0, 1, 0, 0]) ** 2
 
     loss += rel_abs_loss(sample_mat[0, 0, 1, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 1, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
 
@@ -889,11 +894,11 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
     constraint = not (np.arange(sample_mat.shape[3]) == np.round(sample_mat[0, 0, 1, :, 0], 2).argsort()).all()
     
-    # loss += 100*constraint  
+    loss += 100*constraint  
 
-    constraint = not len(np.unique(np.round(sample_mat[0, 0, 1, :, 0], 3))) == sample_mat.shape[3]
+    constraint = not len(np.unique(np.round(sample_mat[0, 0, 1, :, 0], 2))) == sample_mat.shape[3]
 
-    # loss += 100*constraint  
+    loss += 100*constraint  
 
     if sample_mat.shape[2]  > 2:
         loss += rel_abs_loss(sample_mat[0, 0, 2, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 2, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
@@ -956,7 +961,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
                     r_ref = ref_mat[i, j, k, l, 1]
 
                     if not (np.isinf(r_ref) or np.isinf(r_sample)):
-                        loss += abs(r_sample - r_ref)
+                        loss += 10 * abs(r_sample - r_ref)
     if diag:
         t2 = time.perf_counter()
         
@@ -978,7 +983,7 @@ def random_sampling(n_knots, comm, proc_id, max_time=3, work_dir = '../Optim_Loc
     shutil.copytree(data_files_folder, lammps_folder)
 
     # Read Daniel's potential to initialize the W-H potential and the params for writing a .eam.alloy file
-    pot, potlines, pot_params = read_pot('git_folder/Potentials/beck.eam.alloy')
+    pot, potlines, pot_params = read_pot('git_folder/Potentials/init.eam.alloy')
 
     pot_params['rho_c'] = pot_params['Nrho']*pot_params['drho']
     
@@ -1056,7 +1061,7 @@ def gaussian_sampling(n_knots, comm, proc_id, mean, cov, max_time=3, work_dir = 
     shutil.copytree(data_files_folder, lammps_folder)
 
     # Read Daniel's potential to initialize the W-H potential and the params for writing a .eam.alloy file
-    pot, potlines, pot_params = read_pot('git_folder/Potentials/beck.eam.alloy')
+    pot, potlines, pot_params = read_pot('git_folder/Potentials/init.eam.alloy')
 
     pot_params['rho_c'] = pot_params['Nrho']*pot_params['drho']
     
@@ -1140,7 +1145,7 @@ def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_
 
 
     # Read Daniel's potential to initialize the W-H potential and the params for writing a .eam.alloy file
-    pot, potlines, pot_params = read_pot('git_folder/Potentials/beck.eam.alloy')
+    pot, potlines, pot_params = read_pot('git_folder/Potentials/init.eam.alloy')
 
     pot_params['rho_c'] = pot_params['Nrho']*pot_params['drho']
     

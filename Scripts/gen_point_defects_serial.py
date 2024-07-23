@@ -30,9 +30,9 @@ init_dict['size'] = 7
 
 init_dict['surface'] = 0
 
-init_dict['potfile'] = 'git_folder/Potentials/WHHe_test.eam.alloy'
+# init_dict['potfile'] = 'git_folder/Potentials/WHHe_test.eam.alloy'
 
-# init_dict['potfile'] = 'Fitting_Runtime/Potentials/optim.0.eam.alloy'
+init_dict['potfile'] = 'Fitting_Runtime/Potentials/optim.0.eam.alloy'
 
 
 init_dict['output_folder'] = output_folder
@@ -47,7 +47,7 @@ lmp = LammpsParentClass(init_dict, comm, proc_id)
 lmp.perfect_crystal()
 
 x = np.arange(3)
-y = np.arange(8)
+y = np.arange(4)
 z = np.arange(8)
 
 xx, yy, zz = np.meshgrid(x, y, z, indexing='ij')

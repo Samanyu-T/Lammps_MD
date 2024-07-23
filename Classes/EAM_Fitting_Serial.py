@@ -236,7 +236,7 @@ def create_init_file(filepath):
     ],
     "size": 4,
     "surface": 0,
-    "potfile": "git_folder/Potentials/beck.eam.alloy",
+    "potfile": "git_folder/Potentials/init.eam.alloy",
     "conv": 100,
     "machine": "",
     "save_folder": "Monte_Carlo_HSurface"
@@ -285,7 +285,7 @@ class Fit_EAM_Potential():
         ],
         "size": 4,
         "surface": 0,
-        "potfile": os.path.join(self.pot_folder, 'optim.%d.eam.alloy' % self.proc_id), #"git_folder/Potentials/beck.eam.alloy"
+        "potfile": os.path.join(self.pot_folder, 'optim.%d.eam.alloy' % self.proc_id), #"git_folder/Potentials/init.eam.alloy"
         "conv": 1000,
         "machine": "",
         "save_folder": self.lammps_folder
@@ -307,7 +307,7 @@ class Fit_EAM_Potential():
         self.knot_pts['He_F'] = np.linspace(0, self.pot_params['rho_c'], n_knots['He_F'])
 
         if n_knots['He_F'] > 2:
-            self.knot_pts['He_F'][1:-1] /= 3
+            self.knot_pts['He_F'][1] = 0.3
 
         self.knot_pts['He_p'] = np.linspace(0, self.pot_params['rc'], n_knots['He_p'])
         self.knot_pts['W-He'] = np.linspace(0, self.pot_params['rc'], n_knots['W-He'])
@@ -530,6 +530,10 @@ class Fit_EAM_Potential():
 
                 y = np.zeros((len(x),))
 
+                # dy = np.full(y.shape, None, dtype=object)
+
+                # d2y = np.full(y.shape, None, dtype=object)
+
                 dy = np.zeros((len(x),))
 
                 d2y = np.zeros((len(x),))
@@ -564,7 +568,7 @@ class Fit_EAM_Potential():
         r = np.linspace(0, self.pot_params['rc'], self.pot_params['Nr'])
 
         if self.bool_fit['He_F']:
-            self.pot_lammps['He_F'] = sample[0] * rho + \
+            self.pot_lammps['He_F'] = sample[0] * rho * (1 - np.exp(- 2 * sample[0] * rho**3)) + \
             splineval(rho, coef_dict['He_F'], self.knot_pts['He_F'], func = True, grad = False, hess = False)
 
         if self.bool_fit['He_p']:
@@ -826,7 +830,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         phi_pot = poly + zbl
 
-        loss += 100 * np.sum((phi_pot - he_he_ref[:, 1])**2, axis=0)
+        # loss += 100 * np.sum((phi_pot - he_he_ref[:, 1])**2, axis=0)
 
         print('He-He Gas Loss ', loss)
 
@@ -892,11 +896,11 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
     constraint = not (np.arange(sample_mat.shape[3]) == np.round(sample_mat[0, 0, 1, :, 0], 3).argsort()).all()
     
-    # loss += 100*constraint  
+    loss += 100*constraint  
 
-    constraint = not len(np.unique(np.round(sample_mat[0, 0, 1, :, 0], 3))) == sample_mat.shape[3]
+    constraint = not len(np.unique(np.round(sample_mat[0, 0, 1, :, 0], 2))) == sample_mat.shape[3]
 
-    # loss += 100*constraint  
+    loss += 100*constraint  
 
     if sample_mat.shape[2]  > 2:
         loss += rel_abs_loss(sample_mat[0, 0, 2, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 2, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
@@ -919,7 +923,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
         
         binding_ref = ref_mat[0, 0, 1, 0, 0] - binding_ref
 
-        loss += rel_abs_loss(binding_sample, binding_ref)
+        loss += abs_loss(binding_sample, binding_ref)
 
         print(v, 0 ,binding_sample, binding_ref, loss)
 
@@ -959,8 +963,8 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
                     r_ref = ref_mat[i, j, k, l, 1]
 
-                    if not (np.isinf(r_ref) or np.isinf(r_sample)):
-                        loss += 0.1*abs(r_sample - r_ref)
+                    if not (np.isinf(r_ref) or np.isinf(r_sample) or r_ref == 0):
+                        loss += abs(1 - r_sample/r_ref)
     if diag:
         t2 = time.perf_counter()
         
@@ -982,7 +986,7 @@ def random_sampling(n_knots, comm, proc_id, max_time=3, work_dir = '../Optim_Loc
     shutil.copytree(data_files_folder, lammps_folder)
 
     # Read Daniel's potential to initialize the W-H potential and the params for writing a .eam.alloy file
-    pot, potlines, pot_params = read_pot('git_folder/Potentials/beck.eam.alloy')
+    pot, potlines, pot_params = read_pot('git_folder/Potentials/init.eam.alloy')
 
     pot_params['rho_c'] = pot_params['Nrho']*pot_params['drho']
     
@@ -1060,7 +1064,7 @@ def random_sampling(n_knots, comm, proc_id, max_time=3, work_dir = '../Optim_Loc
     shutil.copytree(data_files_folder, lammps_folder)
 
     # Read Daniel's potential to initialize the W-H potential and the params for writing a .eam.alloy file
-    pot, potlines, pot_params = read_pot('git_folder/Potentials/beck.eam.alloy')
+    pot, potlines, pot_params = read_pot('git_folder/Potentials/init.eam.alloy')
 
     pot_params['rho_c'] = pot_params['Nrho']*pot_params['drho']
     
@@ -1138,7 +1142,7 @@ def gaussian_sampling(n_knots, comm, proc_id, mean, cov, max_time=3, work_dir = 
     shutil.copytree(data_files_folder, lammps_folder)
 
     # Read Daniel's potential to initialize the W-H potential and the params for writing a .eam.alloy file
-    pot, potlines, pot_params = read_pot('git_folder/Potentials/beck.eam.alloy')
+    pot, potlines, pot_params = read_pot('git_folder/Potentials/init.eam.alloy')
 
     pot_params['rho_c'] = pot_params['Nrho']*pot_params['drho']
     
@@ -1222,7 +1226,8 @@ def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_
 
 
     # Read Daniel's potential to initialize the W-H potential and the params for writing a .eam.alloy file
-    pot, potlines, pot_params = read_pot('git_folder/Potentials/beck.eam.alloy')
+    pot, potlines, pot_params = read_pot('git_folder/Potentials/init.eam.alloy')
+    # pot, potlines, pot_params = read_pot('Fitting_Runtime/Potentials/optim.0.eam.alloy' )
 
     pot_params['rho_c'] = pot_params['Nrho']*pot_params['drho']
     
@@ -1242,7 +1247,7 @@ def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_
         print('Average Time: %.2f s' % (t2 - t1))
         sys.stdout.flush()    
     
-    res = minimize(loss_func, x_init, args=(data_ref, fitting_class, True), method='COBYLA',options={"maxiter":maxiter}, tol=1e-4)
+    res = minimize(loss_func, x_init, args=(data_ref, fitting_class, True), method='Powell',options={"maxiter":maxiter}, tol=1e-4)
 
     # local_minimizer = {
     #     'method': 'BFGS',

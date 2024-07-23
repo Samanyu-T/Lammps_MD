@@ -45,12 +45,12 @@ def loss_func(x, eam_fit, data_dft):
     for i, row in enumerate(data_dft):
         lat, dft_stress, dft_pe = row
 
-        pot_stress, pot_pe = sim_hcp_helium('HCP_Helium_DataFiles/lat.%.1f.data' % lat, eam_fit.lammps_param['potfile'])
+        pot_stress, pot_pe = sim_hcp_helium('HCP_H_He_DataFiles/lat.%.1f.data' % lat, eam_fit.lammps_param['potfile'])
 
-        if dft_stress <20:
-            loss += lat*(1 - pot_stress/dft_stress)**2
-        else:
-            loss += 1e-1*(1 - pot_stress/dft_stress)**2
+        # if dft_stress <20:
+        #     loss += lat*(1 - pot_stress/dft_stress)**2
+        # else:
+        #     loss += 1e-1*(1 - pot_stress/dft_stress)**2
 
         loss +=  lat*(1 - pot_pe/dft_pe)**2
 
@@ -58,7 +58,7 @@ def loss_func(x, eam_fit, data_dft):
     return loss
 
 stress_dft = []
-with open('hcp_stress_curve.dat', 'r') as file:
+with open('hcp_hhe_stress_curve.dat', 'r') as file:
     for line in file:
         split = [txt for txt in line.split(' ') if txt != '']
         alat = float(split[0][-3:])
@@ -75,7 +75,7 @@ stress_dft = np.array(stress_dft)
 
 hcp_dft = []
 
-with open('hcp_total_energy.dat', 'r') as file:
+with open('hcp_hhe_total_energy.dat', 'r') as file:
     for line in file:
         split = line.split(' ')
         alat = float(split[0][-3:])
@@ -98,8 +98,8 @@ n_knots = {}
 n_knots['He_F'] = 2
 n_knots['He_p'] = 2
 n_knots['W-He'] = 0
-n_knots['He-He'] = 4
-n_knots['H-He'] = 0
+n_knots['He-He'] = 0
+n_knots['H-He'] = 4
 
 
 with open('fitting.json', 'r') as file:
@@ -108,17 +108,19 @@ with open('fitting.json', 'r') as file:
 # potfile =  'Fitting_Runtime/Potentials/optim.0.eam.alloy' 
 eam_fit = EAM_Fitting_Serial.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
 
-x = np.array([-4.078e-01, 6.777e-01, -1.038e+00, -2.816e-02,  4.515e-02, -7.875e-02])
+# x = np.array([-4.078e-01, 6.777e-01, -1.038e+00, -2.816e-02,  4.515e-02, -7.875e-02])
 
 # Z = 1.993
 # A = 4.9
 # x = np.hstack([A, Z, x])
 
-x =  np.array(  [-3.670e-01,  4.788e-01, -3.763e-01, -2.759e-02, 4.339e-02, -7.454e-02])
+# x =  np.array(  [-3.670e-01,  4.788e-01, -3.763e-01, -2.759e-02, 4.339e-02, -7.454e-02])
 
-# x_res = minimize(loss_func, x, args=(eam_fit, data_dft), method='Powell',options={"maxiter":100}, tol=1e-4)
-# print(x_res)
-# x = x_res.x
+x = np.array([-2.220e-01,  9.288e-01, -3.680e+00 ,-2.914e-02 , 2.506e-02, -4.401e-02])
+
+x_res = minimize(loss_func, x, args=(eam_fit, data_dft), method='Powell',options={"maxiter":100}, tol=1e-4)
+print(x_res)
+x = x_res.x
 
 # loss_func(x, eam_fit, data_dft)
 stress_arr = np.zeros((len(data_dft,)))
@@ -140,7 +142,7 @@ Handle_PotFiles.write_pot(eam_fit.pot_lammps, eam_fit.potlines, eam_fit.lammps_p
 for i, row in enumerate(data_dft):
     lat, dft_stress, dft_pe = row
 
-    pot_stress, pot_pe = sim_hcp_helium('HCP_Helium_DataFiles/lat.%.1f.data' % lat, eam_fit.lammps_param['potfile'])
+    pot_stress, pot_pe = sim_hcp_helium('HCP_H_He_DataFiles/lat.%.1f.data' % lat, eam_fit.lammps_param['potfile'])
     
     stress_arr[i]  = pot_stress
     pe_arr[i] = pot_pe
@@ -156,16 +158,13 @@ for i, row in enumerate(data_dft):
 
 # conv = 0.602214
 
-press_ref = np.array([15.6, 16.2, 17.4, 23.3])
-lat_ref = np.array([2.1, 2.087, 2.069, 2.003])
 # vol_ref = conv*np.array([3.944, 3.871, 3.772, 3.422])
 
-plt.loglog(lat_ref, press_ref, label='Experiment', color='orange')
 plt.loglog(data_dft[:,0], stress_arr, label='fit')
 plt.loglog(data_dft[:,0], data_dft[:,1], label='dft', color='black')
 plt.xlabel('Lattice Constant/ A')
 plt.ylabel('Hydrostatic Stress / GPA')
-plt.title('Pressure-Volume curve of a HCP Helium Lattice')
+plt.title('Pressure-Volume curve of a HCP Hydrogen-Helium Lattice')
 plt.legend()
 plt.show()
 
@@ -175,7 +174,7 @@ plt.plot(data_dft[:,0], pe_arr, label='fit')
 plt.plot(data_dft[:,0], data_dft[:,2], label='dft', color='black')
 plt.xlabel('Lattice Constant/ A')
 plt.ylabel('Energy/ eV')
-plt.title('Energy-Lattice Constant curve of a HCP Helium Lattice')
+plt.title('Energy-Lattice Constant curve of a HCP Hydrogen-Helium Lattice')
 plt.legend()
 plt.show()
 
@@ -196,11 +195,11 @@ plt.semilogy(r, pot)
 plt.show()
 
 
-pot = eam_fit.pot_lammps['He-He'][1:]
+pot = eam_fit.pot_lammps['H-He'][1:]
 pot /= r[1:]
 plt.ylabel('Pairwise Potential / eV')
 plt.xlabel('Distance/ A')
-plt.title('He-He Pairwise Potential')
+plt.title('H-He Pairwise Potential')
 plt.plot(r[201:], pot[200:])
 print(pot.min())
 plt.show()
