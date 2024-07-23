@@ -225,7 +225,7 @@ def main(json_file):
     
     cov_diag = np.array([#0.5,
                         #1e-3, 1e-3, 
-                        0.5 , 2 , 8 , 0.5, 1, 2
+                        1 , 2 , 8 , 0.5, 1, 2
     ])
 
     cov = np.diag(cov_diag)
