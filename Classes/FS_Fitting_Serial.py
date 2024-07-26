@@ -13,7 +13,7 @@ from scipy.optimize import minimize, basinhopping
 import shutil
 import copy
 from scipy.integrate import simpson
-from scipy.signal import find_peaks
+from scipy.interpolate import interp1d
 
 def eval_virial(phi, T_arr, r):
 
@@ -854,27 +854,78 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
         print('He-He Gas Loss ', loss)
 
     if optim_class.bool_fit['H-He']:
-        
+
         h_he_ref = np.array([
-                    [ 2.64885000e+00,  5.92872325e-03],
-                    [ 2.91373500e+00,  1.38739018e-03],
-                    [ 3.17862000e+00, -3.86056397e-04],
-                    [ 3.44350500e+00, -5.48062207e-04],
-                    [ 3.70839000e+00, -5.85978460e-04],
-                    [ 3.97327500e+00, -4.22249185e-04],
-                    [ 4.23816000e+00, -3.75715601e-04],
-                    [ 4.76793000e+00, -1.68037941e-04],
-                   ])
+        [ 1.00000000e+00,  1.53136336e+00],
+        [ 1.10000000e+00,  1.14179759e+00],
+        [ 1.20000000e+00,  8.52145780e-01],
+        [ 1.30000000e+00,  6.35693600e-01],
+        [ 1.40000000e+00,  4.73397030e-01],
+        [ 1.50000000e+00,  3.51379120e-01],
+        [ 1.60000000e+00,  2.59463250e-01],
+        [ 1.70000000e+00,  1.90180340e-01],
+        [ 1.80000000e+00,  1.38007440e-01],
+        [ 1.90000000e+00,  9.88157400e-02],
+        [ 2.00000000e+00,  6.94959100e-02],
+        [ 2.10000000e+00,  4.76901800e-02],
+        [ 2.20000000e+00,  3.15964000e-02],
+        [ 2.30000000e+00,  1.98300300e-02],
+        [ 2.40000000e+00,  1.13274800e-02],
+        [ 2.50000000e+00,  5.27342000e-03],
+        [ 2.60000000e+00,  1.04497000e-03],
+        [ 2.70000000e+00, -1.83194000e-03],
+        [ 2.80000000e+00, -3.71714000e-03],
+        [ 2.90000000e+00, -4.88409000e-03],
+        [ 3.00000000e+00, -5.53906000e-03],
+        [ 3.10000000e+00, -5.83668000e-03],
+        [ 3.20000000e+00, -5.89115000e-03],
+        [ 3.30000000e+00, -5.78615000e-03],
+        [ 3.40000000e+00, -5.58149000e-03],
+        [ 3.50000000e+00, -5.32012000e-03],
+        [ 3.60000000e+00, -5.03204000e-03],
+        [ 3.70000000e+00, -4.73785000e-03],
+        [ 3.80000000e+00, -4.45179000e-03],
+        [ 3.90000000e+00, -4.18335000e-03],
+        [ 4.00000000e+00, -3.93853000e-03]])
         
         coef_dict = optim_class.fit_sample(sample)
 
-        zbl_class = ZBL(2, 1)
+        r = np.linspace(0, optim_class.pot_params['rc'], optim_class.pot_params['Nr'])
 
-        poly = splineval(h_he_ref[:, 0], coef_dict['H-He'], optim_class.knot_pts['H-He'])
+        rho = np.linspace(0, optim_class.pot_params['rho_c'], optim_class.pot_params['Nrho'])
 
-        phi_pot = poly + zbl_class.eval_zbl(h_he_ref[:, 0])
+        rho_h_he = interp1d(r, optim_class.pot_lammps['H-He p'])
+
+        rho_he_h = interp1d(r,optim_class.pot_lammps['He-H p'])
+
+        F_h = interp1d(rho,optim_class.pot_lammps['H F'])
+
+        F_he = interp1d(rho,optim_class.pot_lammps['He F'])
+
+        zbl_hhe = ZBL(2, 1)
+
+        pot_hhe = zbl_hhe.eval_zbl(h_he_ref[:,0]) + splineval(h_he_ref[:,0], coef_dict['H-He'], optim_class.knot_pts['H-He'])
+
+        emd_H_He = np.zeros(h_he_ref[:,0].shape)
+        emd_He_H = np.zeros(h_he_ref[:,0].shape)
+
+        for i, _r in enumerate(h_he_ref[:,0]):
+
+            _rho_h_he = rho_h_he(_r)
+
+            emd_H_He[i] = F_he(_rho_h_he)
+            
+            _rho_h_he = rho_he_h(_r)
+
+            emd_He_H[i] = F_h(_rho_h_he)
         
-        loss += 100 * np.sum((phi_pot - h_he_ref[:, 1])**2, axis=0)
+        pairwise = (emd_H_He + emd_He_H + pot_hhe)/2
+        
+        print(pairwise - h_he_ref[:, 1])
+
+        exit()
+        loss += np.sum((1 - pairwise/h_he_ref[:, 1])**2, axis=0)
+
 
         print('H-He Gas Loss: ', loss)
 
@@ -966,7 +1017,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
             
             binding_ref = ref_mat[0, 1, 0, 0, 0] - binding_ref
 
-            loss += 100 * rel_abs_loss(binding_sample, binding_ref)
+            loss += 10 * rel_abs_loss(binding_sample, binding_ref)
 
             print( v, h ,binding_sample, binding_ref, loss )
 

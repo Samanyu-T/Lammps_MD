@@ -109,7 +109,8 @@ eam_fit = FS_Fitting_Serial.Fit_EAM_Potential(pot, n_knots, pot_params, potlines
 
 # x = np.array([-1.875e-01,  2.568e-01, -2.578e-01, -1.852e-02,  2.622e-02, -3.972e-02])
 
-x = np.array([ 1, 1.202e+00 , 2, 3.884e-01, -1.103e-01,  1.809e-01, -6.601e-01, -2.979e-02 , 2.880e-02, -6.059e-02])
+x = np.array([ 0.91861628,  1.27351374,  1.99999996,  0.78466961, -0.1294734, 
+              0.1495497,  -0.36530064, -0.03049166,  0.03071201, -0.06344354])
 
 # x_res = minimize(loss_func, x, args=(eam_fit, data_dft), method='Powell',options={"maxiter":1000}, tol=1e-4)
 # print(x_res)
@@ -145,11 +146,13 @@ Handle_PotFiles_FS.write_pot(eam_fit.pot_lammps, eam_fit.potlines, 'git_folder/P
 
 
 
-r_plt = np.linspace(0.5, 4, 100)
-zbl = FS_Fitting_Serial.ZBL(2, 1)
-y = zbl.eval_zbl(r)
+# r_plt = np.linspace(0.5, 4, 100)
+# zbl = FS_Fitting_Serial.ZBL(2, 1)
+# y = zbl.eval_zbl(r)
 
-pe_arr = np.zeros((len(r,)))
+r_plt = data_dft[:, 0]
+
+pe_arr = np.zeros((len(r_plt,)))
 
 for i, _r in enumerate(r_plt):
     pot_pe = sim_h_he(_r, eam_fit.lammps_param['potfile'])
@@ -198,7 +201,7 @@ F_he = interp1d(rho,eam_fit.pot_lammps['He F'])
 
 zbl_hhe = FS_Fitting_Serial.ZBL(2, 1)
 
-r_plt = np.linspace(0.9, 4, 100)
+r_plt = data_dft[:,0]
 
 coef_dict = eam_fit.fit_sample(x)
 
@@ -218,7 +221,7 @@ for i, _r in enumerate(r_plt):
     emd_He_H[i] = F_h(_rho_h_he)
 
 total_hhe = (emd_H_He + emd_He_H + pot_hhe)/2
-print(data_dft)
+np.savetxt('h_he_pairwise.txt',data_dft)
 plt.plot(r_plt, total_hhe, label='total')
 plt.plot(data_dft[:,0], data_dft[:,1], label='dft', color='black')
 plt.plot(r_plt, emd_H_He, label='Electron density of Hydrogen on Helium')
@@ -232,14 +235,15 @@ plt.title('H-He Pairwise Potential')
 plt.legend()
 plt.show()
 
+print(pe_arr - total_hhe)
 
 n_knots = {}
 n_knots['He F'] = 2
 n_knots['H-He p'] = 2
-n_knots['He-W p'] = 0
+n_knots['He-W p'] = 2
 n_knots['He-H p'] = 2
 n_knots['He-He p'] = 2
-n_knots['W-He'] = 0
+n_knots['W-He'] = 4
 n_knots['He-He'] = 4
 n_knots['H-He'] = 4
 
@@ -247,12 +251,65 @@ pot, potlines, pot_params = Handle_PotFiles_FS.read_pot('git_folder/Potentials/b
 
 eam_fit = FS_Fitting_Serial.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
 
-x = np.array([ 5.46 ,  0.91861628,  1.27351374,  2,  0.78466961, 2, 3e-4, 
-              -3.670e-01,  4.789e-01 ,-3.762e-01, -2.760e-02,  4.344e-02, -7.470e-02, -0.1294734, 
-              0.1495497,  -0.36530064, -0.03049166,  0.03071201, -0.06344354])
+x = np.array([ 5.46 ,  0.91861628,  1.27351374, 2, 1, 2,  0.78466961, 2, 3e-4, 
+              -1.89051467,  3.00833016,  1.85408476, -0.64971704,  0.63928971, -0.32182122,
+              -3.670e-01,  4.789e-01 ,-3.762e-01, -2.760e-02,  4.344e-02, -7.470e-02, 
+              -0.1294734, 0.1495497,  -0.36530064, -0.03049166,  0.03071201, -0.06344354])
 
+print(eam_fit.map)
+
+r = np.linspace(0, eam_fit.pot_params['rc'], eam_fit.pot_params['Nr'])
+rho = np.linspace(0, eam_fit.pot_params['rho_c'], eam_fit.pot_params['Nrho'])
+
+rho_h_he = interp1d(r, eam_fit.pot_lammps['H-He p'])
+
+rho_he_h = interp1d(r,eam_fit.pot_lammps['He-H p'])
+
+F_h = interp1d(rho,eam_fit.pot_lammps['H F'])
+
+F_he = interp1d(rho,eam_fit.pot_lammps['He F'])
+
+zbl_hhe = FS_Fitting_Serial.ZBL(2, 1)
+
+r_plt = data_dft[:,0]
+
+coef_dict = eam_fit.fit_sample(x)
+
+pot_hhe = zbl_hhe.eval_zbl(r_plt) + FS_Fitting_Serial.splineval(r_plt, coef_dict['H-He'], eam_fit.knot_pts['H-He'])
+
+emd_H_He = np.zeros(r_plt.shape)
+emd_He_H = np.zeros(r_plt.shape)
+
+for i, _r in enumerate(r_plt):
+
+    _rho_h_he = rho_h_he(_r)
+
+    emd_H_He[i] = F_he(_rho_h_he)
+    
+    _rho_h_he = rho_he_h(_r)
+
+    emd_He_H[i] = F_h(_rho_h_he)
+
+total_hhe = (emd_H_He + emd_He_H + pot_hhe)/2
+
+print(-data_dft[:,1] + total_hhe)
 eam_fit.sample_to_file(x)
 
 Handle_PotFiles_FS.write_pot(eam_fit.pot_lammps, eam_fit.potlines, eam_fit.lammps_param['potfile'])
 
 Handle_PotFiles_FS.write_pot(eam_fit.pot_lammps, eam_fit.potlines, 'git_folder/Potentials/init.eam.fs')
+
+
+
+n_knots = {}
+n_knots['He F'] = 2
+n_knots['H-He p'] = 2
+n_knots['He-W p'] = 0
+n_knots['He-H p'] = 2
+n_knots['He-He p'] = 0
+n_knots['W-He'] = 0
+n_knots['He-He'] = 0
+n_knots['H-He'] = 4
+
+x = np.array([ 5.46 ,  0.91861628,  1.27351374,  1.99999996,  0.78466961, -0.1294734, 
+              0.1495497,  -0.36530064, -0.03049166,  0.03071201, -0.06344354])
