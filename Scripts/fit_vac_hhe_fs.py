@@ -7,10 +7,10 @@ sys.path.append(os.path.join(os.getcwd(), 'git_folder', 'Classes'))
 from lammps import lammps
 import matplotlib.pyplot as plt
 import math
-import EAM_Fitting_Serial, Handle_PotFiles
+import FS_Fitting_Serial, Handle_PotFiles_FS
 from scipy.optimize import minimize
 
-def sim_h_he(r, potfile):
+def sim_h_he(r, potfile,type='fs'):
     lmp = lammps( cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
     lmp.command('units metal')
     lmp.command('atom_style atomic')
@@ -39,19 +39,21 @@ def sim_h_he(r, potfile):
     return pe
 
 def loss_func(x, eam_fit, data_dft):
-    A = x[0]
-    Z = x[1]
-    h = x[2]
-    # A = 5.4
+
+    Zh = 1
+    Zhe = 2
+    A = 5.46
+    h = 0.9
     a0 = 0.529
     k = 0.1366
+    # x = np.hstack([A, Zh, x[0], Zhe, x[1], x[2:]])
+    loss = 1e6 *( (x[0] > 1) + (x[2] > 2) )
 
-    loss = 1e8*(Z > 2) + 1e8*( A > 5.8) + 1e8*(A < 5.4) + 1e8*(h<0) + 1e8*(h>0.9)
+    x = np.hstack([A, x])
 
-    # x = np.hstack([A, Z**4/(k*np.pi*a0**3), (2*Z/a0), x])
     eam_fit.sample_to_file(x)
 
-    Handle_PotFiles.write_pot(eam_fit.pot_lammps, eam_fit.potlines, eam_fit.lammps_param['potfile'])
+    Handle_PotFiles_FS.write_pot(eam_fit.pot_lammps, eam_fit.potlines, eam_fit.lammps_param['potfile'])
 
 
     for i, row in enumerate(data_dft):
@@ -59,8 +61,8 @@ def loss_func(x, eam_fit, data_dft):
     
         pot_pe = sim_h_he(r, eam_fit.lammps_param['potfile'])
 
-        if r > 1.3:
-            loss += (1 - pot_pe/dft_pe)**2
+        loss += (1 - pot_pe/dft_pe)**2
+
     print(x, loss)
     return loss
 
@@ -75,7 +77,7 @@ with open('hhe_energy.dat', 'r') as file:
 data_dft = np.array(data_dft)
 
 r = np.linspace(1.5, 4, 100)
-zbl = EAM_Fitting_Serial.ZBL(2, 1)
+zbl = FS_Fitting_Serial.ZBL(2, 1)
 y = zbl.eval_zbl(r)
 
 # data_dft = np.hstack([r.reshape(-1,1), y.reshape(-1,1)])
@@ -85,65 +87,65 @@ proc_id = 0
 
 n_procs = 1
 
-pot, potlines, pot_params = Handle_PotFiles.read_pot('git_folder/Potentials/beck.eam.alloy')
+pot, potlines, pot_params = Handle_PotFiles_FS.read_pot('git_folder/Potentials/beck.eam.fs')
 
 
 n_knots = {}
-n_knots['He_F'] = 2
-n_knots['He_p'] = 2
+n_knots['He F'] = 2
+n_knots['H-He p'] = 2
+n_knots['He-W p'] = 0
+n_knots['He-H p'] = 2
+n_knots['He-He p'] = 0
 n_knots['W-He'] = 0
 n_knots['He-He'] = 0
 n_knots['H-He'] = 4
 
-
 with open('fitting.json', 'r') as file:
     param_dict = json.load(file)
 
-eam_fit = EAM_Fitting_Serial.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
+eam_fit = FS_Fitting_Serial.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
 
-x = np.array([-1.875e-01,  2.568e-01, -2.578e-01, -1.852e-02,  2.622e-02, -3.972e-02])
 
-# x = np.array([ -1.57304977e-01, 2.55730610e-01, -3.04095309e-01, -2.91073705e-02,  3.33967828e-02, -1.06016653e-01])
-# x = np.array([ -2.43262355e-01, 3.72114002e-01,  7.85573717e-02, -2.85585122e-02,  3.96325522e-02, -1.65936981e-01]) 
-# x = np.array([-4.91023057e-02, 6.44896465e-02, -4.29839368e-01, -2.90499863e-02,  2.89994789e-02, -7.50996183e-02])
-# x = np.array([-2.96808939e-01, 1.12443859e+00, -3.83569086e+00, -2.86488137e-02,  3.27661217e-02,-1.09961765e-0])
-x = np.array([5.3, 2, 1, -1.04069087,  0.48249025, -0.20081857, -0.00879394, -0.15072352,  1.14083218])
-# x = np.array([-3.682e+00,  8.656e+00, -1.773e+01, -1.607e-01,  4.941e-01, -1.375e+00, -1.930e-02,  2.345e-02, -1.243e-01])
-# x = np.array([-3.67194357e+00, 9.69802650e+00, -3.58810962e+00, -5.76257268e-02,  3.45931845e-02,
-#   1.59252021e-01 ,-1.88672790e-02,  2.32253675e-02 ,-1.48271492e-01])
+# x = np.array([-1.875e-01,  2.568e-01, -2.578e-01, -1.852e-02,  2.622e-02, -3.972e-02])
 
-# x = np.array([2.79972926e-01, 5.59966304e-01, -6.27399559e+00,  2.27451317e-02, -5.81315963e-02, 2.31961952e-01])
+x = np.array([ 1, 1.202e+00 , 2, 3.884e-01, -1.103e-01,  1.809e-01, -6.601e-01, -2.979e-02 , 2.880e-02, -6.059e-02])
 
-Z = 2
-A = 5.4
-h = 0.9
-a0 = 0.529
-k = 0.1366
-
-x = np.hstack([A, Z, h, x])
-
-# x = np.array([5.400e+00,  1.823e+00,  7.833e-01,  1.630e-01 , 1.216e+00, -6.894e+00, -1.355e-02, -2.319e-02,  8.444e-02])
-# x = np.array([5.500e+00 , 2.000e+00 , 7.078e-01 , 1.526e-01 , 1.434e+00, -7.844e+00, -1.594e-02 ,-1.474e-02,  5.061e-02])
 # x_res = minimize(loss_func, x, args=(eam_fit, data_dft), method='Powell',options={"maxiter":1000}, tol=1e-4)
 # print(x_res)
 # x = x_res.x
 
 
+Zh = 1
+Zhe = 2
+A = 5.46
+h = 0.9
+a0 = 0.529
+k = 0.1366
+
+x = np.hstack([A, x])
+
+# x = np.hstack([A, Zh, x[0], Zhe, x[1], x[2:]])
+
 # x = np.array([ 4.92700000e+00 , 2.48348537e+02,  7.53497164e+00,  2.79972926e-01,
 #   5.59966304e-01, -6.27399559e+00,  2.27451317e-02, -5.81315963e-02,
 #   2.31961952e-01])
 
+x = np.array([ 5.46 ,  0.91861628,  1.27351374,  1.99999996,  0.78466961, -0.1294734, 
+              0.1495497,  -0.36530064, -0.03049166,  0.03071201, -0.06344354])
+
+x = np.array([5.46 ,  0.91861628,  1.27351374, 1.99999996,  0.78466961,-3.66286476e-01,  1.46948597e-01, -3.65438537e-01, -3.32882749e-03, 2.06810423e-02, -3.23230052e-01])
+
 eam_fit.sample_to_file(x)
 
-Handle_PotFiles.write_pot(eam_fit.pot_lammps, eam_fit.potlines, eam_fit.lammps_param['potfile'])
+Handle_PotFiles_FS.write_pot(eam_fit.pot_lammps, eam_fit.potlines, eam_fit.lammps_param['potfile'])
 
-Handle_PotFiles.write_pot(eam_fit.pot_lammps, eam_fit.potlines, 'git_folder/Potentials/init.eam.alloy')
+Handle_PotFiles_FS.write_pot(eam_fit.pot_lammps, eam_fit.potlines, 'git_folder/Potentials/init.eam.fs')
 
 
 
 
 r_plt = np.linspace(0.5, 4, 100)
-zbl = EAM_Fitting_Serial.ZBL(2, 1)
+zbl = FS_Fitting_Serial.ZBL(2, 1)
 y = zbl.eval_zbl(r)
 
 pe_arr = np.zeros((len(r,)))
@@ -166,7 +168,7 @@ h_he_ref = np.array([
 
 r = np.linspace(0, eam_fit.pot_params['rc'], eam_fit.pot_params['Nr'])[1:]
 
-zbl = EAM_Fitting_Serial.ZBL(2, 1)
+zbl = FS_Fitting_Serial.ZBL(2, 1)
 plt.plot(r_plt, pe_arr, label='full inc eam')
 plt.plot(data_dft[:,0], zbl.eval_zbl(data_dft[:,0]), label = 'zbl')  
 plt.plot(data_dft[:,0], data_dft[:,1], label='dft', color='black')
@@ -185,3 +187,29 @@ plt.show()
 plt.plot(r[80:], pot[80:], label='pairwise')
 plt.plot(r[80:], zbl.eval_zbl(r[80:]), label='zbl')
 plt.show()
+
+
+
+n_knots = {}
+n_knots['He F'] = 2
+n_knots['H-He p'] = 2
+n_knots['He-W p'] = 0
+n_knots['He-H p'] = 2
+n_knots['He-He p'] = 2
+n_knots['W-He'] = 0
+n_knots['He-He'] = 4
+n_knots['H-He'] = 4
+
+pot, potlines, pot_params = Handle_PotFiles_FS.read_pot('git_folder/Potentials/beck.eam.fs')
+
+eam_fit = FS_Fitting_Serial.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
+
+x = np.array([ 5.46 ,  0.91861628,  1.27351374,  2,  0.78466961, 2, 3e-4, 
+              -3.670e-01,  4.789e-01 ,-3.762e-01, -2.760e-02,  4.344e-02, -7.470e-02, -0.1294734, 
+              0.1495497,  -0.36530064, -0.03049166,  0.03071201, -0.06344354])
+
+eam_fit.sample_to_file(x)
+
+Handle_PotFiles_FS.write_pot(eam_fit.pot_lammps, eam_fit.potlines, eam_fit.lammps_param['potfile'])
+
+Handle_PotFiles_FS.write_pot(eam_fit.pot_lammps, eam_fit.potlines, 'git_folder/Potentials/init.eam.fs')

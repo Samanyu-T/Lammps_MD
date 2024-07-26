@@ -2,8 +2,8 @@ import numpy as np
 import sys
 import os
 sys.path.append(os.path.join(os.getcwd(), 'git_folder', 'Classes'))
-import EAM_Fitting_Serial
-import Handle_PotFiles
+import FS_Fitting_Serial
+import Handle_PotFiles_FS
 import time
 import json, glob, shutil
 import matplotlib.pyplot as plt
@@ -44,26 +44,25 @@ proc_id = 0
 
 n_procs = 1
 
-pot, potlines, pot_params = Handle_PotFiles.read_pot('Fitting_Runtime/Potentials/optim.0.eam.alloy' )
+pot, potlines, pot_params = Handle_PotFiles_FS.read_pot('git_folder/Potentials/init.eam.fs')
 
 
 n_knots = {}
-n_knots['He_F'] = 2
-n_knots['He_p'] = 2
+n_knots['He F'] = 0
+n_knots['H-He p'] = 0
+n_knots['He-W p'] = 2
+n_knots['He-H p'] = 0
+n_knots['He-He p'] = 0
 n_knots['W-He'] = 4
 n_knots['He-He'] = 0
-n_knots['H-He'] = 0
-
-
-
+n_knots['H-He'] = 4
 
 with open('fitting.json', 'r') as file:
     param_dict = json.load(file)
 
 copy_files(True, True, True, param_dict['work_dir'], param_dict['data_dir'])
 
-eam_fit = EAM_Fitting_Serial.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
-
+eam_fit = FS_Fitting_Serial.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
 
 sample2 = eam_fit.gen_rand()
 
@@ -79,7 +78,7 @@ data_ref = np.loadtxt('dft_update.txt')
 
 t1 = time.perf_counter()
 
-EAM_Fitting_Serial.simplex(n_knots, comm, proc_id, sample, 1000, param_dict['work_dir'], param_dict['save_dir'])
+FS_Fitting_Serial.simplex(n_knots, comm, proc_id, sample, 1000, param_dict['work_dir'], param_dict['save_dir'])
 
 t2 = time.perf_counter()
 print(t2 - t1)

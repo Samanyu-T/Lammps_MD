@@ -46,7 +46,7 @@ class LammpsParentClass:
         self.stress_perfect = np.zeros((6,))
         self.vol_perfect = (self.alattice*self.size)**3
 
-    def init_from_datafile(self, filepath):
+    def init_from_datafile(self, filepath, pot_type='alloy'):
         """
         Initialize a Lammps simulation from a .data file
 
@@ -67,7 +67,10 @@ class LammpsParentClass:
 
         cmdlist.append('read_data %s' % filepath)
 
-        cmdlist.append('pair_style eam/alloy')
+        if pot_type=='alloy':
+            cmdlist.append('pair_style eam/alloy' )
+        elif pot_type=='fs':
+            cmdlist.append('pair_style eam/fs')
 
         cmdlist.append('pair_coeff * * %s W H He' % self.potfile)
 
@@ -79,7 +82,7 @@ class LammpsParentClass:
 
         return cmdlist
     
-    def init_from_box(self):
+    def init_from_box(self, pot_type='alloy'):
         """
         Initialize a Lammps simulation by creating a box of atoms defined by the attributes of the Parent Class (JSON) file
 
@@ -142,7 +145,10 @@ class LammpsParentClass:
 
         cmdlist.append('mass 3 4.002602')
 
-        cmdlist.append('pair_style eam/alloy' )
+        if pot_type=='alloy':
+            cmdlist.append('pair_style eam/alloy' )
+        elif pot_type=='fs':
+            cmdlist.append('pair_style eam/fs')
 
         cmdlist.append('pair_coeff * * %s W H He' % self.potfile)
         

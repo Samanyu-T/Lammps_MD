@@ -11,13 +11,16 @@ import EAM_Fitting_Serial, Handle_PotFiles
 from scipy.optimize import minimize
 from scipy.interpolate import interp1d
 
-def sim_hcp(filepath, potfile):
+def sim_hcp(filepath, potfile, type='alloy'):
     lmp = lammps(cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
     lmp.command('units metal')
     lmp.command('atom_style atomic')
     lmp.command('atom_modify map array sort 0 0.0')
     lmp.command('read_data %s' % filepath)
-    lmp.command('pair_style eam/alloy' )
+    if type=='alloy':
+        lmp.command('pair_style eam/alloy' )
+    elif type=='fs':
+        lmp.command('pair_style eam/fs')
     lmp.command('pair_coeff * * %s W H He' % potfile)
     lmp.command('thermo_style custom step temp pe pxx pyy pzz pxy pxz pyz vol')
     lmp.command('thermo 100')
@@ -44,7 +47,10 @@ def sim_h_he(r, potfile):
     lmp.command('mass 1 183.84')
     lmp.command('mass 2 1.00784')
     lmp.command('mass 3 4.002602')
-    lmp.command('pair_style eam/alloy' )
+    if type=='alloy':
+        lmp.command('pair_style eam/alloy' )
+    elif type=='fs':
+        lmp.command('pair_style eam/fs')
     lmp.command('pair_coeff * * %s W H He' % potfile)
     lmp.command('thermo_style custom step temp pe pxx pyy pzz pxy pxz pyz vol')
     lmp.command('thermo 100')
@@ -56,33 +62,33 @@ def sim_h_he(r, potfile):
 
 def loss_func(x, eam_fit, dft_hcp_helium, dft_hcp_hhe, dft_vacuum_hhe):
 
-    A = 5.4
-    Z = 2
-    a0 = 0.529
-    k = 0.1366
-    x_he =  np.array( [-3.670e-01,  4.788e-01, -3.763e-01, -2.759e-02, 4.339e-02, -7.454e-02] )
+    A =x[0]
+    Z = x[1]
+    h = x[2]
+
+    # x_he =  np.array( [-3.670e-01,  4.788e-01, -3.763e-01, -2.759e-02, 4.339e-02, -7.454e-02] )
     
-    x_he = np.hstack([A, Z**4/(k*np.pi*a0**3), (2*Z/a0), x_he])
+    # x_he = np.hstack([A, Z, x_he])
     
-    x = np.hstack([x_he, x])
+    # x = np.hstack([x_he, x])
 
     eam_fit.sample_to_file(x)
 
     Handle_PotFiles.write_pot(eam_fit.pot_lammps, eam_fit.potlines, eam_fit.lammps_param['potfile'])
 
-    loss = 0
+    loss = 1e8*(Z > 2) + 1e8*( A > 5.6) + 1e8*(A < 5.4) + 1e8*(h<0) + 1e8*(h>1)
 
-    # for i, row in enumerate(dft_hcp_helium):
-    #     lat, dft_stress, dft_pe = row
+    for i, row in enumerate(dft_hcp_helium):
+        lat, dft_stress, dft_pe = row
 
-    #     pot_stress, pot_pe = sim_hcp('HCP_Helium_DataFiles/lat.%.1f.data' % lat, eam_fit.lammps_param['potfile'])
+        pot_stress, pot_pe = sim_hcp('HCP_Helium_DataFiles/lat.%.1f.data' % lat, eam_fit.lammps_param['potfile'])
 
-    #     if dft_stress <20:
-    #         loss += lat*(1 - pot_stress/dft_stress)**2
-    #     else:
-    #         loss += 1e-1*(1 - pot_stress/dft_stress)**2
+        if dft_stress <20:
+            loss += lat*(1 - pot_stress/dft_stress)**2
+        else:
+            loss += 1e-1*(1 - pot_stress/dft_stress)**2
 
-    #     loss += (1 - pot_pe/dft_pe)**2
+        loss += (1 - pot_pe/dft_pe)**2
 
     # for i, row in enumerate(dft_hcp_hhe):
     #     lat, dft_stress, dft_pe = row
@@ -103,7 +109,7 @@ def loss_func(x, eam_fit, dft_hcp_helium, dft_hcp_hhe, dft_vacuum_hhe):
 
         loss += 10*(1 - pot_pe/dft_pe)**2
 
-    print(x[-9:], loss)
+    print(x, loss)
     return loss
 
 
@@ -201,9 +207,24 @@ with open('fitting.json', 'r') as file:
 # potfile =  'Fitting_Runtime/Potentials/optim.0.eam.alloy' 
 eam_fit = EAM_Fitting_Serial.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
 
+
+A = 5.4
+Z = 2
+h = 1
+
+# Z = 1.688
+a0 = 0.529
+k = 0.1366
+
+x_he =  np.array( [-3.670e-01,  4.788e-01, -3.763e-01, -2.759e-02, 4.339e-02, -7.454e-02] )
+
+x_he = np.hstack([A, Z, h, x_he])
+
+
 x =  np.zeros((6, ))
 
 x = np.array([-1.667e-01,  8.366e-01, -3.819e+00, -2.940e-02,  2.126e-02, -9.489e-03])
+x = np.array([-0.99759284,  0.46957353, -0.33063608,  0.01337966, -0.11074582,  0.44841358])
 
 # x = np.array([-4.045e+00,  1.515e+01, -3.703e+01, -5.456e-02,  4.143e-02,
 #            -1.908e-01, -1.996e-02,  1.611e-02,  3.742e-03])
@@ -213,17 +234,11 @@ x = np.array([-1.667e-01,  8.366e-01, -3.819e+00, -2.940e-02,  2.126e-02, -9.489
 
 # x = np.zeros((9, ))
 
-# res = minimize(loss_func, x, args=(eam_fit, dft_hcp_helium, dft_hcp_hhe, dft_vacuum_hhe), method='Powell',options={"maxiter":1000}, tol=1e-4)
+# res = minimize(loss_func, np.hstack([x_he, x]), args=(eam_fit, dft_hcp_helium, dft_hcp_hhe, dft_vacuum_hhe), method='Powell',options={"maxiter":1000}, tol=1e-4)
 # print(res)
 # x = res.x
 
-A = 5.4
-Z = 2
-a0 = 0.529
-k = 0.1366
-x_he =  np.array( [-3.670e-01,  4.788e-01, -3.763e-01, -2.759e-02, 4.339e-02, -7.454e-02] )
-
-x_he = np.hstack([A, Z**4/(k*np.pi*a0**3), (2*Z/a0), x_he])
+print(x_he)
 
 sample = np.hstack([x_he, x])
 

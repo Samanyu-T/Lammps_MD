@@ -7,10 +7,10 @@ sys.path.append(os.path.join(os.getcwd(), 'git_folder', 'Classes'))
 from lammps import lammps
 import matplotlib.pyplot as plt
 import math
-import EAM_Fitting_Serial, Handle_PotFiles
+import FS_Fitting_Serial, Handle_PotFiles_FS
 from scipy.optimize import minimize
 
-def sim_hcp_helium(filepath, potfile, type='alloy'):
+def sim_hcp_helium(filepath, potfile, type='fs'):
     lmp = lammps(cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
     lmp.command('units metal')
     lmp.command('atom_style atomic')
@@ -35,20 +35,17 @@ def sim_hcp_helium(filepath, potfile, type='alloy'):
 
 
 def loss_func(x, eam_fit, data_dft):
-    # A = x[0]
-    # Z = x[1]
-    # h = x[2]
 
     A = 5.46
     Z = 2
     h = 1
     # a0 = 0.529
     # k = 0.1366
-    x = np.hstack([A, Z, h, x])
-
+    x = np.hstack([A, Z, x])
+    
     eam_fit.sample_to_file(x)
 
-    Handle_PotFiles.write_pot(eam_fit.pot_lammps, eam_fit.potlines, eam_fit.lammps_param['potfile'])
+    Handle_PotFiles_FS.write_pot(eam_fit.pot_lammps, eam_fit.potlines, eam_fit.lammps_param['potfile'])
 
     loss = 0 #1e8*( (Z > 1.83) + ( A > 5.6) + (A < 5.4) + (h<0) + (h>0.78) ) 
 
@@ -64,7 +61,7 @@ def loss_func(x, eam_fit, data_dft):
 
         loss +=  lat*(1 - pot_pe/dft_pe)**2
 
-    print(x[3:], loss)
+    print(x, loss)
     return loss
 
 stress_dft = []
@@ -101,12 +98,15 @@ proc_id = 0
 
 n_procs = 1
 
-pot, potlines, pot_params = Handle_PotFiles.read_pot('git_folder/Potentials/beck.eam.alloy')
+pot, potlines, pot_params = Handle_PotFiles_FS.read_pot('git_folder/Potentials/beck.eam.fs')
 
 
 n_knots = {}
-n_knots['He_F'] = 2
-n_knots['He_p'] = 2
+n_knots['He F'] = 2
+n_knots['H-He p'] = 0
+n_knots['He-W p'] = 0
+n_knots['He-H p'] = 0
+n_knots['He-He p'] = 2
 n_knots['W-He'] = 0
 n_knots['He-He'] = 4
 n_knots['H-He'] = 0
@@ -116,25 +116,16 @@ with open('fitting.json', 'r') as file:
     param_dict = json.load(file)
 
 # potfile =  'Fitting_Runtime/Potentials/optim.0.eam.alloy' 
-eam_fit = EAM_Fitting_Serial.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
+eam_fit = FS_Fitting_Serial.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
 
-x = np.array([-4.078e-01, 6.777e-01, -1.038e+00, -2.816e-02,  4.515e-02, -7.875e-02])
-
-# Z = 1.993
-# A = 4.9
-# x = np.hstack([A, Z, x])
-# -3.670e-01,  4.788e-01, -3.763e-01, -2.759e-02, 4.339e-02, -7.454e-02
+# x = np.array([-4.078e-01, 6.777e-01, -1.038e+00, -2.816e-02,  4.515e-02, -7.875e-02])
 
 ''' CURRENT STABLE OPTIMA '''
-x =  np.array(  [-3.670e-01,  4.788e-01, -3.763e-01, -2.759e-02, 4.339e-02, -7.454e-02])
+x =  np.array(  [3e-4, -3.670e-01,  4.789e-01 ,-3.762e-01, -2.760e-02,  4.344e-02, -7.470e-02])
 
-# x = np.array([-0.40621356,  0.51401276, -0.17846997 ,-0.0274875   ,0.04429768 ,-0.08218945])
-# x =  np.array([-0.34777945,  0.45992866, -0.52837101, -0.0268438,   0.04093725, -0.06855827])
-# x = np.array([-0.29363749 ,-0.08804645,  2.1158142 , -0.02680032 , 0.04675674, -0.09980091])
-# x = np.zeros((9,)) + 1e-1 * np.random.randn((9)
-# x_res = minimize(loss_func, x+ 1e-4 * np.random.randn(6) , args=(eam_fit, data_dft), method='Powell',options={"maxiter":100}, tol=1e-4)
-# print(x_res)
-# x = x_res.x
+x_res = minimize(loss_func, x , args=(eam_fit, data_dft), method='Powell',options={"maxiter":100}, tol=1e-4)
+print(x_res)
+x = x_res.x
 
 loss_func(x, eam_fit, data_dft)
 stress_arr = np.zeros((len(data_dft,)))
@@ -144,16 +135,15 @@ pe_arr = np.zeros((len(data_dft,)))
 A = 5.46
 Z = 2
 h = 1
-# a0 = 0.529
-# k = 0.1366
-x = np.hstack([A, Z, h, x])
+
+x = np.hstack([A, Z, x])
 
 sample = x
 print(sample)
 
 eam_fit.sample_to_file(sample)
 
-Handle_PotFiles.write_pot(eam_fit.pot_lammps, eam_fit.potlines, eam_fit.lammps_param['potfile'])
+Handle_PotFiles_FS.write_pot(eam_fit.pot_lammps, eam_fit.potlines, eam_fit.lammps_param['potfile'])
 
 for i, row in enumerate(data_dft):
     lat, dft_stress, dft_pe = row
@@ -162,13 +152,7 @@ for i, row in enumerate(data_dft):
     
     stress_arr[i]  = pot_stress
     pe_arr[i] = pot_pe
-    # loss += (1 - pot_stress/dft_stress)**2
-    # loss += (1 - pot_pe/dft_pe)**2# # potfile = 'He-Beck1968_modified.table'
 
-# lat_arr = np.linspace(1.3, 4, 20)
-# pe_arr = np.zeros(lat_arr.shape)
-# stress_arr = np.zeros(lat_arr.shape)
-# vol_arr = np.zeros(lat_arr.shape)
 
 
 beck_stress_arr = np.zeros((len(data_dft,)))
@@ -177,7 +161,7 @@ beck_pe_arr = np.zeros((len(data_dft,)))
 for i, row in enumerate(data_dft):
     lat, dft_stress, dft_pe = row
 
-    pot_stress, pot_pe = sim_hcp_helium('HCP_Helium_DataFiles/lat.%.1f.data' % lat, potfile =  'git_folder/Potentials/WHHe_test.eam.alloy' )
+    pot_stress, pot_pe = sim_hcp_helium('HCP_Helium_DataFiles/lat.%.1f.data' % lat, potfile =  'git_folder/Potentials/WHHe_test.eam.alloy' , type='alloy')
     
     beck_stress_arr[i]  = pot_stress
     beck_pe_arr[i] = pot_pe
@@ -211,7 +195,7 @@ plt.legend()
 plt.show()
 
 
-pot = eam_fit.pot_lammps['He_F']
+pot = eam_fit.pot_lammps['He F']
 plt.ylabel('Embedding Function / eV')
 plt.xlabel('Electron Density/ pot_units')
 plt.title('Embedding function of Helium')
@@ -219,7 +203,7 @@ plt.plot(np.linspace(0, eam_fit.pot_params['rho_c'], eam_fit.pot_params['Nrho'])
 plt.show()
 
 
-pot = eam_fit.pot_lammps['He_p']
+pot = eam_fit.pot_lammps['He-He sp']
 plt.ylabel('Electron Density / pot_units')
 plt.xlabel('Distance/ A')
 plt.title('Electron Density Function of Helium')
