@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import math
 import FS_Fitting_Serial, Handle_PotFiles_FS
 from scipy.optimize import minimize
+from scipy.interpolate import interp1d
 
 def sim_h_he(r, potfile,type='fs'):
     lmp = lammps( cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
@@ -133,7 +134,7 @@ x = np.hstack([A, x])
 x = np.array([ 5.46 ,  0.91861628,  1.27351374,  1.99999996,  0.78466961, -0.1294734, 
               0.1495497,  -0.36530064, -0.03049166,  0.03071201, -0.06344354])
 
-x = np.array([5.46 ,  0.91861628,  1.27351374, 1.99999996,  0.78466961,-3.66286476e-01,  1.46948597e-01, -3.65438537e-01, -3.32882749e-03, 2.06810423e-02, -3.23230052e-01])
+# x = np.array([5.46 ,  0.91861628,  1.27351374, 1.99999996,  0.78466961,-3.66286476e-01,  1.46948597e-01, -3.65438537e-01, -3.32882749e-03, 2.06810423e-02, -3.23230052e-01])
 
 eam_fit.sample_to_file(x)
 
@@ -184,10 +185,52 @@ plt.title('Pairwise Interaction of H-He')
 plt.legend()
 plt.show()
 
-plt.plot(r[80:], pot[80:], label='pairwise')
-plt.plot(r[80:], zbl.eval_zbl(r[80:]), label='zbl')
-plt.show()
+r = np.linspace(0, eam_fit.pot_params['rc'], eam_fit.pot_params['Nr'])
+rho = np.linspace(0, eam_fit.pot_params['rho_c'], eam_fit.pot_params['Nrho'])
 
+rho_h_he = interp1d(r, eam_fit.pot_lammps['H-He p'])
+
+rho_he_h = interp1d(r,eam_fit.pot_lammps['He-H p'])
+
+F_h = interp1d(rho,eam_fit.pot_lammps['H F'])
+
+F_he = interp1d(rho,eam_fit.pot_lammps['He F'])
+
+zbl_hhe = FS_Fitting_Serial.ZBL(2, 1)
+
+r_plt = np.linspace(0.9, 4, 100)
+
+coef_dict = eam_fit.fit_sample(x)
+
+pot_hhe = zbl_hhe.eval_zbl(r_plt) + FS_Fitting_Serial.splineval(r_plt, coef_dict['H-He'], eam_fit.knot_pts['H-He'])
+
+emd_H_He = np.zeros(r_plt.shape)
+emd_He_H = np.zeros(r_plt.shape)
+
+for i, _r in enumerate(r_plt):
+
+    _rho_h_he = rho_h_he(_r)
+
+    emd_H_He[i] = F_he(_rho_h_he)
+    
+    _rho_h_he = rho_he_h(_r)
+
+    emd_He_H[i] = F_h(_rho_h_he)
+
+total_hhe = (emd_H_He + emd_He_H + pot_hhe)/2
+print(data_dft)
+plt.plot(r_plt, total_hhe, label='total')
+plt.plot(data_dft[:,0], data_dft[:,1], label='dft', color='black')
+plt.plot(r_plt, emd_H_He, label='Electron density of Hydrogen on Helium')
+plt.plot(r_plt, emd_He_H, label='Electron density of Helium on Hydrogen')
+plt.plot(r_plt, pot_hhe, label='Covalent')
+
+plt.ylabel('Contributions / eV')
+plt.xlabel('Distance/ A')
+plt.title('H-He Pairwise Potential')
+
+plt.legend()
+plt.show()
 
 
 n_knots = {}
