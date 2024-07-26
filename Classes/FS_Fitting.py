@@ -746,27 +746,27 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
     loss = 0
 
-    if optim_class.bool_fit['He F']:
-        he_f = optim_class.pot_lammps['He F']
-        if (he_f < 0).any():
-            loss += 1000
-            return loss
+    # if optim_class.bool_fit['He F']:
+    #     he_f = optim_class.pot_lammps['He F']
+    #     if (he_f < 0).any():
+    #         loss += 1000
+    #         return loss
         
 
-    if optim_class.bool_fit['W-He']:
+    # if optim_class.bool_fit['W-He']:
 
-        whe = optim_class.pot_lammps['W-He']
+    #     whe = optim_class.pot_lammps['W-He']
 
-        dr = optim_class.pot_params['rc']/optim_class.pot_params['Nrho']
+    #     dr = optim_class.pot_params['rc']/optim_class.pot_params['Nrho']
 
-        min_idx = whe.argmin()
+    #     min_idx = whe.argmin()
         
-        if min_idx == 0:
-            loss += 100
+    #     if min_idx == 0:
+    #         loss += 100
 
-        else:
-            min_whe = whe.min() / (min_idx * dr)
-            loss += abs(min_whe - -5e-3)
+    #     else:
+    #         min_whe = whe.min() / (min_idx * dr)
+    #         loss += abs(min_whe - -5e-3)
             
     # if optim_class.bool_fit['He-He']:
         

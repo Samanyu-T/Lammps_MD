@@ -29,9 +29,9 @@ def copy_files(w_he, he_he, h_he, work_dir, data_dir):
         files_to_copy.extend(glob.glob('%s/V*H0He*.*.txt' % data_dir))
 
     if h_he:
-        # files_to_copy.extend(glob.glob('%s/V*H*He*.*.txt' % data_dir))
-        files_to_copy.extend(glob.glob('%s/V*H1He0.*.txt' % data_dir))
-        files_to_copy.extend(glob.glob('%s/V*H1He1.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H*He*.*.txt' % data_dir))
+        # files_to_copy.extend(glob.glob('%s/V*H1He0.*.txt' % data_dir))
+        # files_to_copy.extend(glob.glob('%s/V*H1He1.*.txt' % data_dir))
 
     files_to_copy = list(set(files_to_copy))
 
@@ -64,7 +64,7 @@ copy_files(True, True, True, param_dict['work_dir'], param_dict['data_dir'])
 
 eam_fit = FS_Fitting_Serial.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
 
-sample2 = eam_fit.gen_rand()
+zsample2 = eam_fit.gen_rand()
 
 sample = np.loadtxt('sample.txt') 
 # -2.07867732  4.00598855 -2.6092615  -0.66293926  0.87068177 -1.12676143
@@ -73,12 +73,12 @@ sample = np.loadtxt('sample.txt')
 # 5.30600542  1.99987348 0.6 -1.93906141  2.7796295   1.5790798  -0.52774223  0.56313272 -0.4323598  -1.04069087  0.48249025 -0.20081857 -0.00879394 -0.15072352  1.14083218
 # sample = np.array([1e-4])
 # sample += 1e-2*np.random.random(sample.shape)
-print(sample2.shape, sample.shape)
+# print(sample2.shape, sample.shape)
 data_ref = np.loadtxt('dft_update.txt')
 
 t1 = time.perf_counter()
 
-FS_Fitting_Serial.simplex(n_knots, comm, proc_id, sample, 1000, param_dict['work_dir'], param_dict['save_dir'])
+FS_Fitting_Serial.simplex(n_knots, comm, proc_id, sample + 1e-2*np.random.randn(len(sample)), 1000, param_dict['work_dir'], param_dict['save_dir'])
 
 t2 = time.perf_counter()
 print(t2 - t1)
