@@ -911,7 +911,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
         
         pairwise = (emd_H_He + emd_He_H + pot_hhe)/2
 
-        loss += 0.5 * np.sum((1 - pairwise/h_he_ref[:, 1])**2, axis=0)
+        loss += 1e-1 * np.sum((1 - pairwise/h_he_ref[:, 1])**2, axis=0)
 
         # print('H-He Gas Loss: ', loss)
 
