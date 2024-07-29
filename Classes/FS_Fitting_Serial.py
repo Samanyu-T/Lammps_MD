@@ -934,7 +934,6 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
     sample_mat = lst2matrix(data_sample)
 
-
     ''' 
 
     Loss from Helium Interstitial
@@ -983,7 +982,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
             
         binding_sample = subtract_lst(np.min(sample_mat[v, 0, 1:, :, 0], axis = 1), np.min(sample_mat[v, 0, :-1, :, 0], axis = 1))
         
-        binding_sample = sample_mat[0, 0, 1, 0, 0] - binding_sample
+        binding_sample = sample_mat[0, 0, 1, 0, 0] - binding_sample 
 
         binding_ref = subtract_lst(np.min(ref_mat[v, 0, 1:, :, 0], axis = 1), np.min(ref_mat[v, 0, :-1, :, 0], axis = 1))
         
@@ -1014,7 +1013,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
             binding_ref = ref_mat[0, 1, 0, 0, 0] - binding_ref
 
             loss += 10 * rel_abs_loss(binding_sample, binding_ref)
-
+            
             print( v, h ,binding_sample, binding_ref, loss )
 
 
@@ -1059,7 +1058,7 @@ def random_sampling(n_knots, comm, proc_id, max_time=3, work_dir = '../Optim_Loc
     # Call the main fitting class
     fitting_class = Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, work_dir)
 
-    data_ref = np.loadtxt('dft_update.txt')
+    data_ref = np.loadtxt('dft_yang.txt')
 
     # Init Optimization Parameter
     t1 = time.perf_counter()
@@ -1137,7 +1136,7 @@ def random_sampling(n_knots, comm, proc_id, max_time=3, work_dir = '../Optim_Loc
     # Call the main fitting class
     fitting_class = Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, work_dir)
 
-    data_ref = np.loadtxt('dft_update.txt')
+    data_ref = np.loadtxt('dft_yang.txt')
 
     # Init Optimization Parameter
     t1 = time.perf_counter()
@@ -1215,7 +1214,7 @@ def gaussian_sampling(n_knots, comm, proc_id, mean, cov, max_time=3, work_dir = 
     # Call the main fitting class
     fitting_class = Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, work_dir)
 
-    data_ref = np.loadtxt('dft_update.txt')
+    data_ref = np.loadtxt('dft_yang.txt')
 
     # Init Optimization Parameter
     t1 = time.perf_counter()
@@ -1300,7 +1299,7 @@ def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_
     # Call the main fitting class
     fitting_class = Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, work_dir)
 
-    data_ref = np.loadtxt('dft_update.txt')
+    data_ref = np.loadtxt('dft_yang.txt')
 
     # Init Optimization Parameter
     t1 = time.perf_counter()

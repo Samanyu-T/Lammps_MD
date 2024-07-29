@@ -1049,7 +1049,7 @@ def random_sampling(n_knots, comm, proc_id, max_time=3, work_dir = '../Optim_Loc
     # Call the main fitting class
     fitting_class = Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, work_dir)
 
-    data_ref = np.loadtxt('dft_update.txt')
+    data_ref = np.loadtxt('dft_yang.txt')
 
     # Init Optimization Parameter
     t1 = time.perf_counter()
@@ -1127,7 +1127,7 @@ def random_sampling(n_knots, comm, proc_id, max_time=3, work_dir = '../Optim_Loc
     # Call the main fitting class
     fitting_class = Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, work_dir)
 
-    data_ref = np.loadtxt('dft_update.txt')
+    data_ref = np.loadtxt('dft_yang.txt')
 
     # Init Optimization Parameter
     t1 = time.perf_counter()
@@ -1205,7 +1205,7 @@ def gaussian_sampling(n_knots, comm, proc_id, mean, cov, max_time=3, work_dir = 
     # Call the main fitting class
     fitting_class = Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, work_dir)
 
-    data_ref = np.loadtxt('dft_update.txt')
+    data_ref = np.loadtxt('dft_yang.txt')
 
     # Init Optimization Parameter
     t1 = time.perf_counter()
@@ -1233,8 +1233,6 @@ def gaussian_sampling(n_knots, comm, proc_id, mean, cov, max_time=3, work_dir = 
         sample = np.random.multivariate_normal(mean=mean, cov=cov)
 
         loss = loss_func(sample, data_ref, fitting_class)
-
-        print(loss)
         
         idx += 1
 
@@ -1290,7 +1288,7 @@ def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_
     # Call the main fitting class
     fitting_class = Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, work_dir)
 
-    data_ref = np.loadtxt('dft_update.txt')
+    data_ref = np.loadtxt('dft_yang.txt')
 
     # Init Optimization Parameter
     t1 = time.perf_counter()
