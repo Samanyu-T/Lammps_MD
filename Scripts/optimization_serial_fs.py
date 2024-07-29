@@ -29,7 +29,7 @@ def copy_files(w_he, he_he, h_he, work_dir, data_dir):
         # files_to_copy.extend(glob.glob('%s/V*H0He*.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H0He2.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H0He3.*.txt' % data_dir))
-        files_to_copy.extend(glob.glob('%s/V*H0He4.*.txt' % data_dir))
+        # files_to_copy.extend(glob.glob('%s/V*H0He4.*.txt' % data_dir))
 
     if h_he:
         # files_to_copy.extend(glob.glob('%s/V*H*He*.*.txt' % data_dir))
@@ -55,7 +55,7 @@ n_knots['He F'] = 0
 n_knots['H-He p'] = 2
 n_knots['He-W p'] = 2
 n_knots['He-H p'] = 2
-n_knots['He-He p'] = 0
+n_knots['He-He p'] = 2
 n_knots['W-He'] = 4
 n_knots['He-He'] = 0
 n_knots['H-He'] = 4

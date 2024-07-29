@@ -246,6 +246,9 @@ def main(json_file):
     mean = mean[np.newaxis, :]
     cov = cov[np.newaxis, :, :]
 
+    if proc_id == 0:
+        print('Init Cov and Mean')
+        sys.stdout.flush()
     ## START GAUSSIAN SAMPLING LOOP ###
     g_iteration = 0
 
