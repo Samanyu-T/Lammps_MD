@@ -165,7 +165,9 @@ def copy_files(w_he, he_he, h_he, work_dir, data_dir):
         files_to_copy.extend(glob.glob('%s/V*H0He1.0.txt' % data_dir))
 
     if he_he:
-        files_to_copy.extend(glob.glob('%s/V*H0He*.*.txt' % data_dir))
+        # files_to_copy.extend(glob.glob('%s/V*H0He*.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H0He2.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H0He3.*.txt' % data_dir))
 
     if h_he:
         # files_to_copy.extend(glob.glob('%s/V*H*He*.*.txt' % data_dir))

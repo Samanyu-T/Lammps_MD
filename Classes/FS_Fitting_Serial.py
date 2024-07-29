@@ -967,8 +967,8 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
     loss += 100*constraint  
 
-    if sample_mat.shape[2]  > 2:
-        loss += rel_abs_loss(sample_mat[0, 0, 2, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 2, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
+    # if sample_mat.shape[2]  > 2:
+    #     loss += 10*rel_abs_loss(sample_mat[0, 0, 2, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 2, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
 
     ''' 
     Loss from He-He Binding
@@ -988,7 +988,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
         
         binding_ref = ref_mat[0, 0, 1, 0, 0] - binding_ref
 
-        loss += rel_abs_loss(binding_sample, binding_ref)
+        loss += (3 - v) * rel_abs_loss(binding_sample, binding_ref)
 
         print(v, 0 ,binding_sample, binding_ref, loss)
 
