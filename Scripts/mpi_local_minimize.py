@@ -102,7 +102,15 @@ cov = cov_full[proc_id % mean_full.shape[0]]
 with open('fitting.json', 'r') as file:
     param_dict = json.load(file)
 
-copy_files(True, True, True, param_dict['work_dir'], param_dict['data_dir'])
+save_folder = os.path.join(param_dict['save_dir'], 'Local_Minimizer')
+
+if proc_id == 0:
+    copy_files(True, True, True, param_dict['work_dir'], param_dict['data_dir'])
+
+    if not os.path.exists(save_folder) and proc_id == 0:
+        os.mkdir(save_folder)
+
+comm.Barrier()
 
 eam_fit = FS_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
 
@@ -110,11 +118,5 @@ x_init = np.random.multivariate_normal(mean=mean, cov=cov)
 
 data_ref = np.loadtxt('dft_yang.txt')
 
-save_folder = os.path.join(param_dict['save_dir'], 'Local_Minimizer')
-
-if not os.path.exists(save_folder) and proc_id == 0:
-    os.mkdir(save_folder)
-
-comm.Barrier()
 
 FS_Fitting.simplex(n_knots, comm, proc_id, x_init, 2, param_dict['work_dir'], save_folder)

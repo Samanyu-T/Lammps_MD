@@ -1315,7 +1315,7 @@ def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_
     with open(os.path.join(save_folder, 'Samples_%d.txt' % proc_id), 'a') as file:
         for vec in res.allvecs:
             np.savetxt(file, res.allvecs, fmt='%.4f')
-            
+
     # local_minimizer = {
     #     'method': 'BFGS',
     #     'args': (data_ref, fitting_class, True),
