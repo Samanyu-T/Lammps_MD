@@ -53,11 +53,11 @@ n_procs = comm.Get_size()
 
 comm_split = comm.Split(proc_id, proc_id)
 
-comm = 0
+# comm = 0
 
-proc_id = 0
+# proc_id = 0
 
-n_procs = 1
+# n_procs = 1
 
 pot, potlines, pot_params = Handle_PotFiles_FS.read_pot('git_folder/Potentials/init.eam.fs')
 
