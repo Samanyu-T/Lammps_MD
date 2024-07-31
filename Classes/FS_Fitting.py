@@ -815,7 +815,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         B2_pot = eval_virial(phi, virial_coef[:, 0], r_pot)
 
-        loss += 1e-4 * np.sum( (B2_pot - virial_coef[:, 1]) ** 2, axis = 0)
+        loss += 1e-5 * np.sum( (B2_pot - virial_coef[:, 1]) ** 2, axis = 0)
 
         print('He-He Virial Loss ',  0.1 * np.sum( (B2_pot - virial_coef[:, 1]) ** 2, axis = 0))
 
@@ -839,7 +839,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         phi_pot = poly + zbl
 
-        loss += 100 * np.sum((phi_pot - he_he_ref[:, 1])**2, axis=0)
+        loss +=  np.sum((phi_pot - he_he_ref[:, 1])**2, axis=0)
 
         print('He-He Gas Loss ', loss)
 
