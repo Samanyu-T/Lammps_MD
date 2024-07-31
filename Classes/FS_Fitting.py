@@ -1307,7 +1307,7 @@ def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_
         print('Average Time: %.2f s' % (t2 - t1))
         sys.stdout.flush()    
     
-    res = minimize(loss_func, x_init, args=(data_ref, fitting_class, True), method='Powell',
+    res = minimize(loss_func, x_init, args=(data_ref, fitting_class, False), method='Powell',
                    options={"maxfev":maxiter, "return_all":True}, tol=1e-4)
 
     res.allvecs = np.array(res.allvecs)
