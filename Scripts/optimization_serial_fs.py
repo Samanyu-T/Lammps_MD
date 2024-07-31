@@ -8,6 +8,16 @@ import time
 import json, glob, shutil
 import matplotlib.pyplot as plt
 
+# Poor H-He
+# [ 1.02469398e+01  1.27351374e+00  3.39815554e+00  1.11246492e+00
+#   6.76706812e+00  7.49846373e-01  3.71834135e+00  3.36557055e-04
+#  -1.78010433e+00  3.15816754e+00  1.85458969e+00 -6.57323025e-01
+#   6.04536904e-01 -2.84569871e-01 -3.64470312e-01  4.89139790e-01
+#  -3.60373997e-01 -2.75840515e-02  4.34467205e-02 -7.48828497e-02
+#  -2.58458425e-01  1.10183324e+00 -3.77181683e-01  7.69354047e-02
+#   5.50140079e-02 -3.14586329e-01]
+
+
 def copy_files(w_he, he_he, h_he, work_dir, data_dir):
     
     data_files_folder = os.path.join(work_dir, 'Data_Files')
@@ -61,9 +71,9 @@ n_knots['He F'] = 0
 n_knots['H-He p'] = 2
 n_knots['He-W p'] = 2
 n_knots['He-H p'] = 2
-n_knots['He-He p'] = 0
+n_knots['He-He p'] = 2
 n_knots['W-He'] = 4
-n_knots['He-He'] = 0
+n_knots['He-He'] = 4
 n_knots['H-He'] = 4
 
 with open('fitting.json', 'r') as file:

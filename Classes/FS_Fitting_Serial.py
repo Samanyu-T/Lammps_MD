@@ -825,7 +825,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         B2_pot = eval_virial(phi, virial_coef[:, 0], r_pot)
 
-        loss += 1e-3 * np.sum( (B2_pot - virial_coef[:, 1]) ** 2, axis = 0)
+        loss += 1e-4 * np.sum( (B2_pot - virial_coef[:, 1]) ** 2, axis = 0)
 
         print('He-He Virial Loss ',  1e-3 * np.sum( (B2_pot - virial_coef[:, 1]) ** 2, axis = 0))
 
@@ -849,7 +849,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         phi_pot = poly + zbl
 
-        loss += 100 * np.sum((phi_pot - he_he_ref[:, 1])**2, axis=0)
+        loss += np.sum((phi_pot - he_he_ref[:, 1])**2, axis=0)
 
         print('He-He Gas Loss ', loss)
 
@@ -921,7 +921,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
         
         pairwise = (emd_H_He + emd_He_H + pot_hhe)/2
         
-        # loss += 1e-1 * np.sum((1 - pairwise/h_he_ref[:, 1])**2, axis=0)
+        loss += 1e-1 * np.sum((1 - pairwise/h_he_ref[:, 1])**2, axis=0)
 
         print('H-He Gas Loss: ', 1e-1 * np.sum((1 - pairwise/h_he_ref[:, 1])**2, axis=0))
 
@@ -949,6 +949,8 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
     loss += np.abs(sample_mat[0, 0, 1, 0, 0] - ref_mat[0, 0, 1, 0, 0]) ** 2
 
     loss += rel_abs_loss(sample_mat[0, 0, 1, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 1, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
+
+    loss += 2 * abs(1 - (sample_mat[0, 0, 1, 2, 0] - sample_mat[0, 0, 1, 0, 0]) / (ref_mat[0, 0, 1, 2, 0] - ref_mat[0, 0, 1, 0, 0]) )
 
     # Loss due to difference in Relaxation Volume
     loss += np.abs(1 - sample_mat[0, 0, 1, 0, 1]/ref_mat[0, 0, 1, 0, 1])
@@ -989,7 +991,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
         binding_ref = ref_mat[0, 0, 1, 0, 0] - binding_ref
 
         if v == 0:
-            loss += 25 * rel_abs_loss(binding_sample, binding_ref)
+            loss += 10 * rel_abs_loss(binding_sample, binding_ref)
         else:
             loss += rel_abs_loss(binding_sample, binding_ref)
         # if sample_mat.shape[2]  > 2 and v == 0:
@@ -1018,7 +1020,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
             binding_ref = ref_mat[0, 1, 0, 0, 0] - binding_ref
             
             if v == 1:
-                loss += 25 * rel_abs_loss(binding_sample, binding_ref)
+                loss += 10 * rel_abs_loss(binding_sample, binding_ref)
             else:
                 loss += 1 * rel_abs_loss(binding_sample, binding_ref)
 
@@ -1323,7 +1325,7 @@ def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_
                    options={"maxfev":maxiter, "return_all":True}, tol=1e-4)
 
     res.allvecs = np.array(res.allvecs)
-    
+
     with open(os.path.join(save_folder, 'Samples_%d.txt' % proc_id), 'a') as file:
         for vec in res.allvecs:
             np.savetxt(file, res.allvecs, fmt='%.4f')
