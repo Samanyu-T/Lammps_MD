@@ -979,8 +979,11 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
         
         binding_ref = ref_mat[0, 0, 1, 0, 0] - binding_ref
 
-        loss += rel_abs_loss(binding_sample, binding_ref)
-        
+        if v == 1:
+            loss += 25 * rel_abs_loss(binding_sample, binding_ref)
+        else:
+            loss += 1 * rel_abs_loss(binding_sample, binding_ref)
+
         # print(v, 0 ,binding_sample, binding_ref, loss)
 
     '''
@@ -1003,7 +1006,10 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
             
             binding_ref = ref_mat[0, 1, 0, 0, 0] - binding_ref
 
-            loss +=  10 * rel_abs_loss(binding_sample, binding_ref)
+            if v == 1:
+                loss += 25 * rel_abs_loss(binding_sample, binding_ref)
+            else:
+                loss += 1 * rel_abs_loss(binding_sample, binding_ref)
 
             # print( v, h ,binding_sample, binding_ref, loss )
 
@@ -1301,8 +1307,15 @@ def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_
         print('Average Time: %.2f s' % (t2 - t1))
         sys.stdout.flush()    
     
-    res = minimize(loss_func, x_init, args=(data_ref, fitting_class, True), method='Powell',options={"maxiter":maxiter}, tol=1e-4)
+    res = minimize(loss_func, x_init, args=(data_ref, fitting_class, True), method='Powell',
+                   options={"maxfev":maxiter, "return_all":True}, tol=1e-4)
 
+    res.allvecs = np.array(res.allvecs)
+    
+    with open(os.path.join(save_folder, 'Samples_%d.txt' % proc_id), 'a') as file:
+        for vec in res.allvecs:
+            np.savetxt(file, res.allvecs, fmt='%.4f')
+            
     # local_minimizer = {
     #     'method': 'BFGS',
     #     'args': (data_ref, fitting_class, True),
