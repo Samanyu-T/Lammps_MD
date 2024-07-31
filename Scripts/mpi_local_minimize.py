@@ -118,8 +118,8 @@ eam_fit = FS_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm,
 
 data_ref = np.loadtxt('dft_yang.txt')
 
-for i in range(100):
+for i in range(20):
 
     x_init = np.random.multivariate_normal(mean=mean, cov=cov)
 
-    FS_Fitting.simplex(n_knots, comm, proc_id, x_init, 140, param_dict['work_dir'], save_folder)
+    FS_Fitting.simplex(n_knots, comm, proc_id, x_init, 700, param_dict['work_dir'], save_folder)
