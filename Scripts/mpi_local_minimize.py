@@ -122,4 +122,4 @@ for i in range(100):
 
     x_init = np.random.multivariate_normal(mean=mean, cov=cov)
 
-    FS_Fitting.simplex(n_knots, comm, proc_id, x_init, 140, param_dict['work_dir'], save_folder)
+    FS_Fitting.simplex(n_knots, comm, proc_id, x_init, 2, param_dict['work_dir'], save_folder)
