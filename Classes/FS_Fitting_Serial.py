@@ -645,25 +645,29 @@ def sim_defect_set(optim_class:Fit_EAM_Potential):
         if xyz.ndim == 1 and len(xyz) > 0:
             xyz = xyz.reshape(1, -1)
 
-        for _v in range(vac):
-            
-            vac_pos = (2 - _v/2)*np.ones((3, ))
+        if vac < 3:
+            for _v in range(vac):
+                
+                vac_pos = (2 - _v/2)*np.ones((3, ))
 
-            lmp.command('region sphere_remove_%d sphere %f %f %f 0.1 units lattice' % 
-                        (_v,vac_pos[0], vac_pos[1], vac_pos[2]))
-            
-            lmp.command('group del_atoms region sphere_remove_%d' % _v)
-            
-            lmp.command('delete_atoms group del_atoms')
-            
-            lmp.command('group del_atoms clear')
-        
+                lmp.command('region sphere_remove_%d sphere %f %f %f 0.1 units lattice' % 
+                            (_v,vac_pos[0], vac_pos[1], vac_pos[2]))
+                
+                lmp.command('group del_atoms region sphere_remove_%d' % _v)
+                
+                lmp.command('delete_atoms group del_atoms')
+                
+                lmp.command('group del_atoms clear')
+
+        if vac == 3:
+            lmp.command('create_atoms 1 single 2.25 2.25 2.25 units lattice')
+
         if len(xyz) > 0:
             for _x in xyz:
                 lmp.command('create_atoms %d single %f %f %f units lattice' % 
                             (_x[0], _x[1], _x[2], _x[3])
                             )
-
+        
         lmp_class.cg_min(lmp)
         
         lmp.command('write_dump all custom test_sim/V%dH%dHe%d.%d.atom id type x y z' % (vac, h, he, image))
@@ -950,15 +954,13 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
     loss += rel_abs_loss(sample_mat[0, 0, 1, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 1, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
 
-    loss += 2 * abs(1 - (sample_mat[0, 0, 1, 2, 0] - sample_mat[0, 0, 1, 0, 0]) / (ref_mat[0, 0, 1, 2, 0] - ref_mat[0, 0, 1, 0, 0]) )
+    loss += 5 * abs(1 - (sample_mat[0, 0, 1, 2, 0] - sample_mat[0, 0, 1, 0, 0])/(ref_mat[0, 0, 1, 2, 0] - ref_mat[0, 0, 1, 0, 0]) )
 
     # Loss due to difference in Relaxation Volume
     loss += np.abs(1 - sample_mat[0, 0, 1, 0, 1]/ref_mat[0, 0, 1, 0, 1])
 
     loss += np.abs(1 - sample_mat[0, 0, 1, 3, 1]/ref_mat[0, 0, 1, 3, 1])
     
-    print(sample_mat[0, 0, 1, :, :], ref_mat[0, 0, 1, :, :])
-    # print(sample_mat[0, 0, 1, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 1, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
     ''' Constraint '''
 
     constraint = not (np.arange(sample_mat.shape[3]) == np.round(sample_mat[0, 0, 1, :, 0], 3).argsort()).all()
@@ -969,8 +971,8 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
     loss += 100*constraint  
 
-    # if sample_mat.shape[2]  > 2:
-    #     loss += 10*rel_abs_loss(sample_mat[0, 0, 2, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 2, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
+    if sample_mat.shape[2]  > 2:
+        loss += rel_abs_loss(sample_mat[0, 0, 2, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 2, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
 
     ''' 
     Loss from He-He Binding
@@ -984,7 +986,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
             
         binding_sample = subtract_lst(np.min(sample_mat[v, 0, 1:, :, 0], axis = 1), np.min(sample_mat[v, 0, :-1, :, 0], axis = 1))
         
-        binding_sample = sample_mat[0, 0, 1, 0, 0] - binding_sample 
+        binding_sample = sample_mat[0, 0, 1, 0, 0] - binding_sample
 
         binding_ref = subtract_lst(np.min(ref_mat[v, 0, 1:, :, 0], axis = 1), np.min(ref_mat[v, 0, :-1, :, 0], axis = 1))
         
@@ -992,10 +994,11 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         if v == 0:
             loss += 10 * rel_abs_loss(binding_sample, binding_ref)
+        elif v == 3:
+            loss += 2.5 * rel_abs_loss(binding_sample, binding_ref)
         else:
-            loss += rel_abs_loss(binding_sample, binding_ref)
-        # if sample_mat.shape[2]  > 2 and v == 0:
-        #     loss +=  rel_abs_loss(binding_sample[:2], binding_ref[:2])
+            loss += 1 * rel_abs_loss(binding_sample, binding_ref)
+
 
         print(v, 0 ,binding_sample, binding_ref, loss)
 

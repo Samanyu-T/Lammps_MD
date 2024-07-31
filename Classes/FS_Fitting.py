@@ -646,18 +646,22 @@ def sim_defect_set(optim_class:Fit_EAM_Potential):
         if xyz.ndim == 1 and len(xyz) > 0:
             xyz = xyz.reshape(1, -1)
 
-        for _v in range(vac):
-            
-            vac_pos = (2 - _v/2)*np.ones((3, ))
+        if vac < 3:
+            for _v in range(vac):
+                
+                vac_pos = (2 - _v/2)*np.ones((3, ))
 
-            lmp.command('region sphere_remove_%d sphere %f %f %f 0.1 units lattice' % 
-                        (_v,vac_pos[0], vac_pos[1], vac_pos[2]))
-            
-            lmp.command('group del_atoms region sphere_remove_%d' % _v)
-            
-            lmp.command('delete_atoms group del_atoms')
-            
-            lmp.command('group del_atoms clear')
+                lmp.command('region sphere_remove_%d sphere %f %f %f 0.1 units lattice' % 
+                            (_v,vac_pos[0], vac_pos[1], vac_pos[2]))
+                
+                lmp.command('group del_atoms region sphere_remove_%d' % _v)
+                
+                lmp.command('delete_atoms group del_atoms')
+                
+                lmp.command('group del_atoms clear')
+
+        if vac == 3:
+            lmp.command('create_atoms 1 single 2.25 2.25 2.25 units lattice')
         
         if len(xyz) > 0:
             for _x in xyz:
@@ -941,6 +945,8 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
     loss += rel_abs_loss(sample_mat[0, 0, 1, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 1, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
 
+    loss += 5 * abs(1 - (sample_mat[0, 0, 1, 2, 0] - sample_mat[0, 0, 1, 0, 0])/(ref_mat[0, 0, 1, 2, 0] - ref_mat[0, 0, 1, 0, 0]) )
+
     # Loss due to difference in Relaxation Volume
     loss += np.abs(1 - sample_mat[0, 0, 1, 0, 1]/ref_mat[0, 0, 1, 0, 1])
 
@@ -979,8 +985,10 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
         
         binding_ref = ref_mat[0, 0, 1, 0, 0] - binding_ref
 
-        if v == 1:
+        if v == 0:
             loss += 10 * rel_abs_loss(binding_sample, binding_ref)
+        elif v == 3:
+            loss += 2.5 * rel_abs_loss(binding_sample, binding_ref)
         else:
             loss += 1 * rel_abs_loss(binding_sample, binding_ref)
 
@@ -1313,8 +1321,10 @@ def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_
     res.allvecs = np.array(res.allvecs)
     
     with open(os.path.join(save_folder, 'Samples_%d.txt' % proc_id), 'a') as file:
-        for vec in res.allvecs:
-            np.savetxt(file, res.allvecs, fmt='%.4f')
+        np.savetxt(file, res.allvecs, fmt='%.4f')
+
+    with open(os.path.join(save_folder, 'Loss_%d.txt' % proc_id), 'a') as file:
+        file.write('%.4f\n' % res.fun)
 
     # local_minimizer = {
     #     'method': 'BFGS',

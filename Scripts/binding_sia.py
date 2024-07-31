@@ -4,6 +4,7 @@ import json
 import numpy as np
 # from mpi4py import MPI
 import matplotlib.pyplot as plt
+from lammps import lammps
 
 sys.path.append(os.path.join(os.getcwd(), 'git_folder', 'Classes'))
 
@@ -26,7 +27,7 @@ init_dict = {}
 with open('init_param.json', 'r') as file:
     init_dict = json.load(file)
 
-output_folder = 'Lammps_Surface'
+output_folder = 'SIA_Binding'
 
 
 if not os.path.exists(output_folder):
@@ -52,9 +53,9 @@ def surface_binding(lmp, depth):
 
 
 
-init_dict['size'] = 6
+init_dict['size'] = 7
 
-init_dict['surface'] = 10
+init_dict['surface'] = 0
 
 init_dict['output_folder'] = output_folder
 
@@ -70,46 +71,42 @@ init_dict['pottype'] = 'fs'
 
 depth = np.linspace(0, 10, 10)
 
-lmp = LammpsParentClass(init_dict, comm, proc_id)
+lmp_class = LammpsParentClass(init_dict, comm, proc_id)
 
-lmp.perfect_crystal()
+lmp_class.perfect_crystal()
 
-lmp, pe_100 = surface_binding(lmp, depth)
+cmd = lmp_class.init_from_datafile(os.path.join(output_folder, 'Data_Files', 'V0H0He0.data'))
 
-lmp.orientx = [1, 1, 0]
+lmp = lammps()
 
-lmp.orienty = [0, 0, 1]
+lmp.commands_list(cmd)
 
-lmp.orientz = [1, -1, 0]
+lmp.command('create_atoms 1 single %f %f %f units box' % (2.25*3.14221, 2.25*3.14221, 2.25*3.14221))
 
-lmp.perfect_crystal()
+lmp_class.cg_min(lmp)
 
-lmp, pe_110 = surface_binding(lmp, depth)
+lmp.command('write_data %s' % os.path.join(output_folder, 'Data_Files', 'sia.data'))
 
+lmp.command('write_dump all custom %s id type x y z'  % os.path.join(output_folder, 'Atom_Files', 'sia.atom'))
 
-lmp.orientx = [1, 1, 1]
+lmp.close()
 
-lmp.orienty = [1, -1, 0]
+cmd = lmp_class.init_from_datafile(os.path.join(output_folder, 'Data_Files', 'sia.data'))
 
-lmp.orientz = [1, 1, -2]
+lmp = lammps()
 
-lmp.perfect_crystal()
+lmp.commands_list(cmd)
 
-lmp, pe_111 = surface_binding(lmp, depth)
+lmp.command('create_atoms 1 single %f %f %f units box' % (2.75*3.14221, 2.75*3.14221, .752*3.14221))
 
+lmp_class.cg_min(lmp)
 
-plt.plot(depth, pe_100, label='100', linestyle=':', marker='o')
+pe = lmp.get_thermo('pe')
 
-plt.plot(depth, pe_110, label='110', linestyle=':', marker='o')
+lmp.command('write_data %s' % os.path.join(output_folder, 'Data_Files', 'sia.data'))
 
-plt.plot(depth, pe_111, label='111', linestyle=':', marker='o')
+lmp.command('write_dump all custom %s id type x y z'  % os.path.join(output_folder, 'Atom_Files', 'sia.atom'))
 
-plt.legend()
+lmp.close()
 
-plt.xlabel('depth / A')
-
-plt.ylabel('Formation Energy / eV')
-
-plt.title('Formation energy of He interstitial to Tungsten Surfaces')
-
-plt.show()
+print(pe)
