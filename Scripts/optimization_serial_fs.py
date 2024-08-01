@@ -39,15 +39,15 @@ def copy_files(w_he, he_he, h_he, work_dir, data_dir):
     if he_he:
         # files_to_copy.extend(glob.glob('%s/V*H0He*.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H0He2.*.txt' % data_dir))
-        files_to_copy.extend(glob.glob('%s/V*H0He3.*.txt' % data_dir))
+        # files_to_copy.extend(glob.glob('%s/V*H0He3.*.txt' % data_dir))
         # files_to_copy.extend(glob.glob('%s/V*H0He4.*.txt' % data_dir))
 
     if h_he:
         # files_to_copy.extend(glob.glob('%s/V*H*He*.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H1He0.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H1He1.*.txt' % data_dir))
-        files_to_copy.extend(glob.glob('%s/V*H1He2.*.txt' % data_dir))
-        files_to_copy.extend(glob.glob('%s/V*H1He3.*.txt' % data_dir))
+        # files_to_copy.extend(glob.glob('%s/V*H1He2.*.txt' % data_dir))
+        # files_to_copy.extend(glob.glob('%s/V*H1He3.*.txt' % data_dir))
 
     files_to_copy = list(set(files_to_copy))
 
@@ -68,13 +68,13 @@ pot, potlines, pot_params = Handle_PotFiles_FS.read_pot('git_folder/Potentials/i
 #  -1.9733587   3.66449741  1.60497915 -0.68848128  0.80103327 -0.74969712
 #  -0.19581129  0.37283166 -0.41408367 -0.03112508  0.05222353 -0.15153377
 n_knots = {}
-n_knots['He F'] = 2
+n_knots['He F'] = 0
 n_knots['H-He p'] = 2
 n_knots['He-W p'] = 2
 n_knots['He-H p'] = 2
-n_knots['He-He p'] = 2
+n_knots['He-He p'] = 0
 n_knots['W-He'] = 4
-n_knots['He-He'] = 4
+n_knots['He-He'] = 0
 n_knots['H-He'] = 4
 
 with open('fitting.json', 'r') as file:

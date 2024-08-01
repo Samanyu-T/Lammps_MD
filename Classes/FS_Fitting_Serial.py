@@ -631,7 +631,10 @@ def sim_defect_set(optim_class:Fit_EAM_Potential):
 
         image = int(filename[8])
         
-        lmp_class.N_species = np.array([2*lmp_class.size**3 - vac, h, he])
+        if vac < 3:
+            lmp_class.N_species = np.array([2*lmp_class.size**3 - vac, h, he])
+        else:
+            lmp_class.N_species = np.array([2*lmp_class.size**3 + (vac - 2), h, he])
 
         lmp = lammps( cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
 
@@ -661,6 +664,7 @@ def sim_defect_set(optim_class:Fit_EAM_Potential):
 
         if vac == 3:
             lmp.command('create_atoms 1 single 2.25 2.25 2.25 units lattice')
+            lmp_class.cg_min(lmp)
 
         if len(xyz) > 0:
             for _x in xyz:
@@ -971,6 +975,8 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
     loss += 100*constraint  
 
+    print(sample_mat[0, 0, 1, :, :], ref_mat[0, 0, 1, :, :])
+
     if sample_mat.shape[2]  > 2:
         loss += rel_abs_loss(sample_mat[0, 0, 2, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 2, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
 
@@ -995,7 +1001,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
         if v == 0:
             loss += 10 * rel_abs_loss(binding_sample, binding_ref)
         elif v == 3:
-            loss += 2.5 * rel_abs_loss(binding_sample, binding_ref)
+            loss += 10 * rel_abs_loss(binding_sample, binding_ref)
         else:
             loss += 1 * rel_abs_loss(binding_sample, binding_ref)
 
@@ -1023,7 +1029,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
             binding_ref = ref_mat[0, 1, 0, 0, 0] - binding_ref
             
             if v == 1:
-                loss += 10 * rel_abs_loss(binding_sample, binding_ref)
+                loss += 20 * rel_abs_loss(binding_sample, binding_ref)
             else:
                 loss += 1 * rel_abs_loss(binding_sample, binding_ref)
 

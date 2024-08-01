@@ -632,7 +632,10 @@ def sim_defect_set(optim_class:Fit_EAM_Potential):
 
         image = int(filename[8])
         
-        lmp_class.N_species = np.array([2*lmp_class.size**3 - vac, h, he])
+        if vac < 3:
+            lmp_class.N_species = np.array([2*lmp_class.size**3 - vac, h, he])
+        else:
+            lmp_class.N_species = np.array([2*lmp_class.size**3 + (vac - 2), h, he])
 
         lmp = lammps(comm=optim_class.comm, cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
 
