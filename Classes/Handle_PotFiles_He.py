@@ -4,8 +4,15 @@
 import numpy as np
 
 def write_pot(pot, starting_lines, file_path):
-     
-     with open(file_path, 'w') as file:
+    
+    keys = [
+            'W F' , 'W-W p' , 'W-H p' , 'W-He p' ,
+            'H F' , 'H-W p' , 'H-H p' , 'H-He p' ,
+            'He F', 'He-W p', 'He-H p', 'He-He p',
+            'W-W' , 'W-H'   , 'H-H'   , 'W-He'  , 'H-He'   , 'He-He'
+            ] 
+
+    with open(file_path, 'w') as file:
 
         lines = starting_lines.split('\n')
         line_idx = 0
@@ -21,6 +28,7 @@ def write_pot(pot, starting_lines, file_path):
         Nr   = int(val[2])
         dr   = float(val[3])
         cutoff  = float(val[4])
+        rhomax = float(val[5])
 
         for element in ['W', 'H', 'He']:
 
@@ -29,12 +37,16 @@ def write_pot(pot, starting_lines, file_path):
             line_idx += 1
 
             for i in range(Nrho):
-                
-                file.write('%16.8f \n' % pot[element + '_F'][i])
+                file.write('%16.8f \n' % pot[element + ' F'][i])
             
             for i in range(Nr):
-                
-                file.write('%16.8f \n' % pot[element + '_p'][i])
+                file.write('%16.8f \n' % pot[element + '-W p'][i])
+
+            for i in range(Nr):
+                file.write('%16.8f \n' % pot[element + '-H p'][i])
+
+            for i in range(Nr):
+                file.write('%16.8f \n' % pot[element + '-He p'][i])
 
         
         for pair in ['W-W', 'W-H', 'H-H', 'W-He', 'H-He', 'He-He']:
@@ -47,24 +59,17 @@ def read_pot(potfile_path):
 
     starting_lines = ''
 
+    keys = [
+            'W F' , 'W-W p' , 'W-H p' , 'W-He p' ,
+            'H F' , 'H-W p' , 'H-H p' , 'H-He p' ,
+            'He F', 'He-W p', 'He-H p', 'He-He p',
+            'W-W' , 'W-H'   ,  'H-H' , 'W-He'  , 'H-He'   , 'He-He'
+            ] 
+
     pot = {}
 
-    pot['W_F'] = []
-    pot['W_p'] = []
-
-    pot['H_F'] = []
-    pot['H_p'] = []
-
-    pot['He_F'] = []
-    pot['He_p'] = []
-
-    pot['W-W'] = []
-    pot['W-H'] = []
-    pot['H-H'] = []
-    pot['W-He'] = []
-    pot['H-He'] = []
-    pot['He-He'] = []
-
+    for key in keys:
+        pot[key] = []
 
     with open(potfile_path, 'r') as ref:
             
@@ -78,21 +83,28 @@ def read_pot(potfile_path):
         Nr   = int(val[2])
         dr   = float(val[3])
         cutoff  = float(val[4])
+        rhomax = float(val[5])
 
         for element in ['W', 'H', 'He']:
 
             starting_lines += ref.readline()
 
             for i in range(Nrho):
-                
                 val = float(ref.readline())
-                pot[element + '_F'].append(val)
+                pot[element + ' F'].append(val)
                 
             for i in range(Nr):
-                
                 val = float(ref.readline())
-                pot[element + '_p'].append(val)
+                pot[element + '-W p'].append(val)
         
+            for i in range(Nr):
+                val = float(ref.readline())
+                pot[element + '-H p'].append(val)
+
+            for i in range(Nr):
+                val = float(ref.readline())
+                pot[element + '-He p'].append(val)
+
         for pair in ['W-W', 'W-H', 'H-H', 'W-He', 'H-He', 'He-He']:
             
             for i in range(Nr):
@@ -103,7 +115,8 @@ def read_pot(potfile_path):
     for key in pot:
         pot[key] = np.array(pot[key])
 
-    return pot, starting_lines, {'Nrho': Nrho, 'drho':drho, 'Nr':Nr, 'dr':dr, 'rc':cutoff, 'rho_c':(Nrho-1)*drho}
+    return pot, starting_lines, {'Nrho': Nrho, 'drho':drho, 'Nr':Nr, 'dr':dr, 'rc':cutoff, 
+                                 'rho_c':rhomax, 'rhomin':rhomax-drho*(Nrho-1)}
 
 
 

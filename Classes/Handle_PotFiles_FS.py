@@ -113,7 +113,7 @@ def read_pot(potfile_path):
     for key in pot:
         pot[key] = np.array(pot[key])
 
-    return pot, starting_lines, {'Nrho': Nrho, 'drho':drho, 'Nr':Nr, 'dr':dr, 'rc':cutoff, 'rho_c':Nrho*drho}
+    return pot, starting_lines, {'Nrho': Nrho, 'drho':drho, 'Nr':Nr, 'dr':dr, 'rc':cutoff, 'rho_c':(Nrho-1)*drho}
 
 
 

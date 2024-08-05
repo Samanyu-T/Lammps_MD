@@ -70,6 +70,8 @@ class LammpsParentClass:
             cmdlist.append('pair_style eam/alloy' )
         elif pot_type=='fs':
             cmdlist.append('pair_style eam/fs')
+        elif pot_type=='he':
+            cmdlist.append('pair_style eam/he')
         else:
             cmdlist.append('pair_style eam/%s' % self.pottype)
 
@@ -147,9 +149,11 @@ class LammpsParentClass:
         cmdlist.append('mass 3 4.002602')
 
         if pot_type=='alloy':
-            cmdlist.append('pair_style eam/alloy' )
+            cmdlist.append('pair_style eam/alloy')
         elif pot_type=='fs':
             cmdlist.append('pair_style eam/fs')
+        elif pot_type=='he':
+            cmdlist.append('pair_style eam/he')
         else:
             cmdlist.append('pair_style eam/%s' % self.pottype)
 

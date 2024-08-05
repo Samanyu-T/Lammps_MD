@@ -588,9 +588,15 @@ class Fit_EAM_Potential():
         r = np.linspace(0, self.pot_params['rc'], self.pot_params['Nr'])
 
         if self.bool_fit['He F']:
+            x1 = 1.237663101
+            y1 = 6.140713432
 
-            self.pot_lammps['He F'] = sample[0] * rho + \
+            a = sample[0]
+            b  = y1 - a * x1
+
+            self.pot_lammps['He F'] = np.sqrt(a**2 * rho**2 + b**2) - abs(b) + \
             splineval(rho, coef_dict['He F'], self.knot_pts['He F'], func = True, grad = False, hess = False)
+
 
         for key in ['H-He p' ,'He-W p', 'He-H p', 'He-He p']:
             if self.bool_fit[key]:
@@ -1072,7 +1078,7 @@ def random_sampling(n_knots, comm, proc_id, max_time=3, work_dir = '../Optim_Loc
     # Read Daniel's potential to initialize the W-H potential and the params for writing a .eam.fs file
     pot, potlines, pot_params = read_pot('git_folder/Potentials/init.eam.fs')
 
-    pot_params['rho_c'] = pot_params['Nrho']*pot_params['drho']
+    pot_params['rho_c'] = (pot_params['Nrho'] - 1)*pot_params['drho']
     
     # Call the main fitting class
     fitting_class = Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, work_dir)
@@ -1150,7 +1156,7 @@ def random_sampling(n_knots, comm, proc_id, max_time=3, work_dir = '../Optim_Loc
     # Read Daniel's potential to initialize the W-H potential and the params for writing a .eam.fs file
     pot, potlines, pot_params = read_pot('git_folder/Potentials/init.eam.fs')
 
-    pot_params['rho_c'] = pot_params['Nrho']*pot_params['drho']
+    pot_params['rho_c'] = (pot_params['Nrho'] - 1)*pot_params['drho']
     
     # Call the main fitting class
     fitting_class = Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, work_dir)
@@ -1228,7 +1234,7 @@ def gaussian_sampling(n_knots, comm, proc_id, mean, cov, max_time=3, work_dir = 
     # Read Daniel's potential to initialize the W-H potential and the params for writing a .eam.fs file
     pot, potlines, pot_params = read_pot('git_folder/Potentials/init.eam.fs')
 
-    pot_params['rho_c'] = pot_params['Nrho']*pot_params['drho']
+    pot_params['rho_c'] = (pot_params['Nrho'] - 1)*pot_params['drho']
     
     # Call the main fitting class
     fitting_class = Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, work_dir)
@@ -1312,7 +1318,7 @@ def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_
     pot, potlines, pot_params = read_pot('git_folder/Potentials/init.eam.fs')
     # pot, potlines, pot_params = read_pot('Fitting_Runtime/Potentials/optim.0.eam.fs' )
 
-    pot_params['rho_c'] = pot_params['Nrho']*pot_params['drho']
+    pot_params['rho_c'] = (pot_params['Nrho'] - 1)*pot_params['drho']
     
     # Call the main fitting class
     fitting_class = Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, work_dir)
