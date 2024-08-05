@@ -1177,7 +1177,7 @@ def random_sampling(n_knots, comm, proc_id, max_time=3, work_dir = '../Optim_Loc
         if t_end - t_init > max_time:
             break
 
-        if idx % 1000 == 0 and fitting_class.proc_id == 0:
+        if idx % 500 == 0 and fitting_class.proc_id == 0:
             print(t_end - t_init)
             sys.stdout.flush()  
 
@@ -1242,8 +1242,6 @@ def gaussian_sampling(n_knots, comm, proc_id, mean, cov, max_time=3, work_dir = 
         sample = np.random.multivariate_normal(mean=mean, cov=cov)
 
         loss = loss_func(sample, data_ref, fitting_class)
-
-        print(loss)
         
         idx += 1
 
@@ -1255,7 +1253,7 @@ def gaussian_sampling(n_knots, comm, proc_id, mean, cov, max_time=3, work_dir = 
         if t_end - t_init > max_time:
             break
 
-        if idx % 1000 == 0 and fitting_class.proc_id == 0:
+        if idx % 500 == 0 and fitting_class.proc_id == 0:
             print(t_end - t_init)
             sys.stdout.flush()  
 
