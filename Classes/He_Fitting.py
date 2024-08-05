@@ -663,8 +663,6 @@ def sim_defect_set(optim_class:Fit_EAM_Potential):
         
         lmp_class.cg_min(lmp)
         
-        lmp.command('write_dump all custom test_sim/V%dH%dHe%d.%d.atom id type x y z' % (vac, h, he, image))
-
         ef = lmp_class.get_formation_energy(lmp)
 
         rvol = lmp_class.get_rvol(lmp)
@@ -824,7 +822,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         loss += 1e-4 * np.sum( (B2_pot - virial_coef[:, 1]) ** 2, axis = 0)
 
-        print('He-He Virial Loss ',  1e-3 * np.sum( (B2_pot - virial_coef[:, 1]) ** 2, axis = 0))
+        # print('He-He Virial Loss ',  1e-3 * np.sum( (B2_pot - virial_coef[:, 1]) ** 2, axis = 0))
 
         he_he_ref = np.array([
                         [ 1.58931000e+00,  3.28492631e-01],
@@ -848,7 +846,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         loss += np.sum((phi_pot - he_he_ref[:, 1])**2, axis=0)
 
-        print('He-He Gas Loss ', loss)
+        #print('He-He Gas Loss ', loss)
 
     if optim_class.bool_fit['H-He']:
 
@@ -920,7 +918,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
         
         loss += 1e-1 * np.sum((1 - pairwise/h_he_ref[:, 1])**2, axis=0)
 
-        print('H-He Gas Loss: ', 1e-1 * np.sum((1 - pairwise/h_he_ref[:, 1])**2, axis=0))
+        #print('H-He Gas Loss: ', 1e-1 * np.sum((1 - pairwise/h_he_ref[:, 1])**2, axis=0))
 
 
     write_pot(optim_class.pot_lammps, optim_class.potlines, optim_class.lammps_param['potfile'])
@@ -964,7 +962,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
     loss += 100*constraint  
 
-    print(sample_mat[0, 0, 1, :, :], ref_mat[0, 0, 1, :, :])
+    #print(sample_mat[0, 0, 1, :, :], ref_mat[0, 0, 1, :, :])
 
     if sample_mat.shape[2]  > 2:
         loss += rel_abs_loss(sample_mat[0, 0, 2, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 2, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
@@ -995,7 +993,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
             loss += 1 * rel_abs_loss(binding_sample, binding_ref)
 
 
-        print(v, 0 ,binding_sample, binding_ref, loss)
+        #print(v, 0 ,binding_sample, binding_ref, loss)
 
     '''
     Loss from H-He Binding
@@ -1022,7 +1020,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
             else:
                 loss += 1 * rel_abs_loss(binding_sample, binding_ref)
 
-            print( v, h ,binding_sample, binding_ref, loss )
+            #print( v, h ,binding_sample, binding_ref, loss )
 
 
     ''' Loss from Relaxation Volumes '''
@@ -1041,7 +1039,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
     if diag:
         t2 = time.perf_counter()
         
-        print(sample,loss, t2 - t1)
+        #print(sample,loss, t2 - t1)
 
     return loss
 
