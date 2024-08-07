@@ -53,7 +53,7 @@ n_procs = 1
 pot, potlines, pot_params = Handle_PotFiles_He.read_pot('git_folder/Potentials/init.eam.he')
 
 n_knots = {}
-n_knots['He F'] = 2
+n_knots['He F'] = 0
 n_knots['H-He p'] = 0
 n_knots['He-W p'] = 2
 n_knots['He-H p'] = 0
@@ -65,7 +65,7 @@ n_knots['H-He'] = 0
 with open('fitting.json', 'r') as file:
     param_dict = json.load(file)
 
-copy_files(True, True, True, param_dict['work_dir'], param_dict['data_dir'])
+copy_files(True, True, False, param_dict['work_dir'], param_dict['data_dir'])
 
 eam_fit = He_Fitting_Serial.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
 
@@ -75,9 +75,19 @@ sample = np.loadtxt('sample.txt')
 
 eam_fit.sample_to_file(sample)
 
-whe = eam_fit.pot_lammps['W-He']
+whe = eam_fit.pot_lammps['He-He'][1:]
 
 r = np.linspace(0, eam_fit.pot_params['rc'], eam_fit.pot_params['Nr'])[1:]
+
+phi = whe/r
+
+plt.plot(r[400:], phi[400:])
+
+plt.show()
+
+plt.plot(r, eam_fit.pot_lammps['He-He p'][1:])
+
+plt.show()
 
 print(sample2.shape, sample.shape)
 

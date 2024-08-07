@@ -330,8 +330,8 @@ class Fit_EAM_Potential():
         self.knot_pts['He-He p'] = np.linspace(0, self.pot_params['rc'], n_knots['He-He p'])
 
         self.knot_pts['W-He'] = np.linspace(0, self.pot_params['rc'], n_knots['W-He'])
-        # if n_knots['W-He'] == 4:
-        #     self.knot_pts['W-He'][1:3] = np.array([1.7581, 2.7236])
+        if n_knots['W-He'] == 4:
+            self.knot_pts['W-He'][1:3] = np.array([1.7581, 2.7236])
         self.knot_pts['He-He'] = np.linspace(0, self.pot_params['rc'], n_knots['He-He'])
         self.knot_pts['H-He'] = np.linspace(0, self.pot_params['rc'], n_knots['H-He'])
         
@@ -571,7 +571,7 @@ class Fit_EAM_Potential():
             x1 = 1.237663101
             y1 = 6.140713432
 
-            a = sample[0]
+            a = abs(sample[0])
             b  = abs(y1 - a * x1)
 
             self.pot_lammps['He F'] = np.sqrt(a**2 * rho**2 + b**2 ) - b + \
@@ -740,42 +740,19 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
     loss = 0
 
-    # if optim_class.bool_fit['He F']:
-    #     he_f = optim_class.pot_lammps['He F']
-    #     if (he_f < 0).any():
-    #         loss += 1000
-    #         return loss
-        
 
     if optim_class.bool_fit['W-He']:
 
-        whe = optim_class.pot_lammps['W-He']
+        pot = optim_class.pot_lammps['W-He'][1:]
 
-        dr = optim_class.pot_params['rc']/optim_class.pot_params['Nrho']
+        r_pot = np.linspace(0, optim_class.pot_params['rc'], optim_class.pot_params['Nr'])[1:]
 
-        min_idx = whe.argmin()
-        
-        if min_idx == 0:
-            loss += 100
+        phi = pot/r_pot
 
-        else:
-            min_whe = whe.min() / (min_idx * dr)
-            loss += abs(min_whe - -5e-3)
+        loss += np.abs(np.sum(phi[phi < 0]))
 
-    # if optim_class.bool_fit['H-He p']:
-    #     if sample[optim_class.map['H-He p']][0] > 2 or sample[optim_class.map['H-He p']][0] < 1:
-    #         loss += 1000
-    #         return loss
-        
-    # for key in ['He-W p', 'He-H p', 'He-He p']:
-    #     if optim_class.bool_fit[key]:
-    #         if sample[optim_class.map[key]][0] > 2 or sample[optim_class.map[key]][0] < 1:
-    #             loss += 1000
-    #             return loss
-            
     if optim_class.bool_fit['He-He']:
         
-
         virial_coef= np.array([
         [2.47734287e+01, 5.94121916e-01],
         [2.92941502e+01, 2.40776488e+00],
@@ -1016,7 +993,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
             binding_ref = ref_mat[0, 1, 0, 0, 0] - binding_ref
             
             if v == 1:
-                loss += 10 * rel_abs_loss(binding_sample, binding_ref)
+                loss += 2 * rel_abs_loss(binding_sample, binding_ref)
             else:
                 loss += 1 * rel_abs_loss(binding_sample, binding_ref)
 
@@ -1035,11 +1012,11 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
                     r_ref = ref_mat[i, j, k, l, 1]
 
                     if not (np.isinf(r_ref) or np.isinf(r_sample)):
-                        loss +=  abs(r_sample - r_ref)
+                        loss += 5 * abs(r_sample - r_ref)
     if diag:
         t2 = time.perf_counter()
         
-        #print(sample,loss, t2 - t1)
+        print(sample,loss, t2 - t1)
 
     return loss
 
