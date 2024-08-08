@@ -6,7 +6,7 @@ import He_Fitting_Serial
 import Handle_PotFiles_He
 import time
 import json, glob, shutil
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 def copy_files(w_he, he_he, h_he, work_dir, data_dir):
     
@@ -75,19 +75,19 @@ sample = np.loadtxt('sample.txt')
 
 eam_fit.sample_to_file(sample)
 
-whe = eam_fit.pot_lammps['W-He'][1:]
+# whe = eam_fit.pot_lammps['W-He'][1:]
 
-r = np.linspace(0, eam_fit.pot_params['rc'], eam_fit.pot_params['Nr'])[1:]
+# r = np.linspace(0, eam_fit.pot_params['rc'], eam_fit.pot_params['Nr'])[1:]
 
-phi = whe/r
+# phi = whe/r
 
-plt.plot(r[400:], phi[400:])
+# plt.plot(r[400:], phi[400:])
 
-plt.show()
+# plt.show()
 
-plt.plot(r, eam_fit.pot_lammps['He-W p'][1:])
+# plt.plot(r, eam_fit.pot_lammps['He-W p'][1:])
 
-plt.show()
+# plt.show()
 
 print(sample2.shape, sample.shape)
 
