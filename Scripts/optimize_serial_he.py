@@ -75,7 +75,7 @@ sample = np.loadtxt('sample.txt')
 
 eam_fit.sample_to_file(sample)
 
-whe = eam_fit.pot_lammps['He-He'][1:]
+whe = eam_fit.pot_lammps['W-He'][1:]
 
 r = np.linspace(0, eam_fit.pot_params['rc'], eam_fit.pot_params['Nr'])[1:]
 
@@ -85,7 +85,7 @@ plt.plot(r[400:], phi[400:])
 
 plt.show()
 
-plt.plot(r, eam_fit.pot_lammps['He-He p'][1:])
+plt.plot(r, eam_fit.pot_lammps['He-W p'][1:])
 
 plt.show()
 

@@ -109,9 +109,9 @@ eam_fit = He_Fitting_Serial.Fit_EAM_Potential(pot, n_knots, pot_params, potlines
 x = np.array([ 5.06685817e-01,  1.94452540e-01,  4.7, 1.5, 1.5,
               -1.26327399e-01,  1.31954504e-01, -2.34140120e-01, -2.33344481e-02,  2.75030830e-02, -4.83606197e-02])
 
-x_res = minimize(loss_func, x, args=(eam_fit, data_dft), method='Powell',options={"maxiter":1000}, tol=1e-4)
-print(x_res)
-x = x_res.x
+# x_res = minimize(loss_func, x, args=(eam_fit, data_dft), method='Powell',options={"maxiter":1000}, tol=1e-4)
+# print(x_res)
+# x = x_res.x
 
 
 # Zh = 1
@@ -185,7 +185,7 @@ plt.scatter(h_he_ref[:,0], h_he_ref[:,1], label='qmc', color='red')
 
 plt.xlabel('Lattice Constant/ A')
 plt.ylabel('Energy/ eV')
-plt.title('Pairwise Interaction of H-He')
+plt.title('Vacuum Interaction of H-He')
 plt.legend()
 plt.show()
 

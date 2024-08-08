@@ -123,9 +123,9 @@ eam_fit = FS_Fitting_Serial.Fit_EAM_Potential(pot, n_knots, pot_params, potlines
 ''' CURRENT STABLE OPTIMA '''
 x =  np.array(  [3e-4, -3.670e-01,  4.789e-01 ,-3.762e-01, -2.760e-02,  4.344e-02, -7.470e-02])
 
-x_res = minimize(loss_func, x , args=(eam_fit, data_dft), method='Powell',options={"maxiter":100}, tol=1e-4)
-print(x_res)
-x = x_res.x
+# x_res = minimize(loss_func, x , args=(eam_fit, data_dft), method='Powell',options={"maxiter":100}, tol=1e-4)
+# print(x_res)
+# x = x_res.x
 
 loss_func(x, eam_fit, data_dft)
 stress_arr = np.zeros((len(data_dft,)))
