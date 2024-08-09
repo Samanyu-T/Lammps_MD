@@ -963,11 +963,11 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
         binding_ref = ref_mat[0, 0, 1, 0, 0] - binding_ref
 
         if v == 0:
-            loss += 5 * rel_abs_loss(binding_sample, binding_ref)
+            loss += 10 * rel_abs_loss(binding_sample, binding_ref)
         elif v == 3:
-            loss += 5 * rel_abs_loss(binding_sample, binding_ref)
+            loss += 10 * rel_abs_loss(binding_sample, binding_ref)
         else:
-            loss += 1 * rel_abs_loss(binding_sample, binding_ref)
+            loss += 10 * rel_abs_loss(binding_sample, binding_ref)
 
 
         #print(v, 0 ,binding_sample, binding_ref, loss)
@@ -993,9 +993,9 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
             binding_ref = ref_mat[0, 1, 0, 0, 0] - binding_ref
             
             if v == 1:
-                loss += 2 * rel_abs_loss(binding_sample, binding_ref)
+                loss += 10 * rel_abs_loss(binding_sample, binding_ref)
             else:
-                loss += 1 * rel_abs_loss(binding_sample, binding_ref)
+                loss += 10 * rel_abs_loss(binding_sample, binding_ref)
 
             #print( v, h ,binding_sample, binding_ref, loss )
 
