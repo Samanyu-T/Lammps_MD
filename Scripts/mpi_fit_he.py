@@ -9,7 +9,7 @@ sys.path.append(os.path.join(os.getcwd(), 'git_folder', 'Classes'))
 import He_Fitting
 import shutil
 
-def random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time):
+def random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time, mean, cov):
 
     ### START RANDOM SAMPLING ###
     rsamples_folder = ''
@@ -26,7 +26,7 @@ def random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, m
     comm.Barrier()  
     
     t1 = time.perf_counter()
-    He_Fitting.random_sampling(n_knots, comm_split, proc_id, max_time, work_dir, rsamples_folder)
+    He_Fitting.lj_gaussian_sampling(n_knots, comm_split, proc_id, mean[proc_id % mean.shape[0]], cov[proc_id % cov.shape[0]], max_time, work_dir, rsamples_folder)
     t2 = time.perf_counter()
 
     # Wait for the barrier to complete
@@ -223,27 +223,31 @@ def main(json_file):
 
     comm.barrier()
 
-    # mean, cov = random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time)
     
-    mean = np.array([2.234e+01, -3.495e-04,  3.784e+00,
-                     -2, 3, 1, -0.25,  0.5, -0.5])
+    mean = np.array([10, 1e-1,  3,
+                     1e-3, 3])
     
-    cov_diag = np.array([4,  1e-1, 2,
-                         1,  2,  2, 0.25,  0.5, 0.5])    
+    cov_diag = np.array([10,  1e-2, 2,
+                         2e-4,  2e-1])    
 
     cov = np.diag(cov_diag)
 
     mean = mean[np.newaxis, :]
     cov = cov[np.newaxis, :, :]
 
+
     if proc_id == 0:
         print('Init Cov and Mean')
         sys.stdout.flush()
+    comm.Barrier()
+
+    mean, cov = random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time, mean, cov)
+
     ## START GAUSSIAN SAMPLING LOOP ###
     g_iteration = 0
 
-    # mean = np.load(os.path.join(save_folder, 'GMM_%d' % g_iteration, 'Mean.npy'))
-    # cov = np.load(os.path.join(save_folder, 'GMM_%d' % g_iteration, 'Cov.npy'))
+    mean = np.load(os.path.join(save_folder, 'GMM_%d' % g_iteration, 'Mean.npy'))
+    cov = np.load(os.path.join(save_folder, 'GMM_%d' % g_iteration, 'Cov.npy'))
 
     N_gaussian = 3
  

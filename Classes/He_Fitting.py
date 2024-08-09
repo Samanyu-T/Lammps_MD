@@ -1251,6 +1251,125 @@ def gaussian_sampling(n_knots, comm, proc_id, mean, cov, max_time=3, work_dir = 
     np.savetxt(os.path.join(save_folder, 'Filtered_Loss_%d.txt' % proc_id), lst_loss[:n])
 
 
+def loss_whe_lj(x, fitting_class, ref):
+
+    loss = 0
+
+    coef_dict = fitting_class.fit_sample(np.hstack([0,0,0,x]))
+
+    zbl_class = ZBL(2, 74)
+
+    poly = splineval(ref[:, 0], coef_dict['W-He'], fitting_class.knot_pts['W-He'])
+
+    zbl = zbl_class.eval_zbl(ref[:, 0])
+
+    phi_pot = poly + zbl
+    
+    loss = np.sum((phi_pot - ref[:, 1])**2, axis=0)
+
+    return loss
+
+def min_whe_lj(lj_coef, fitting_class):
+
+
+    x = np.linspace(2, 4, 20)
+
+    y = 4 * lj_coef[0] * ( (lj_coef[1]/x)**12 - (lj_coef[1]/x)**6 )
+
+    ref = np.column_stack([x, y])
+
+    x_init = np.hstack([-2.469e+00,  6.119e+00 ,-1.617e+01, -2.636e-01,  5.594e-01, -1.124e+00])
+
+    res = minimize(loss_whe_lj, x_init, args=(fitting_class, ref), method='Powell', options={'maxfev':1e4})
+
+    res.x += res.x * 1e-1  * np.random.randn(6)
+
+    return res.x
+
+
+def lj_gaussian_sampling(n_knots, comm, proc_id, mean, cov, max_time=3, work_dir = '../Optim_Local', save_folder = '../Fitting_Output'):
+
+    data_files_folder = os.path.join(work_dir, 'Data_Files')
+
+    lammps_folder = os.path.join(work_dir, 'Data_Files_%d' % proc_id)
+
+    if os.path.exists(lammps_folder):
+
+        shutil.rmtree(lammps_folder)
+    
+    shutil.copytree(data_files_folder, lammps_folder)
+
+    # Read Daniel's potential to initialize the W-H potential and the params for writing a .eam.he file
+    pot, potlines, pot_params = read_pot('git_folder/Potentials/init.eam.he')
+    
+    # Call the main fitting class
+    fitting_class = Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, work_dir)
+
+    data_ref = np.loadtxt('dft_yang.txt')
+
+    # Init Optimization Parameter
+    t1 = time.perf_counter()
+
+    sample = fitting_class.gen_rand()
+
+    _ = loss_func(sample, data_ref, fitting_class)
+
+    t2 = time.perf_counter()
+
+    if proc_id == 0:
+        print('Average Time: %.2f s' % (t2 - t1))
+        sys.stdout.flush()    
+    
+    lst_loss = []
+
+    lst_samples = []
+
+    t_init = time.perf_counter()
+
+    idx = 0
+
+    while True:
+
+        x = np.random.multivariate_normal(mean=mean, cov=cov)
+
+        whe_sample = min_whe_lj(np.abs(x[-2:]), fitting_class)
+
+        sample = np.hstack([x[:-2], whe_sample])
+
+        loss = loss_func(sample, data_ref, fitting_class)
+        print(x, loss)
+
+        idx += 1
+
+        lst_loss.append(loss)
+        lst_samples.append(sample)
+        
+        t_end = time.perf_counter()
+        
+        if t_end - t_init > max_time:
+            break
+
+        if idx % 500 == 0 and fitting_class.proc_id == 0:
+            print(t_end - t_init)
+            sys.stdout.flush()  
+
+    lst_loss = np.array(lst_loss)
+    lst_samples = np.array(lst_samples)
+
+    idx = np.argsort(lst_loss)
+
+    lst_loss = lst_loss[idx]
+    lst_samples = lst_samples[idx]
+
+    n = int( len(lst_loss) * 0.1 )
+
+    print(os.path.join(save_folder, 'Filtered_Samples_%d.txt' % proc_id))
+    sys.stdout.flush()
+    
+    np.savetxt(os.path.join(save_folder, 'Filtered_Samples_%d.txt' % proc_id), lst_samples[:n])
+    np.savetxt(os.path.join(save_folder, 'Filtered_Loss_%d.txt' % proc_id), lst_loss[:n])
+
+
 
 def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_Local', save_folder = '../Fitting_Output'):
 

@@ -663,8 +663,6 @@ def sim_defect_set(optim_class:Fit_EAM_Potential):
         
         lmp_class.cg_min(lmp)
         
-        # lmp.command('write_dump all custom test_sim/V%dH%dHe%d.%d.atom id type x y z' % (vac, h, he, image))
-
         ef = lmp_class.get_formation_energy(lmp)
 
         rvol = lmp_class.get_rvol(lmp)
@@ -742,6 +740,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
     loss = 0
 
+
     if optim_class.bool_fit['W-He']:
 
         pot = optim_class.pot_lammps['W-He'][1:]
@@ -752,11 +751,10 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         loss += np.abs(np.sum(phi[phi < 0]))
 
-        print('Tungsten-Helium Loss: %f' % loss)
+        print('Tungsten - Helium Loss: %f' % loss)
 
     if optim_class.bool_fit['He-He']:
         
-
         virial_coef= np.array([
         [2.47734287e+01, 5.94121916e-01],
         [2.92941502e+01, 2.40776488e+00],
@@ -967,9 +965,9 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
         binding_ref = ref_mat[0, 0, 1, 0, 0] - binding_ref
 
         if v == 0:
-            loss += 10 * rel_abs_loss(binding_sample, binding_ref)
+            loss += 5 * rel_abs_loss(binding_sample, binding_ref)
         elif v == 3:
-            loss += 10 * rel_abs_loss(binding_sample, binding_ref)
+            loss += 5 * rel_abs_loss(binding_sample, binding_ref)
         else:
             loss += 1 * rel_abs_loss(binding_sample, binding_ref)
 
@@ -997,7 +995,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
             binding_ref = ref_mat[0, 1, 0, 0, 0] - binding_ref
             
             if v == 1:
-                loss += 20 * rel_abs_loss(binding_sample, binding_ref)
+                loss += 2 * rel_abs_loss(binding_sample, binding_ref)
             else:
                 loss += 1 * rel_abs_loss(binding_sample, binding_ref)
 
@@ -1016,9 +1014,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
                     r_ref = ref_mat[i, j, k, l, 1]
 
                     if not (np.isinf(r_ref) or np.isinf(r_sample)):
-                        loss +=  10 * abs(r_sample - r_ref)
-    
-    
+                        loss += 10 * abs(r_sample - r_ref)
     if diag:
         t2 = time.perf_counter()
         
@@ -1160,7 +1156,7 @@ def random_sampling(n_knots, comm, proc_id, max_time=3, work_dir = '../Optim_Loc
         if t_end - t_init > max_time:
             break
 
-        if idx % 1000 == 0 and fitting_class.proc_id == 0:
+        if idx % 500 == 0 and fitting_class.proc_id == 0:
             print(t_end - t_init)
             sys.stdout.flush()  
 
@@ -1225,8 +1221,6 @@ def gaussian_sampling(n_knots, comm, proc_id, mean, cov, max_time=3, work_dir = 
         sample = np.random.multivariate_normal(mean=mean, cov=cov)
 
         loss = loss_func(sample, data_ref, fitting_class)
-
-        print(loss)
         
         idx += 1
 
@@ -1238,7 +1232,7 @@ def gaussian_sampling(n_knots, comm, proc_id, mean, cov, max_time=3, work_dir = 
         if t_end - t_init > max_time:
             break
 
-        if idx % 1000 == 0 and fitting_class.proc_id == 0:
+        if idx % 500 == 0 and fitting_class.proc_id == 0:
             print(t_end - t_init)
             sys.stdout.flush()  
 
@@ -1258,6 +1252,122 @@ def gaussian_sampling(n_knots, comm, proc_id, mean, cov, max_time=3, work_dir = 
     np.savetxt(os.path.join(save_folder, 'Filtered_Samples_%d.txt' % proc_id), lst_samples[:n])
     np.savetxt(os.path.join(save_folder, 'Filtered_Loss_%d.txt' % proc_id), lst_loss[:n])
 
+def loss_whe_lj(x, fitting_class, ref):
+
+    loss = 0
+
+    coef_dict = fitting_class.fit_sample(x)
+
+    ZBL = ZBL(2, 74)
+
+    poly = splineval(ref[:, 0], coef_dict['W-He'], fitting_class.knot_pts['W-He'])
+
+    zbl = ZBL.eval_zbl(ref[:, 0])
+
+    phi_pot = poly + zbl
+    
+    loss = np.sum((phi_pot - ref[:, 1])**2, axis=0)
+
+    return loss
+
+def min_whe_lj(lj_coef, fitting_class):
+
+
+    x = np.linspace(2, 4, 20)
+
+    y = 4 * lj_coef[0] * ( (lj_coef[1]/x)**12 - (lj_coef[1]/x)**6 )
+
+    ref = np.column_stack([x, y])
+
+    x_init = np.hstack([-2.469e+00,  6.119e+00 ,-1.617e+01, -2.636e-01,  5.594e-01, -1.124e+00])
+
+    res = minimize(loss_whe_lj, x_init, args=(fitting_class, ref), method='Powell', options={'maxfev':1e4})
+
+    res.x += res.x * 1e-2  * np.random.randn(6)
+
+    return res.x
+
+
+def lj_gaussian_sampling(n_knots, comm, proc_id, mean, cov, max_time=3, work_dir = '../Optim_Local', save_folder = '../Fitting_Output'):
+
+    data_files_folder = os.path.join(work_dir, 'Data_Files')
+
+    lammps_folder = os.path.join(work_dir, 'Data_Files_%d' % proc_id)
+
+    if os.path.exists(lammps_folder):
+
+        shutil.rmtree(lammps_folder)
+    
+    shutil.copytree(data_files_folder, lammps_folder)
+
+    # Read Daniel's potential to initialize the W-H potential and the params for writing a .eam.he file
+    pot, potlines, pot_params = read_pot('git_folder/Potentials/init.eam.he')
+    
+    # Call the main fitting class
+    fitting_class = Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, work_dir)
+
+    data_ref = np.loadtxt('dft_yang.txt')
+
+    # Init Optimization Parameter
+    t1 = time.perf_counter()
+
+    sample = fitting_class.gen_rand()
+
+    _ = loss_func(sample, data_ref, fitting_class)
+
+    t2 = time.perf_counter()
+
+    if proc_id == 0:
+        print('Average Time: %.2f s' % (t2 - t1))
+        sys.stdout.flush()    
+    
+    lst_loss = []
+
+    lst_samples = []
+
+    t_init = time.perf_counter()
+
+    idx = 0
+    
+    while True:
+
+        x = np.random.multivariate_normal(mean=mean, cov=cov)
+
+        whe_sample = min_whe_lj(x[-2:], fitting_class)
+
+        sample = np.hstack([x[:-2], whe_sample])
+
+        loss = loss_func(sample, data_ref, fitting_class)
+        
+        idx += 1
+
+        lst_loss.append(loss)
+        lst_samples.append(sample)
+
+        t_end = time.perf_counter()
+        
+        if t_end - t_init > max_time:
+            break
+
+        if idx % 500 == 0 and fitting_class.proc_id == 0:
+            print(t_end - t_init)
+            sys.stdout.flush()  
+
+    lst_loss = np.array(lst_loss)
+    lst_samples = np.array(lst_samples)
+
+    idx = np.argsort(lst_loss)
+
+    lst_loss = lst_loss[idx]
+    lst_samples = lst_samples[idx]
+
+    n = int( len(lst_loss) * 0.1 )
+
+    print(os.path.join(save_folder, 'Filtered_Samples_%d.txt' % proc_id))
+    sys.stdout.flush()
+    
+    np.savetxt(os.path.join(save_folder, 'Filtered_Samples_%d.txt' % proc_id), lst_samples[:n])
+    np.savetxt(os.path.join(save_folder, 'Filtered_Loss_%d.txt' % proc_id), lst_loss[:n])
 
 
 def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_Local', save_folder = '../Fitting_Output'):
