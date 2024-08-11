@@ -209,7 +209,7 @@ def main(json_file):
     comm.Barrier()
 
     n_knots = {}
-    n_knots['He F'] = 0
+    n_knots['He F'] = 2
     n_knots['H-He p'] = 0
     n_knots['He-W p'] = 2
     n_knots['He-H p'] = 0
@@ -224,11 +224,22 @@ def main(json_file):
     comm.barrier()
 
     
-    mean = np.array([10, 1e-1,  3,
+    mean = np.array([5.5, 0.6,
+                     10, 1e-1,  3,
                      1e-3, 3])
     
-    cov_diag = np.array([10,  1e-2, 2,
-                         2e-4,  2e-1])    
+    cov_diag = np.array([1, 0.2,
+                         10,  1e-2, 2,
+                         2e-6,  2e-1])    
+
+
+    mean = np.array([5.5, 0.6,
+                     10, 1e-1,  3,
+                     -2,  0,  0, -0.2,  0,  0])
+    
+    cov_diag = np.array([1, 0.2,
+                         10,  1e-2, 2,
+                         2e-1, 4, 8, 2e-2, 1, 2])    
 
     cov = np.diag(cov_diag)
 
@@ -241,13 +252,13 @@ def main(json_file):
         sys.stdout.flush()
     comm.Barrier()
 
-    mean, cov = random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time, mean, cov)
+    # mean, cov = random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time, mean, cov)
 
     ## START GAUSSIAN SAMPLING LOOP ###
     g_iteration = 0
 
-    mean = np.load(os.path.join(save_folder, 'GMM_%d' % g_iteration, 'Mean.npy'))
-    cov = np.load(os.path.join(save_folder, 'GMM_%d' % g_iteration, 'Cov.npy'))
+    # mean = np.load(os.path.join(save_folder, 'GMM_%d' % g_iteration, 'Mean.npy'))
+    # cov = np.load(os.path.join(save_folder, 'GMM_%d' % g_iteration, 'Cov.npy'))
 
     N_gaussian = 3
  

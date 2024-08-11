@@ -337,7 +337,7 @@ class Fit_EAM_Potential():
         
         self.map = {}
 
-        full_map_idx = [3*(n_knots['He F'] - 2) + 1] + [3*(n_knots['H-He p'] - 2) + 2] + \
+        full_map_idx = [3*(n_knots['He F'] - 2) + 2] + [3*(n_knots['H-He p'] - 2) + 2] + \
                        [3*(n_knots['He-W p'] - 2) + 3] + [3*(n_knots['He-H p'] - 2) + 3] + [3*(n_knots['He-He p'] - 2) + 3] + \
                        [3*(n_knots['W-He'] - 2)] + [3*(n_knots['He-He'] - 2)] + [3*(n_knots['H-He'] - 2)]
         
@@ -390,6 +390,7 @@ class Fit_EAM_Potential():
         if self.bool_fit['He F']:
 
             sample[self.map['He F']][0] = np.random.rand()
+            sample[self.map['He F']][1] = 0.1 * np.random.rand()
 
             for i in range(self.n_knots['He F'] - 2):
 
@@ -466,9 +467,9 @@ class Fit_EAM_Potential():
 
             for i in range(self.n_knots['He F'] - 2):
 
-                y[i + 1]   = sample[self.map['He F']][3*i + 1] 
-                dy[i + 1]  = sample[self.map['He F']][3*i + 2] 
-                d2y[i + 1] = sample[self.map['He F']][3*i + 3] 
+                y[i + 1]   = sample[self.map['He F']][3*i + 2] 
+                dy[i + 1]  = sample[self.map['He F']][3*i + 3] 
+                d2y[i + 1] = sample[self.map['He F']][3*i + 4] 
 
             coef_dict['He F'] = splinefit(x, y, dy, d2y)
 
@@ -568,11 +569,8 @@ class Fit_EAM_Potential():
 
         if self.bool_fit['He F']:
             
-            x1 = 1.237663101
-            y1 = 6.140713432
-
             a = abs(sample[0])
-            b  = abs(y1 - a * x1)
+            b  = abs(sample[1])
 
             self.pot_lammps['He F'] = np.sqrt(a**2 * rho**2 + b**2 ) - b + \
             splineval(rho, coef_dict['He F'], self.knot_pts['He F'], func = True, grad = False, hess = False)
@@ -751,6 +749,9 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         loss += np.abs(np.sum(phi[phi < 0]))
 
+        if diag:
+            print('Tungsten - Helium Loss: %f' % loss)
+
     if optim_class.bool_fit['He-He']:
         
         virial_coef= np.array([
@@ -799,7 +800,8 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         loss += 1e-4 * np.sum( (B2_pot - virial_coef[:, 1]) ** 2, axis = 0)
 
-        # print('He-He Virial Loss ',  1e-3 * np.sum( (B2_pot - virial_coef[:, 1]) ** 2, axis = 0))
+        if diag:
+           print('He-He Virial Loss ',  1e-3 * np.sum( (B2_pot - virial_coef[:, 1]) ** 2, axis = 0))
 
         he_he_ref = np.array([
                         [ 1.58931000e+00,  3.28492631e-01],
@@ -823,7 +825,8 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
         loss += np.sum((phi_pot - he_he_ref[:, 1])**2, axis=0)
 
-        #print('He-He Gas Loss ', loss)
+        if diag:
+            print('He-He Gas Loss ', loss)
 
     if optim_class.bool_fit['H-He']:
 
@@ -895,7 +898,8 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
         
         loss += 1e-1 * np.sum((1 - pairwise/h_he_ref[:, 1])**2, axis=0)
 
-        #print('H-He Gas Loss: ', 1e-1 * np.sum((1 - pairwise/h_he_ref[:, 1])**2, axis=0))
+        if diag:
+            print('H-He Gas Loss: ', 1e-1 * np.sum((1 - pairwise/h_he_ref[:, 1])**2, axis=0))
 
 
     write_pot(optim_class.pot_lammps, optim_class.potlines, optim_class.lammps_param['potfile'])
@@ -939,7 +943,8 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
 
     loss += 100*constraint  
 
-    #print(sample_mat[0, 0, 1, :, :], ref_mat[0, 0, 1, :, :])
+    if diag:
+        print(sample_mat[0, 0, 1, :, :], ref_mat[0, 0, 1, :, :])
 
     if sample_mat.shape[2]  > 2:
         loss += rel_abs_loss(sample_mat[0, 0, 2, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 2, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
@@ -969,8 +974,8 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
         else:
             loss += 10 * rel_abs_loss(binding_sample, binding_ref)
 
-
-        #print(v, 0 ,binding_sample, binding_ref, loss)
+        if diag:
+            print(v, 0 ,binding_sample, binding_ref, loss)
 
     '''
     Loss from H-He Binding
@@ -997,7 +1002,8 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
             else:
                 loss += 10 * rel_abs_loss(binding_sample, binding_ref)
 
-            #print( v, h ,binding_sample, binding_ref, loss )
+            if diag:
+                print( v, h ,binding_sample, binding_ref, loss )
 
 
     ''' Loss from Relaxation Volumes '''
@@ -1254,8 +1260,10 @@ def gaussian_sampling(n_knots, comm, proc_id, mean, cov, max_time=3, work_dir = 
 def loss_whe_lj(x, fitting_class, ref):
 
     loss = 0
+    
+    rand_sample = fitting_class.gen_rand()
 
-    coef_dict = fitting_class.fit_sample(np.hstack([0,0,0,x]))
+    coef_dict = fitting_class.fit_sample(np.hstack([np.zeros(len(rand_sample) - 6),x]))
 
     zbl_class = ZBL(2, 74)
 
@@ -1271,7 +1279,6 @@ def loss_whe_lj(x, fitting_class, ref):
 
 def min_whe_lj(lj_coef, fitting_class):
 
-
     x = np.linspace(2, 4, 20)
 
     y = 4 * lj_coef[0] * ( (lj_coef[1]/x)**12 - (lj_coef[1]/x)**6 )
@@ -1282,7 +1289,7 @@ def min_whe_lj(lj_coef, fitting_class):
 
     res = minimize(loss_whe_lj, x_init, args=(fitting_class, ref), method='Powell', options={'maxfev':1e4})
 
-    res.x += res.x * 1e-1  * np.random.randn(6)
+    # res.x += res.x * 1e-1  * np.random.randn(6)
 
     return res.x
 
@@ -1337,6 +1344,7 @@ def lj_gaussian_sampling(n_knots, comm, proc_id, mean, cov, max_time=3, work_dir
         sample = np.hstack([x[:-2], whe_sample])
 
         loss = loss_func(sample, data_ref, fitting_class)
+
         # print(x, loss)
 
         idx += 1
@@ -1462,10 +1470,10 @@ def gmm(file_pattern, data_folder, iter):
     samples = samples[sort_idx]
 
     # Select samples with loss less than twice the minimum loss
-    thresh_idx = np.where(loss < 2 * loss.min())[0]
+    thresh_idx = np.where(loss < 3 * loss.min())[0]
 
     # Limit the number of samples to a maximum of 10000
-    n = np.clip(10000, a_min=0, a_max=len(thresh_idx)).astype(int)
+    n = np.clip(1000, a_min=0, a_max=len(thresh_idx)).astype(int)
     print("Threshold indices and number of samples:", thresh_idx, n)
     
     data = samples[thresh_idx[:n]]

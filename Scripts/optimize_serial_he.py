@@ -2,7 +2,7 @@ import numpy as np
 import sys
 import os
 sys.path.append(os.path.join(os.getcwd(), 'git_folder', 'Classes'))
-import He_Fitting_Serial
+import He_Fitting
 import Handle_PotFiles_He
 import time
 import json, glob, shutil
@@ -53,7 +53,7 @@ n_procs = 1
 pot, potlines, pot_params = Handle_PotFiles_He.read_pot('git_folder/Potentials/init.eam.he')
 
 n_knots = {}
-n_knots['He F'] = 0
+n_knots['He F'] = 2
 n_knots['H-He p'] = 0
 n_knots['He-W p'] = 2
 n_knots['He-H p'] = 0
@@ -67,7 +67,7 @@ with open('fitting.json', 'r') as file:
 
 copy_files(True, True, True, param_dict['work_dir'], param_dict['data_dir'])
 
-eam_fit = He_Fitting_Serial.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
+eam_fit = He_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
 
 sample2 = eam_fit.gen_rand()
 
@@ -95,7 +95,7 @@ data_ref = np.loadtxt('dft_yang.txt')
 
 t1 = time.perf_counter()
 
-He_Fitting_Serial.simplex(n_knots, comm, proc_id, sample , 1000, param_dict['work_dir'], param_dict['save_dir'])
+He_Fitting.simplex(n_knots, comm, proc_id, sample , 1000, param_dict['work_dir'], param_dict['save_dir'])
 
 t2 = time.perf_counter()
 print(t2 - t1)
