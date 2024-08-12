@@ -53,31 +53,19 @@ def d2neg_exp(x, a, b, c):
     c = abs(c)
     return a * c * (c + 2*b - b*c*x) * np.exp(-c*x)
 
-def exp(x, Z, amp):
-    amp = abs(amp)
-    Z = abs(Z)
-    a0 = 0.529
-    k = 0.1366
-    A = amp*Z**4/(k*np.pi*a0**3)
-    b = (2*Z/a0)
+def exp(x, A, b):
+    A = abs(A)
+    b = abs(b)
     return A * np.exp(-b * x)
 
-def dexp(x, Z, amp):
-    amp = abs(amp)
-    Z = abs(Z)
-    a0 = 0.529
-    k = 0.1366
-    A = amp*Z**4/(k*np.pi*a0**3)
-    b = (2*Z/a0)
+def dexp(x, A, b):
+    A = abs(A)
+    b = abs(b)
     return -b * A * np.exp(-b * x)
 
-def d2exp(x, Z, amp):
-    amp = abs(amp)
-    Z = abs(Z)
-    a0 = 0.529
-    k = 0.1366
-    A = amp*Z**4/(k*np.pi*a0**3)
-    b = (2*Z/a0)
+def d2exp(x, A, b):
+    A = abs(A)
+    b = abs(b)
     return b**2 * A * np.exp(-b * x)
 
 class ZBL():

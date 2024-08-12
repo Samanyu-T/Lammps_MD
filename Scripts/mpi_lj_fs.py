@@ -9,16 +9,16 @@ sys.path.append(os.path.join(os.getcwd(), 'git_folder', 'Classes'))
 import FS_Fitting
 import shutil
 
-def random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time):
+def lj_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time, mean, cov):
 
     ### START RANDOM SAMPLING ###
     rsamples_folder = ''
 
     if proc_id == 0:
-        print('Start Random Sampling \n')
+        print('Start LJ Sampling \n')
         sys.stdout.flush()  
 
-    rsamples_folder = os.path.join(save_folder, 'Random_Samples') 
+    rsamples_folder = os.path.join(save_folder, 'LJ_Samples') 
 
     if not os.path.exists(rsamples_folder) and proc_id == 0:
         os.mkdir(rsamples_folder)
@@ -26,7 +26,7 @@ def random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, m
     comm.Barrier()  
     
     t1 = time.perf_counter()
-    FS_Fitting.random_sampling(n_knots, comm_split, proc_id, max_time, work_dir, rsamples_folder)
+    FS_Fitting.lj_sampling(n_knots, comm_split, proc_id, mean, cov, max_time, work_dir, rsamples_folder)
     t2 = time.perf_counter()
 
     # Wait for the barrier to complete
@@ -65,6 +65,7 @@ def random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, m
     ## END CLUSTERING ALGORITHM ###
     
     return mean, cov
+
 
 def gaussian_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time, g_iteration, N_iterations, mean, cov):
 
@@ -223,29 +224,25 @@ def main(json_file):
 
     comm.barrier()
 
-    # mean, cov = random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time)
-    
     mean = np.array([4,  0.5,
                      25, 3,
-                     -1.5,  0,  0, -0.25,  0, 0,    ])
+                     1e-3,  2.5])
 
-    cov_diag = np.array([2,  0.25,
+    cov = np.array([2,  0.25,
                          25, 2,
-                         0.5,  2,  4, 0.1, 0.5, 1])    
+                         1e-3,  0.5])    
 
-    cov = np.diag(cov_diag)
-
-    mean = mean[np.newaxis, :]
-    cov = cov[np.newaxis, :, :]
-
+    mean, cov = lj_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time, mean, cov)
+    
     if proc_id == 0:
         print('Init Cov and Mean')
         sys.stdout.flush()
+
     ## START GAUSSIAN SAMPLING LOOP ###
     g_iteration = 0
 
-    # mean = np.load(os.path.join(save_folder, 'GMM_%d' % g_iteration, 'Mean.npy'))
-    # cov = np.load(os.path.join(save_folder, 'GMM_%d' % g_iteration, 'Cov.npy'))
+    mean = np.load(os.path.join(save_folder, 'GMM_%d' % g_iteration, 'Mean.npy'))
+    cov = np.load(os.path.join(save_folder, 'GMM_%d' % g_iteration, 'Cov.npy'))
 
     N_gaussian = 3
  
@@ -424,4 +421,4 @@ def main(json_file):
 
 
 if __name__ == '__main__':
-    main('fitting.json')
+    main('fitting_lj.json')

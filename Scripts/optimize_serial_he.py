@@ -7,6 +7,7 @@ import Handle_PotFiles_He
 import time
 import json, glob, shutil
 import matplotlib.pyplot as plt
+from mpi4py import MPI
 
 def copy_files(w_he, he_he, h_he, work_dir, data_dir):
     
@@ -44,7 +45,7 @@ def copy_files(w_he, he_he, h_he, work_dir, data_dir):
     for file in files_to_copy:
         shutil.copy(file, data_files_folder)
     
-comm = 0
+comm = MPI.COMM_WORLD
 
 proc_id = 0
 
@@ -99,3 +100,5 @@ He_Fitting.simplex(n_knots, comm, proc_id, sample , 1000, param_dict['work_dir']
 
 t2 = time.perf_counter()
 print(t2 - t1)
+
+# -1.12629766  1.00451879 50.83365775  0.49178287  3.92100575 -1.08399913  1.38391886  9.5296594  -0.16774509  0.43470896 -0.78895374
