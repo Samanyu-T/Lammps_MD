@@ -74,11 +74,6 @@ work_dir = param_dict['work_dir']
 save_folder = param_dict['save_dir']
 data_dir = param_dict['data_dir']
 
-if proc_id == 0:
-    copy_files(True, True, True, work_dir, data_dir)
-
-comm.Barrier()
-
 data_files_folder = os.path.join(work_dir, 'Data_Files')
 
 lammps_folder = os.path.join(work_dir, 'Data_Files_%d' % proc_id)
@@ -88,6 +83,27 @@ if os.path.exists(lammps_folder):
     shutil.rmtree(lammps_folder)
 
 shutil.copytree(data_files_folder, lammps_folder)
+
+save_folder = os.path.join(param_dict['save_dir'], 'Python_Global_Optim')
+
+if not os.path.exists(save_folder) and proc_id == 0:
+    os.mkdir(save_folder)
+comm.Barrier()
+
+
+if not os.path.exists(work_dir) and proc_id == 0:
+    os.mkdir(work_dir)
+comm.Barrier()
+
+
+if not os.path.exists(os.path.join(work_dir,'Data_Files')) and proc_id == 0:
+    os.mkdir(work_dir)
+comm.Barrier()
+
+if proc_id == 0:
+    copy_files(True, True, True, work_dir, data_dir)
+comm.Barrier()
+
 
 # Read Daniel's potential to initialize the W-H potential and the params for writing a .eam.he file
 pot, potlines, pot_params = Handle_PotFiles_He.read_pot('git_folder/Potentials/init.eam.he')
@@ -102,12 +118,6 @@ color = proc_id % 8
 optim_bounds = ( (color, color + 1), (0, 1), 
                  (1, 100), (0, 1), (1, 8),
                  (-3, -1), (-10, 10), (-20, 20), (-0.3, -0.1), (-1, 1), (-2, 2))
-
-save_folder = os.path.join(param_dict['save_dir'], 'Python_Global_Optim')
-
-if not os.path.exists(save_folder):
-    os.mkdir(save_folder)
-comm.Barrier()
 
 diag = False
 write = True
