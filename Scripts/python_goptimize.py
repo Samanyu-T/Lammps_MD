@@ -6,7 +6,6 @@ import He_Fitting
 import Handle_PotFiles_He
 import time
 import json, glob, shutil
-import matplotlib.pyplot as plt
 from scipy import optimize
 from mpi4py import MPI
 
@@ -108,6 +107,7 @@ save_folder = os.path.join(param_dict['save_dir'], 'Python_Global_Optim')
 
 if not os.path.exists(save_folder):
     os.mkdir(save_folder)
+comm.Barrier()
 
 optimize.differential_evolution(He_Fitting.loss_func, bounds = optim_bounds, args=(data_ref, eam_fit, True, True, save_folder),
                                 popsize=50)
