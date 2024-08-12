@@ -1,6 +1,6 @@
 #!/bin/bash
 #! Name of the job:
-#SBATCH -J fit_eam
+#SBATCH -J fit_gen
 #SBATCH -A UKAEA-AP002-CPU
 #SBATCH -p sapphire
 #SBATCH --nodes=1
