@@ -1232,7 +1232,6 @@ def lj_sampling(n_knots, comm, proc_id, mean, cov, max_time=3, work_dir = '../Op
 
         loss = loss_func(sample, data_ref, fitting_class)
         
-        print(x, loss)
         idx += 1
 
         lst_loss.append(loss)
