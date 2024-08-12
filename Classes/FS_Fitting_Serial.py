@@ -103,31 +103,19 @@ def d2f_2p(x, Z, c):
     b = Z/a0
     return A * (2 - 4*b*x + b**2 * x**2) * np.exp(-b * x)
 
-def exp(x, Z, amp):
-    amp = abs(amp)
-    Z = abs(Z)
-    a0 = 0.529
-    k = 0.1366
-    A = amp*Z**4/(k*np.pi*a0**3)
-    b = (2*Z/a0)
+def exp(x, A, b):
+    A = abs(A)
+    b = abs(b)
     return A * np.exp(-b * x)
 
-def dexp(x, Z, amp):
-    amp = abs(amp)
-    Z = abs(Z)
-    a0 = 0.529
-    k = 0.1366
-    A = amp*Z**4/(k*np.pi*a0**3)
-    b = (2*Z/a0)
+def dexp(x, A, b):
+    A = abs(A)
+    b = abs(b)
     return -b * A * np.exp(-b * x)
 
-def d2exp(x, Z, amp):
-    amp = abs(amp)
-    Z = abs(Z)
-    a0 = 0.529
-    k = 0.1366
-    A = amp*Z**4/(k*np.pi*a0**3)
-    b = (2*Z/a0)
+def d2exp(x, A, b):
+    A = abs(A)
+    b = abs(b)
     return b**2 * A * np.exp(-b * x)
 
 class ZBL():
@@ -387,7 +375,7 @@ class Fit_EAM_Potential():
         
         self.map = {}
 
-        full_map_idx = [3*(n_knots['He F'] - 2) + 1] + [3*(n_knots['H-He p'] - 2) + 2] + \
+        full_map_idx = [3*(n_knots['He F'] - 2) + 2] + [3*(n_knots['H-He p'] - 2) + 2] + \
                        [3*(n_knots['He-W p'] - 2) + 2] + [3*(n_knots['He-H p'] - 2) + 2] + [3*(n_knots['He-He p'] - 2) + 2] + \
                        [3*(n_knots['W-He'] - 2)] + [3*(n_knots['He-He'] - 2)] + [3*(n_knots['H-He'] - 2)]
         
@@ -587,14 +575,13 @@ class Fit_EAM_Potential():
 
         r = np.linspace(0, self.pot_params['rc'], self.pot_params['Nr'])
 
+
         if self.bool_fit['He F']:
-            x1 = 1.237663101
-            y1 = 6.140713432
+            
+            a = abs(sample[0])
+            b  = abs(sample[1])
 
-            a = sample[0]
-            b  = y1 - a * x1
-
-            self.pot_lammps['He F'] = np.sqrt(a**2 * rho**2 + b**2) - abs(b) + \
+            self.pot_lammps['He F'] = np.sqrt(a**2 * rho**2 + b**2 ) - b + \
             splineval(rho, coef_dict['He F'], self.knot_pts['He F'], func = True, grad = False, hess = False)
 
 

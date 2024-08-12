@@ -729,7 +729,7 @@ def abs_loss(y1, y2):
         loss += np.abs(y1[i] - y2[i])
     return loss 
 
-def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
+def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write=False, save_folder=None):
 
     if diag:
         t1 = time.perf_counter()    
@@ -972,7 +972,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
         elif v == 3:
             loss += 10 * rel_abs_loss(binding_sample, binding_ref)
         else:
-            loss += 10 * rel_abs_loss(binding_sample, binding_ref)
+            loss += 1 * rel_abs_loss(binding_sample, binding_ref)
 
         if diag:
             print(v, 0 ,binding_sample, binding_ref, loss)
@@ -1000,7 +1000,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
             if v == 1:
                 loss += 10 * rel_abs_loss(binding_sample, binding_ref)
             else:
-                loss += 10 * rel_abs_loss(binding_sample, binding_ref)
+                loss += 1 * rel_abs_loss(binding_sample, binding_ref)
 
             if diag:
                 print( v, h ,binding_sample, binding_ref, loss )
@@ -1023,6 +1023,19 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False):
         t2 = time.perf_counter()
         
         print(sample,loss, t2 - t1)
+
+    if write:
+        
+        if loss < 50:
+            with open(os.path.join(save_folder, 'Samples_%d.txt' % optim_class.proc_id), 'a') as file:
+                string = ''
+                for _x in sample:
+                    string += '%f ' % _x
+                string += '\n'
+                file.write(string)
+
+            with open(os.path.join(save_folder, 'Loss_%d.txt' % optim_class.proc_id), 'a') as file:
+                file.write('%f \n' % loss)
 
     return loss
 

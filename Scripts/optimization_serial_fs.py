@@ -68,14 +68,14 @@ pot, potlines, pot_params = Handle_PotFiles_FS.read_pot('git_folder/Potentials/i
 #  -1.9733587   3.66449741  1.60497915 -0.68848128  0.80103327 -0.74969712
 #  -0.19581129  0.37283166 -0.41408367 -0.03112508  0.05222353 -0.15153377
 n_knots = {}
-n_knots['He F'] = 0
-n_knots['H-He p'] = 2
+n_knots['He F'] = 2
+n_knots['H-He p'] = 0
 n_knots['He-W p'] = 2
-n_knots['He-H p'] = 2
+n_knots['He-H p'] = 0
 n_knots['He-He p'] = 0
 n_knots['W-He'] = 4
 n_knots['He-He'] = 0
-n_knots['H-He'] = 4
+n_knots['H-He'] = 0
 
 with open('fitting.json', 'r') as file:
     param_dict = json.load(file)
