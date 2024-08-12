@@ -109,7 +109,7 @@ comm.Barrier()
 pot, potlines, pot_params = Handle_PotFiles_He.read_pot('git_folder/Potentials/init.eam.he')
 
 # Call the main fitting class
-eam_fit = He_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, work_dir)
+eam_fit = He_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm_split, proc_id, work_dir)
 
 data_ref = np.loadtxt('dft_yang.txt')
 
