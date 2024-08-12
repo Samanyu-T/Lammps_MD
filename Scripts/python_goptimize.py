@@ -87,7 +87,7 @@ shutil.copytree(data_files_folder, lammps_folder)
 save_folder = os.path.join(param_dict['save_dir'], 'Python_Global_Optim')
 
 if not os.path.exists(save_folder) and proc_id == 0:
-    os.mkdir(save_folder)
+    os.makedirs(save_folder, exist_ok=True)
 comm.Barrier()
 
 
