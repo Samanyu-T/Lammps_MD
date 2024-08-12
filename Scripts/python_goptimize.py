@@ -119,7 +119,7 @@ optim_bounds = ( (color, color + 1), (0, 1),
                  (1, 100), (0, 1), (1, 8),
                  (-3, -1), (-10, 10), (-20, 20), (-0.3, -0.1), (-1, 1), (-2, 2))
 
-diag = True
+diag = False
 write = True
 
 if proc_id == 0:
