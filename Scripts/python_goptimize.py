@@ -109,5 +109,13 @@ if not os.path.exists(save_folder):
     os.mkdir(save_folder)
 comm.Barrier()
 
-optimize.differential_evolution(He_Fitting.loss_func, bounds = optim_bounds, args=(data_ref, eam_fit, True, True, save_folder),
+diag = False
+write = True
+
+if proc_id == 0:
+    print('Begin Genetic Algorithm')
+    sys.stdout.flush()
+comm.Barrier()
+
+optimize.differential_evolution(He_Fitting.loss_func, bounds = optim_bounds, args=(data_ref, eam_fit, diag, write, save_folder),
                                 popsize=50)
