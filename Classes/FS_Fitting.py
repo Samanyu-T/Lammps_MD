@@ -1035,7 +1035,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
 
     if write:
 
-        if loss < 500:
+        if loss < 50:
             with open(os.path.join(save_folder, 'Loss_%d.txt' % optim_class.proc_id), 'a') as file:
                 file.write('%f \n' % loss)
         
@@ -1403,7 +1403,7 @@ def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_
     return res.x
 
 
-def genetic_alg(n_knots, comm, proc_id, work_dir = '../Optim_Local', save_folder = '../Fitting_Output'):
+def genetic_alg(n_knots, comm, proc_id, work_dir = '../Optim_Local', save_folder = '../Fitting_Output', diag=False, write=True):
 
     data_files_folder = os.path.join(work_dir, 'Data_Files')
 
@@ -1416,9 +1416,9 @@ def genetic_alg(n_knots, comm, proc_id, work_dir = '../Optim_Local', save_folder
     shutil.copytree(data_files_folder, lammps_folder)
 
 
-    # Read Daniel's potential to initialize the W-H potential and the params for writing a .eam.he file
-    pot, potlines, pot_params = read_pot('git_folder/Potentials/init.eam.he')
-    # pot, potlines, pot_params = read_pot('Fitting_Runtime/Potentials/optim.0.eam.he' )
+    # Read Daniel's potential to initialize the W-H potential and the params for writing a .eam.fs file
+    pot, potlines, pot_params = read_pot('git_folder/Potentials/init.eam.fs')
+    # pot, potlines, pot_params = read_pot('Fitting_Runtime/Potentials/optim.0.eam.fs' )
 
     pot_params['rho_c'] = (pot_params['Nrho'] - 1)*pot_params['drho']
     
@@ -1442,9 +1442,9 @@ def genetic_alg(n_knots, comm, proc_id, work_dir = '../Optim_Local', save_folder
 
     bounds = ((color, color + 1), (0, 1),
                (1, 100), (1, 10),
-               (-3, -1), (-5, 5), (-10, 10), (-0.4, 0), (-2, 2), (-4, 4))
+               (-3, -1), (-10, 10), (-10, 10), (-0.4, 0.2), (-5, 5), (-5, 5))
     
-    res = differential_evolution(loss_func, bounds = bounds, args=(data_ref, fitting_class, False, True, save_folder), popsize=50)
+    res = differential_evolution(loss_func, bounds = bounds, args=(data_ref, fitting_class, diag, write, save_folder), popsize=50)
 
     # local_minimizer = {
     #     'method': 'BFGS',

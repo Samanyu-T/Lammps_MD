@@ -101,7 +101,7 @@ data_ref = np.loadtxt('dft_yang.txt')
 
 t1 = time.perf_counter()
 
-FS_Fitting_Serial.simplex(n_knots, comm, proc_id, sample + 1e-3*np.random.rand(sample.shape[0]), 1000, param_dict['work_dir'], param_dict['save_dir'])
+FS_Fitting_Serial.simplex(n_knots, comm, proc_id, sample, 1000, param_dict['work_dir'], param_dict['save_dir'])
 
 t2 = time.perf_counter()
 print(t2 - t1)

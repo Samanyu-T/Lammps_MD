@@ -5,7 +5,6 @@ sys.path.append(os.path.join(os.getcwd(), 'git_folder', 'Classes'))
 import FS_Fitting
 import time
 import json, glob, shutil
-from scipy import optimize
 from mpi4py import MPI
 
 def copy_files(w_he, he_he, h_he, work_dir, data_dir):

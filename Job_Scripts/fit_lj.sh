@@ -37,7 +37,7 @@ export PATH=$HOME/lammps/src/:$PATH
 
 
 #! Full path to application executable:
-application="python git_folder/Scripts/fit_lj_fs.py"
+application="python git_folder/Scripts/mpi_lj_fs.py"
  
 #! Run options for the application:
 options=""
