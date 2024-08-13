@@ -217,6 +217,7 @@ def main(json_file):
     n_knots['W-He'] = 4
     n_knots['He-He'] = 0
     n_knots['H-He'] = 0
+    n_knots['W-He p'] = 3
 
     if proc_id == 0:
         copy_files(True, True, True, work_dir, data_dir)
@@ -225,13 +226,15 @@ def main(json_file):
 
     # mean, cov = random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time)
     
-    mean = np.array([4,  0.5,
-                     25, 3,
-                     -1.5,  0,  0, -0.25,  0, 0,    ])
+    mean = np.array([4, 0.5,
+                     40, 4,
+                    -1.25, 3, 4, -0.2, 0.2, -1,
+                     0.5, -0.25, 0.06, 0.05, -0.075, 0.06])
 
-    cov_diag = np.array([2,  0.25,
+    cov_diag = np.array([1.5,  0.25,
                          25, 2,
-                         0.5,  2,  4, 0.1, 0.5, 1])    
+                         0.2,  1,  4, 0.2, 0.5, 1,
+                         0.2, 0.2, 0.01, 0.01, 0.01, 0.01])    
 
     cov = np.diag(cov_diag)
 
