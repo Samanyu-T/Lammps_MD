@@ -210,27 +210,27 @@ def main(json_file):
 
     comm.Barrier()
 
-    # n_knots = {}
-    # n_knots['He F'] = 2
-    # n_knots['H-He p'] = 2
-    # n_knots['He-W p'] = 2
-    # n_knots['He-H p'] = 2
-    # n_knots['He-He p'] = 2
-    # n_knots['W-He'] = 4
-    # n_knots['He-He'] = 0
-    # n_knots['H-He'] = 0
-    # n_knots['W-He p'] = 3
-
     n_knots = {}
     n_knots['He F'] = 2
-    n_knots['H-He p'] = 0
+    n_knots['H-He p'] = 2
     n_knots['He-W p'] = 2
-    n_knots['He-H p'] = 0
-    n_knots['He-He p'] = 0
+    n_knots['He-H p'] = 2
+    n_knots['He-He p'] = 2
     n_knots['W-He'] = 4
     n_knots['He-He'] = 0
     n_knots['H-He'] = 0
     n_knots['W-He p'] = 3
+
+    # n_knots = {}
+    # n_knots['He F'] = 2
+    # n_knots['H-He p'] = 0
+    # n_knots['He-W p'] = 2
+    # n_knots['He-H p'] = 0
+    # n_knots['He-He p'] = 0
+    # n_knots['W-He'] = 4
+    # n_knots['He-He'] = 0
+    # n_knots['H-He'] = 0
+    # n_knots['W-He p'] = 3
     if proc_id == 0:
         copy_files(True, True, True, work_dir, data_dir)
 
@@ -263,7 +263,7 @@ def main(json_file):
         print('Init Cov and Mean')
         sys.stdout.flush()
     ## START GAUSSIAN SAMPLING LOOP ###
-    g_iteration = 3
+    g_iteration = 0
 
     # mean = np.load(os.path.join(save_folder, 'GMM_%d' % g_iteration, 'Mean.npy'))
     # cov = np.load(os.path.join(save_folder, 'GMM_%d' % g_iteration, 'Cov.npy'))
@@ -272,6 +272,8 @@ def main(json_file):
  
     mean, cov = gaussian_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time, g_iteration, N_gaussian, mean, cov)
     
+    g_iteration = 3
+
     samples = np.loadtxt(os.path.join(save_folder, 'GMM_%d' % g_iteration, 'Filtered_Samples.txt'))
 
     x_init = samples[proc_id]
