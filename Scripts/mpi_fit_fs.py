@@ -210,17 +210,27 @@ def main(json_file):
 
     comm.Barrier()
 
+    # n_knots = {}
+    # n_knots['He F'] = 2
+    # n_knots['H-He p'] = 2
+    # n_knots['He-W p'] = 2
+    # n_knots['He-H p'] = 2
+    # n_knots['He-He p'] = 2
+    # n_knots['W-He'] = 4
+    # n_knots['He-He'] = 0
+    # n_knots['H-He'] = 0
+    # n_knots['W-He p'] = 3
+
     n_knots = {}
     n_knots['He F'] = 2
-    n_knots['H-He p'] = 2
+    n_knots['H-He p'] = 0
     n_knots['He-W p'] = 2
-    n_knots['He-H p'] = 2
-    n_knots['He-He p'] = 2
+    n_knots['He-H p'] = 0
+    n_knots['He-He p'] = 0
     n_knots['W-He'] = 4
     n_knots['He-He'] = 0
     n_knots['H-He'] = 0
     n_knots['W-He p'] = 3
-
     if proc_id == 0:
         copy_files(True, True, True, work_dir, data_dir)
 
