@@ -967,7 +967,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
     
     '''
     # Loss due to difference in Tet Formation Energy
-    loss += np.abs(sample_mat[0, 0, 1, 0, 0] - ref_mat[0, 0, 1, 0, 0]) ** 2
+    loss += 5 * np.abs(sample_mat[0, 0, 1, 0, 0] - ref_mat[0, 0, 1, 0, 0]) ** 2
 
     loss += rel_abs_loss(sample_mat[0, 0, 1, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 1, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
 
@@ -1013,9 +1013,9 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
         binding_ref = ref_mat[0, 0, 1, 0, 0] - binding_ref
 
         if v == 0:
-            loss += 10 * rel_abs_loss(binding_sample, binding_ref)
+            loss += 5 * rel_abs_loss(binding_sample, binding_ref)
         elif v == 3:
-            loss += 10 * rel_abs_loss(binding_sample, binding_ref)
+            loss += 5 * rel_abs_loss(binding_sample, binding_ref)
         else:
             loss += 1 * rel_abs_loss(binding_sample, binding_ref)
         if diag:
@@ -1062,7 +1062,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
                     r_ref = ref_mat[i, j, k, l, 1]
 
                     if not (np.isinf(r_ref) or np.isinf(r_sample)):
-                        loss +=  abs(r_sample - r_ref)
+                        loss += 5 * abs(r_sample - r_ref)
     if diag:
         t2 = time.perf_counter()
         
@@ -1081,7 +1081,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
                 string += '\n'
 
                 file.write(string)
-
+        print(sample, loss)
     return loss
 
 
