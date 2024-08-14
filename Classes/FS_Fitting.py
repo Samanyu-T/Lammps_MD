@@ -1081,7 +1081,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
                 string += '\n'
 
                 file.write(string)
-        print(sample, loss)
+        # print(sample, loss)
     return loss
 
 

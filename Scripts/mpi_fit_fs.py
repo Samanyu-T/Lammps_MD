@@ -270,7 +270,7 @@ def main(json_file):
 
     N_gaussian = 3
  
-    #mean, cov = gaussian_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time, g_iteration, N_gaussian, mean, cov)
+    mean, cov = gaussian_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time, g_iteration, N_gaussian, mean, cov)
     
     samples = np.loadtxt(os.path.join(save_folder, 'GMM_%d' % g_iteration, 'Filtered_Samples.txt'))
 
