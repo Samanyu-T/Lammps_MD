@@ -263,7 +263,7 @@ def main(json_file):
         print('Init Cov and Mean')
         sys.stdout.flush()
     ## START GAUSSIAN SAMPLING LOOP ###
-    g_iteration = 0
+    g_iteration = 3
 
     # mean = np.load(os.path.join(save_folder, 'GMM_%d' % g_iteration, 'Mean.npy'))
     # cov = np.load(os.path.join(save_folder, 'GMM_%d' % g_iteration, 'Cov.npy'))
