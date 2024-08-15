@@ -967,7 +967,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
     
     '''
     # Loss due to difference in Tet Formation Energy
-    loss += 5 * np.abs(sample_mat[0, 0, 1, 0, 0] - ref_mat[0, 0, 1, 0, 0]) ** 2
+    loss += 2.5 * np.abs(sample_mat[0, 0, 1, 0, 0] - ref_mat[0, 0, 1, 0, 0]) ** 2
 
     loss += rel_abs_loss(sample_mat[0, 0, 1, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 1, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
 
