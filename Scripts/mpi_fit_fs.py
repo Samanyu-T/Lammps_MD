@@ -212,10 +212,10 @@ def main(json_file):
 
     n_knots = {}
     n_knots['He F'] = 2
-    n_knots['H-He p'] = 2
-    n_knots['He-W p'] = 2
-    n_knots['He-H p'] = 2
-    n_knots['He-He p'] = 2
+    n_knots['H-He p'] = 0
+    n_knots['He-W p'] = 0
+    n_knots['He-H p'] = 0
+    n_knots['He-He p'] = 0
     n_knots['W-He'] = 4
     n_knots['He-He'] = 0
     n_knots['H-He'] = 0
@@ -239,18 +239,10 @@ def main(json_file):
     # mean, cov = random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time)
     
     mean = np.array([4, 0.5,
-                     10, 5,
-                     40, 5,
-                     10, 5,
-                     10, 5,
                     -1.25, 3, 4, -0.2, 0.2, -1,
                      0.5, -0.25, 0.06, 0.05, -0.075, 0.06])
 
     cov_diag = np.array([1.5,  0.25,
-                         25, 2,
-                         25, 2,
-                         25, 2,
-                         25, 2,
                          0.2,  1,  4, 0.2, 0.5, 1,
                          0.2, 0.2, 0.01, 0.01, 0.01, 0.01])    
 

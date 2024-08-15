@@ -2,8 +2,8 @@ import numpy as np
 import sys
 import os
 sys.path.append(os.path.join(os.getcwd(), 'git_folder', 'Classes'))
-import FS_Fitting
-import Handle_PotFiles_FS
+import He_Fitting
+import Handle_PotFiles_He
 import time
 import json, glob, shutil
 from mpi4py import MPI
@@ -42,8 +42,8 @@ def copy_files(w_he, he_he, h_he, work_dir, data_dir):
     if he_he:
         # files_to_copy.extend(glob.glob('%s/V*H0He*.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H0He2.*.txt' % data_dir))
-        files_to_copy.extend(glob.glob('%s/V*H0He3.*.txt' % data_dir))
-        files_to_copy.extend(glob.glob('%s/V*H0He4.*.txt' % data_dir))
+        # files_to_copy.extend(glob.glob('%s/V*H0He3.*.txt' % data_dir))
+        # files_to_copy.extend(glob.glob('%s/V*H0He4.*.txt' % data_dir))
 
     if h_he:
         # files_to_copy.extend(glob.glob('%s/V*H*He*.*.txt' % data_dir))
@@ -64,7 +64,7 @@ proc_id = 0
 
 n_procs = 1
 
-pot, potlines, pot_params = Handle_PotFiles_FS.read_pot('git_folder/Potentials/init.eam.fs')
+pot, potlines, pot_params = Handle_PotFiles_He.read_pot('git_folder/Potentials/init.eam.he')
 
 # 5.60697527e+00  3.85118169e+00  9.49832030e+01  3.84392370e+00  1.19397215e+00  2.30219362e+01  7.76016391e-01  2.16019733e+00  1.45467904e+00 -1.85564438e+00  3.01824645e+00  1.86007434e+00 -6.61953938e-01  6.11439256e-01 -3.11273002e-01 -4.14029651e-01  6.77237863e-02 -3.78793307e-01  8.04632485e-01  1.49701602e+00 -1.10496938e-01 -1.01947712e-01  1.84336665e-01 -3.20069363e-01 -4.21210361e-02  3.50947646e-02  4.49373636e-02
 
@@ -74,20 +74,20 @@ pot, potlines, pot_params = Handle_PotFiles_FS.read_pot('git_folder/Potentials/i
 n_knots = {}
 n_knots['He F'] = 2
 n_knots['H-He p'] = 0
-n_knots['He-W p'] = 2
+n_knots['He-W p'] = 0
 n_knots['He-H p'] = 0
 n_knots['He-He p'] = 0
 n_knots['W-He'] = 4
 n_knots['He-He'] = 0
 n_knots['H-He'] = 0
-n_knots['W-He p'] = 3
+n_knots['W-He p'] = 0
 
 with open('fitting.json', 'r') as file:
     param_dict = json.load(file)
 
 copy_files(True, True, True, param_dict['work_dir'], param_dict['data_dir'])
 
-eam_fit = FS_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
+eam_fit = He_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
 
 sample2 = eam_fit.gen_rand()
 
@@ -122,7 +122,7 @@ plt.plot(r, pot['W-He p'])
 
 plt.show()
 
-FS_Fitting.simplex(n_knots, comm, proc_id, sample, 1000, param_dict['work_dir'], param_dict['save_dir'], True)
+He_Fitting.simplex(n_knots, comm, proc_id, sample, 1000, param_dict['work_dir'], param_dict['save_dir'], True)
 
 t2 = time.perf_counter()
 print(t2 - t1)

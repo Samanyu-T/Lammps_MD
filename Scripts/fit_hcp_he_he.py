@@ -7,7 +7,7 @@ sys.path.append(os.path.join(os.getcwd(), 'git_folder', 'Classes'))
 from lammps import lammps
 import matplotlib.pyplot as plt
 import math
-import He_Fitting_Serial, Handle_PotFiles_He
+import He_Fitting, Handle_PotFiles_He
 from scipy.optimize import minimize
 
 def sim_hcp_helium(filepath, potfile, type='he'):
@@ -36,7 +36,7 @@ def loss_func(x, eam_fit, data_dft):
     # h = 1
     # a0 = 0.529
     # k = 0.1366
-    x = np.hstack([A, x])
+    x = np.hstack([A, 0.6,  x])
     
     eam_fit.sample_to_file(x)
 
@@ -105,13 +105,13 @@ n_knots['He-He p'] = 2
 n_knots['W-He'] = 0
 n_knots['He-He'] = 4
 n_knots['H-He'] = 0
-
+n_knots['W-He p'] = 0
 
 with open('fitting.json', 'r') as file:
     param_dict = json.load(file)
 
 # potfile =  'Fitting_Runtime/Potentials/optim.0.eam.alloy' 
-eam_fit = He_Fitting_Serial.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
+eam_fit = He_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
 
 # x = np.array([-4.078e-01, 6.777e-01, -1.038e+00, -2.816e-02,  4.515e-02, -7.875e-02])
 

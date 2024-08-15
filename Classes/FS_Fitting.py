@@ -1070,7 +1070,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
 
     if write:
 
-        if loss < 20:
+        if loss < 40:
             with open(os.path.join(save_folder, 'Loss_%d.txt' % optim_class.proc_id), 'a') as file:
                 file.write('%f \n' % loss)
         
@@ -1473,15 +1473,14 @@ def genetic_alg(n_knots, comm, proc_id, work_dir = '../Optim_Local', save_folder
         print('Average Time: %.2f s' % (t2 - t1))
         sys.stdout.flush()    
     
-    color = proc_id % 8
+    # color = proc_id % 8
 
     bounds = (
-               (color, color + 1), (0, 1),
-               (1, 100), (1, 10),
-               (-3, -0.5), (1, 5), (-2, 5), (-1, 0.2), (-1, 2), (-3, 3),
+               (1,  8), (0, 1),  #(1, 100), (1, 10),
+               (-3, -0.5), (1, 10), (-2, 10), (-1, 0.2), (-1, 5), (-3, 5),
                (0.2, 1), (-1, 0), (-0.1, 0.1), (0, 0.1), (-0.2, 0), (-0.1, 0.1)
-              )       
-    
+    )
+
     res = differential_evolution(loss_func, bounds = bounds, args=(data_ref, fitting_class, diag, write, save_folder), popsize=50)
 
     # local_minimizer = {

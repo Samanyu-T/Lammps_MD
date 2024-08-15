@@ -119,23 +119,23 @@ def d2exp(x, A, b):
     return b**2 * A * np.exp(-b * x)
 
 
-def neg_exp(x, A, c, b):
+def nexp(x, A, b, c):
     A = abs(A)
     b = abs(b)
     c = abs(c)
-    return A * np.exp(-b * x)
+    return A * np.exp(-b * x) * (1 - c*x)
 
-def neg_dexp(x, A, c, b):
+def dnexp(x, A, b, c):
     A = abs(A)
     b = abs(b)
     c = abs(c)
-    return -b * A * np.exp(-b * x)
+    return A * np.exp(-b * x) * (-c -b + b*c*x)
 
-def neg_d2exp(x, A, c, b):
+def d2nexp(x, A, b, c):
     A = abs(A)
     b = abs(b)
     c = abs(c)
-    return b**2 * A * np.exp(-b * x)
+    return A * np.exp(-b * x) * (b**2 + 2*b*c - c*b**2*x)
 
 class ZBL():
 
@@ -331,7 +331,7 @@ class Fit_EAM_Potential():
 
         self.proc_id = proc_id
 
-        self.keys  = ['He F','H-He p', 'He-W p', 'He-H p', 'He-He p', 'W-He', 'He-He', 'H-He']
+        self.keys  = ['He F','H-He p', 'He-W p', 'He-H p', 'He-He p', 'W-He', 'He-He', 'H-He', 'W-He p']
 
         self.lammps_param = {
                 
@@ -377,7 +377,7 @@ class Fit_EAM_Potential():
         self.knot_pts = {}
         self.comm = comm
 
-        self.knot_pts['He F'] = np.linspace(0, self.pot_params['rho_c'], n_knots['He F'])
+        self.knot_pts['He F'] = np.linspace(self.pot_params['rhomin'], self.pot_params['rho_c'], n_knots['He F'])
 
         if n_knots['He F'] > 2:
             self.knot_pts['He F'][1] = 0.3
@@ -392,13 +392,15 @@ class Fit_EAM_Potential():
             self.knot_pts['W-He'][1:3] = np.array([1.7581, 2.7236])
         self.knot_pts['He-He'] = np.linspace(0, self.pot_params['rc'], n_knots['He-He'])
         self.knot_pts['H-He'] = np.linspace(0, self.pot_params['rc'], n_knots['H-He'])
-        
+
+        self.knot_pts['W-He p'] = np.array([0, 3.27332980, 4.64995591])
+
         self.map = {}
 
-        full_map_idx = [3*(n_knots['He F'] - 2) + 2] + [3*(n_knots['H-He p'] - 2) + 2] + \
-                       [3*(n_knots['He-W p'] - 2) + 2] + [3*(n_knots['He-H p'] - 2) + 2] + [3*(n_knots['He-He p'] - 2) + 2] + \
-                       [3*(n_knots['W-He'] - 2)] + [3*(n_knots['He-He'] - 2)] + [3*(n_knots['H-He'] - 2)]
-        
+        full_map_idx = [3*(n_knots['He F'] - 2) + 2] + [3*(n_knots['H-He p'] - 2) + 3] + \
+                       [3*(n_knots['He-W p'] - 2) + 3] + [3*(n_knots['He-H p'] - 2) + 3] + [3*(n_knots['He-He p'] - 2) + 3] + \
+                       [3*(n_knots['W-He'] - 2)] + [3*(n_knots['He-He'] - 2)] + [3*(n_knots['H-He'] - 2)] + \
+                       [3*(n_knots['W-He p'] - 1)]        
         map_idx = []
         
         for idx, key in enumerate(self.bool_fit):
@@ -465,12 +467,13 @@ class Fit_EAM_Potential():
             # Randomly Generate Knot Values for Rho(r)
             sample[self.map['H-He p']][0] = 0.5 + 0.5*np.random.rand()
             sample[self.map['H-He p']][1] = 1 + 0.5*(np.random.rand() - 0.5)
+            sample[self.map['H-He p']][2] = 1 + 0.5*(np.random.rand() - 0.5)
 
             for i in range(self.n_knots['H-He p'] - 2):
 
-                sample[self.map['H-He p']][3*i + 2] = ymax*(np.random.rand() - 0.5)
-                sample[self.map['H-He p']][3*i + 3] = dymax*(np.random.rand() - 0.5)
-                sample[self.map['H-He p']][3*i + 4] = d2ymax*(np.random.rand() - 0.5)
+                sample[self.map['H-He p']][3*i + 3] = ymax*(np.random.rand() - 0.5)
+                sample[self.map['H-He p']][3*i + 4] = dymax*(np.random.rand() - 0.5)
+                sample[self.map['H-He p']][3*i + 5] = d2ymax*(np.random.rand() - 0.5)
 
         for key in ['He-W p', 'He-H p', 'He-He p']:
     
@@ -479,12 +482,13 @@ class Fit_EAM_Potential():
                 # Randomly Generate Knot Values for Rho(r)
                 sample[self.map[key]][0] = 1.5 + 0.5*np.random.rand()
                 sample[self.map[key]][1] = 1 + 0.5*(np.random.rand() - 0.5)
+                sample[self.map[key]][2] = 1 + 0.5*(np.random.rand() - 0.5)
 
                 for i in range(self.n_knots[key] - 2):
 
-                    sample[self.map[key]][3*i + 2] = ymax*(np.random.rand() - 0.5)
-                    sample[self.map[key]][3*i + 3] = dymax*(np.random.rand() - 0.5)
-                    sample[self.map[key]][3*i + 4] = d2ymax*(np.random.rand() - 0.5)
+                    sample[self.map[key]][3*i + 3] = ymax*(np.random.rand() - 0.5)
+                    sample[self.map[key]][3*i + 4] = dymax*(np.random.rand() - 0.5)
+                    sample[self.map[key]][3*i + 5] = d2ymax*(np.random.rand() - 0.5)
 
         ymax = 4
         dymax = 10
@@ -499,6 +503,14 @@ class Fit_EAM_Potential():
                     sample[self.map[key]][3*i + 0] = ymax*(np.random.rand() - 0.5)
                     sample[self.map[key]][3*i + 1] = dymax*(np.random.rand() - 0.5)
                     sample[self.map[key]][3*i + 2] = d2ymax*(np.random.rand() - 0.5)
+
+        if self.bool_fit['W-He p']:
+            # Randomly Generate Knot Values for Phi(r)
+            for i in range(self.n_knots[key] - 1):
+
+                sample[self.map[key]][3*i + 0] = np.random.rand()
+                sample[self.map[key]][3*i + 1] = np.random.rand() - 0.5
+                sample[self.map[key]][3*i + 2] = np.random.rand() - 0.5
 
         return sample
     
@@ -543,11 +555,11 @@ class Fit_EAM_Potential():
 
                 y[0] = 0
 
-                y[-1] = - exp(x[-1],  sample[self.map[key]][0], sample[self.map[key]][1])
+                y[-1] = - nexp(x[-1],  sample[self.map[key]][0], sample[self.map[key]][1], sample[self.map[key]][2])
                 
-                dy[-1] = - dexp(x[-1],  sample[self.map[key]][0], sample[self.map[key]][1])
+                dy[-1] = - dnexp(x[-1],  sample[self.map[key]][0], sample[self.map[key]][1], sample[self.map[key]][2])
 
-                d2y[-1] = - d2exp(x[-1],  sample[self.map[key]][0], sample[self.map[key]][1])
+                d2y[-1] = - d2nexp(x[-1],  sample[self.map[key]][0], sample[self.map[key]][1], sample[self.map[key]][2])
 
                 for i in range(self.n_knots[key] - 2):
 
@@ -586,6 +598,26 @@ class Fit_EAM_Potential():
 
                 coef_dict[key] = splinefit(x, y, dy, d2y)
 
+        key = 'W-He p'
+
+        if self.bool_fit[key]:
+            
+            x = np.copy(self.knot_pts[key])
+
+            y = np.zeros((len(x),))
+
+            dy = np.zeros((len(x),))
+
+            d2y = np.zeros((len(x),))
+
+            for i in range(self.n_knots[key] - 1):
+
+                y[i]   = sample[self.map[key]][3*i + 0] 
+                dy[i]  = sample[self.map[key]][3*i + 1]
+                d2y[i] = sample[self.map[key]][3*i + 2]
+
+            coef_dict[key] = splinefit(x, y, dy, d2y)
+
         return coef_dict
     
     def sample_to_file(self, sample):
@@ -606,7 +638,7 @@ class Fit_EAM_Potential():
 
         for key in ['H-He p' ,'He-W p', 'He-H p', 'He-He p']:
             if self.bool_fit[key]:
-                self.pot_lammps[key] = exp(r,  sample[self.map[key]][0], sample[self.map[key]][1]) + \
+                self.pot_lammps[key] = nexp(r,  sample[self.map[key]][0], sample[self.map[key]][1], sample[self.map[key]][2]) + \
                     splineval(r, coef_dict[key], self.knot_pts[key], func = True, grad = False, hess = False) 
 
         charge = [[74, 2],[2, 2],[1, 2]]
@@ -621,6 +653,10 @@ class Fit_EAM_Potential():
                 poly = splineval(r[1:], coef_dict[key], self.knot_pts[key] , func = True, grad = False, hess = False)
 
                 self.pot_lammps[key][1:] = r[1:]*(zbl + poly)
+
+        if self.bool_fit['W-He p']:
+            self.pot_lammps['W-He p'] = splineval(r, coef_dict['W-He p'], self.knot_pts['W-He p'],
+                                                func = True, grad = False, hess = False) 
 
 def sim_defect_set(optim_class:Fit_EAM_Potential):
 
@@ -763,28 +799,25 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
 
     loss = 0
 
-    # if optim_class.bool_fit['He F']:
-    #     he_f = optim_class.pot_lammps['He F']
-    #     if (he_f < 0).any():
-    #         loss += 1000
-    #         return loss
+    if optim_class.bool_fit['W-He p']:
+        whe_p = optim_class.pot_lammps['W-He p']
+        if (whe_p < 0).any():
+            loss += 1000
+            return loss
+
+    if optim_class.bool_fit['W-He']:
+
+        whe = optim_class.pot_lammps['W-He']
+
+        r = np.linspace(0, optim_class.pot_params['rc'], optim_class.pot_params['Nr'])
         
+        pot = whe[1:]/r[1:]
 
-    # if optim_class.bool_fit['W-He']:
-
-    #     whe = optim_class.pot_lammps['W-He']
-
-    #     dr = optim_class.pot_params['rc']/optim_class.pot_params['Nrho']
-
-    #     min_idx = whe.argmin()
+        loss += 1e-1 * np.abs(np.sum(pot[pot<0]))
         
-    #     if min_idx == 0:
-    #         loss += 100
+        if diag:
+            print(loss)
 
-    #     else:
-    #         min_whe = whe.min() / (min_idx * dr)
-    #         loss += abs(min_whe - -5e-3)
-            
     if optim_class.bool_fit['He-He']:
         
 
@@ -858,7 +891,8 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
 
         loss +=  np.sum((phi_pot - he_he_ref[:, 1])**2, axis=0)
 
-        # print('He-He Gas Loss ', loss)
+        if diag:
+            print('He-He Gas Loss ', loss)
 
     if optim_class.bool_fit['H-He']:
 
@@ -929,8 +963,9 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
         pairwise = (emd_H_He + emd_He_H + pot_hhe)
 
         loss += 1e-1 * np.sum((1 - pairwise/h_he_ref[:, 1])**2, axis=0)
-
-        # print('H-He Gas Loss: ', loss)
+        
+        if diag:
+            print('H-He Gas Loss: ', loss)
 
 
     write_pot(optim_class.pot_lammps, optim_class.potlines, optim_class.lammps_param['potfile'])
@@ -954,7 +989,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
     
     '''
     # Loss due to difference in Tet Formation Energy
-    loss += np.abs(sample_mat[0, 0, 1, 0, 0] - ref_mat[0, 0, 1, 0, 0]) ** 2
+    loss += 5 * np.abs(sample_mat[0, 0, 1, 0, 0] - ref_mat[0, 0, 1, 0, 0]) ** 2
 
     loss += rel_abs_loss(sample_mat[0, 0, 1, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 1, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
 
@@ -965,7 +1000,8 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
 
     loss += np.abs(1 - sample_mat[0, 0, 1, 3, 1]/ref_mat[0, 0, 1, 3, 1])
     
-    # print(sample_mat[0, 0, 1, :, :], ref_mat[0, 0, 1, :, :])
+    if diag:
+        print(sample_mat[0, 0, 1, :, :], ref_mat[0, 0, 1, :, :])
     # print(sample_mat[0, 0, 1, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 1, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
     ''' Constraint '''
 
@@ -999,13 +1035,13 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
         binding_ref = ref_mat[0, 0, 1, 0, 0] - binding_ref
 
         if v == 0:
-            loss += 10 * rel_abs_loss(binding_sample, binding_ref)
+            loss += 5 * rel_abs_loss(binding_sample, binding_ref)
         elif v == 3:
-            loss += 2.5 * rel_abs_loss(binding_sample, binding_ref)
+            loss += 5 * rel_abs_loss(binding_sample, binding_ref)
         else:
             loss += 1 * rel_abs_loss(binding_sample, binding_ref)
-
-        # print(v, 0 ,binding_sample, binding_ref, loss)
+        if diag:
+            print(v, 0 ,binding_sample, binding_ref, loss)
 
     '''
     Loss from H-He Binding
@@ -1032,7 +1068,8 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
             else:
                 loss += 1 * rel_abs_loss(binding_sample, binding_ref)
 
-            # print( v, h ,binding_sample, binding_ref, loss )
+            if diag:
+                print( v, h ,binding_sample, binding_ref, loss )
 
 
     ''' Loss from Relaxation Volumes '''
@@ -1047,7 +1084,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
                     r_ref = ref_mat[i, j, k, l, 1]
 
                     if not (np.isinf(r_ref) or np.isinf(r_sample)):
-                        loss +=  abs(r_sample - r_ref)
+                        loss += 5 * abs(r_sample - r_ref)
     if diag:
         t2 = time.perf_counter()
         
@@ -1055,7 +1092,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
 
     if write:
 
-        if loss < 50:
+        if loss < 20:
             with open(os.path.join(save_folder, 'Loss_%d.txt' % optim_class.proc_id), 'a') as file:
                 file.write('%f \n' % loss)
         
@@ -1066,7 +1103,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
                 string += '\n'
 
                 file.write(string)
-
+        # print(sample, loss)
     return loss
 
 
@@ -1085,7 +1122,7 @@ def random_sampling(n_knots, comm, proc_id, max_time=3, work_dir = '../Optim_Loc
     # Read Daniel's potential to initialize the W-H potential and the params for writing a .eam.he file
     pot, potlines, pot_params = read_pot('git_folder/Potentials/init.eam.he')
 
-    pot_params['rho_c'] = (pot_params['Nrho'] - 1)*pot_params['drho']
+    # pot_params['rho_c'] = (pot_params['Nrho'] - 1)*pot_params['drho']
     
     # Call the main fitting class
     fitting_class = Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, work_dir)
@@ -1147,8 +1184,55 @@ def random_sampling(n_knots, comm, proc_id, max_time=3, work_dir = '../Optim_Loc
     np.savetxt(os.path.join(save_folder, 'Filtered_Loss_%d.txt' % proc_id), lst_loss[:n])
 
 
+def loss_w_he_lj(x, eam_fit, ref):
 
-def random_sampling(n_knots, comm, proc_id, max_time=3, work_dir = '../Optim_Local', save_folder = '../Fitting_Output'):
+    loss = 0
+
+    coef_dict = eam_fit.fit_sample(x)
+
+    zbl_class = ZBL(2, 74)
+
+    poly = splineval(ref[:, 0], coef_dict['W-He'], eam_fit.knot_pts['W-He'])
+
+    zbl = zbl_class.eval_zbl(ref[:, 0])
+
+    phi_pot = poly + zbl
+    
+    loss = np.sum((phi_pot - ref[:, 1])**2, axis=0)
+
+    return loss
+
+def min_w_he_lj(x):
+    
+    n_knots = {}
+    n_knots['He F'] = 0
+    n_knots['H-He p'] = 0
+    n_knots['He-W p'] = 0
+    n_knots['He-H p'] = 0
+    n_knots['He-He p'] = 0
+    n_knots['W-He'] = 4
+    n_knots['He-He'] = 0
+    n_knots['H-He'] = 0
+
+    pot, potlines, pot_params = read_pot('git_folder/Potentials/init.eam.he')
+
+    eam_fit = Fit_EAM_Potential(pot, n_knots, pot_params, potlines, None, 0, '')
+
+    x = np.linspace(2, 4, 20)
+
+    lj = np.array([5e-3, 2.50])
+
+    y = 4 * lj[0] * ( (lj[1]/x)**12 - (lj[1]/x)**6 )
+
+    ref = np.column_stack([x, y])
+
+    sample = np.hstack([-2,  2 ,-1, -0.2,  0.5, -1])
+
+    res = minimize(loss_w_he_lj, sample, args=(eam_fit, ref), method='Powell', options={'maxfev':1e4})
+
+    return res.x
+
+def lj_sampling(n_knots, comm, proc_id, mean, cov, max_time=3, work_dir = '../Optim_Local', save_folder = '../Fitting_Output'):
 
     data_files_folder = os.path.join(work_dir, 'Data_Files')
 
@@ -1163,7 +1247,7 @@ def random_sampling(n_knots, comm, proc_id, max_time=3, work_dir = '../Optim_Loc
     # Read Daniel's potential to initialize the W-H potential and the params for writing a .eam.he file
     pot, potlines, pot_params = read_pot('git_folder/Potentials/init.eam.he')
 
-    pot_params['rho_c'] = (pot_params['Nrho'] - 1)*pot_params['drho']
+    # pot_params['rho_c'] = (pot_params['Nrho'] - 1)*pot_params['drho']
     
     # Call the main fitting class
     fitting_class = Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, work_dir)
@@ -1179,9 +1263,9 @@ def random_sampling(n_knots, comm, proc_id, max_time=3, work_dir = '../Optim_Loc
 
     t2 = time.perf_counter()
 
-    # if proc_id == 0:
-    print('Average Time: %.2f s' % (t2 - t1))
-    sys.stdout.flush()    
+    if proc_id == 0:
+        print('Average Time: %.2f s' % (t2 - t1))
+        sys.stdout.flush()    
     
     lst_loss = []
 
@@ -1193,10 +1277,18 @@ def random_sampling(n_knots, comm, proc_id, max_time=3, work_dir = '../Optim_Loc
 
     while True:
 
-        sample = fitting_class.gen_rand()
+        x = np.zeros(mean.shape)
+
+        for i in range(len(mean)):
+
+            x[i] = np.random.normal(loc=mean[i], scale=cov[i], size=1)
+
+        whe_sample = min_w_he_lj(x[-2:])
+
+        sample = np.hstack([x[:-2], whe_sample])
 
         loss = loss_func(sample, data_ref, fitting_class)
-
+        
         idx += 1
 
         lst_loss.append(loss)
@@ -1221,9 +1313,11 @@ def random_sampling(n_knots, comm, proc_id, max_time=3, work_dir = '../Optim_Loc
 
     n = int( len(lst_loss) * 0.1 )
 
+    print(os.path.join(save_folder, 'Filtered_Samples_%d.txt' % proc_id))
+    sys.stdout.flush()
+    
     np.savetxt(os.path.join(save_folder, 'Filtered_Samples_%d.txt' % proc_id), lst_samples[:n])
     np.savetxt(os.path.join(save_folder, 'Filtered_Loss_%d.txt' % proc_id), lst_loss[:n])
-
 
 
 def gaussian_sampling(n_knots, comm, proc_id, mean, cov, max_time=3, work_dir = '../Optim_Local', save_folder = '../Fitting_Output'):
@@ -1241,7 +1335,7 @@ def gaussian_sampling(n_knots, comm, proc_id, mean, cov, max_time=3, work_dir = 
     # Read Daniel's potential to initialize the W-H potential and the params for writing a .eam.he file
     pot, potlines, pot_params = read_pot('git_folder/Potentials/init.eam.he')
 
-    pot_params['rho_c'] = (pot_params['Nrho'] - 1)*pot_params['drho']
+    # pot_params['rho_c'] = (pot_params['Nrho'] - 1)*pot_params['drho']
     
     # Call the main fitting class
     fitting_class = Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, work_dir)
@@ -1307,7 +1401,7 @@ def gaussian_sampling(n_knots, comm, proc_id, mean, cov, max_time=3, work_dir = 
 
 
 
-def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_Local', save_folder = '../Fitting_Output'):
+def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_Local', save_folder = '../Fitting_Output', diag=False):
 
     data_files_folder = os.path.join(work_dir, 'Data_Files')
 
@@ -1324,7 +1418,7 @@ def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_
     pot, potlines, pot_params = read_pot('git_folder/Potentials/init.eam.he')
     # pot, potlines, pot_params = read_pot('Fitting_Runtime/Potentials/optim.0.eam.he' )
 
-    pot_params['rho_c'] = (pot_params['Nrho'] - 1)*pot_params['drho']
+    # pot_params['rho_c'] = (pot_params['Nrho'] - 1)*pot_params['drho']
     
     # Call the main fitting class
     fitting_class = Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, work_dir)
@@ -1342,7 +1436,7 @@ def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_
         print('Average Time: %.2f s' % (t2 - t1))
         sys.stdout.flush()    
     
-    res = minimize(loss_func, x_init, args=(data_ref, fitting_class, True, False, None), method='Powell',
+    res = minimize(loss_func, x_init, args=(data_ref, fitting_class, diag, False, None), method='Powell',
                    options={"maxfev":maxiter, "return_all":True}, tol=1e-4)
 
     res.allvecs = np.array(res.allvecs)
@@ -1366,7 +1460,7 @@ def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_
     return res.x
 
 
-def genetic_alg(n_knots, comm, proc_id, work_dir = '../Optim_Local', save_folder = '../Fitting_Output'):
+def genetic_alg(n_knots, comm, proc_id, work_dir = '../Optim_Local', save_folder = '../Fitting_Output', diag=False, write=True):
 
     data_files_folder = os.path.join(work_dir, 'Data_Files')
 
@@ -1383,7 +1477,7 @@ def genetic_alg(n_knots, comm, proc_id, work_dir = '../Optim_Local', save_folder
     pot, potlines, pot_params = read_pot('git_folder/Potentials/init.eam.he')
     # pot, potlines, pot_params = read_pot('Fitting_Runtime/Potentials/optim.0.eam.he' )
 
-    pot_params['rho_c'] = (pot_params['Nrho'] - 1)*pot_params['drho']
+    # pot_params['rho_c'] = (pot_params['Nrho'] - 1)*pot_params['drho']
     
     # Call the main fitting class
     fitting_class = Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, work_dir)
@@ -1403,11 +1497,14 @@ def genetic_alg(n_knots, comm, proc_id, work_dir = '../Optim_Local', save_folder
     
     color = proc_id % 8
 
-    bounds = ((color, color + 1), (0, 1),
+    bounds = (
+               (color, color + 1), (0, 1),
                (1, 100), (1, 10),
-               (-3, -1), (-5, 5), (-10, 10), (-0.4, 0), (-2, 2), (-4, 4))
+               (-3, -0.5), (1, 5), (-2, 5), (-1, 0.2), (-1, 2), (-3, 3),
+               (0.2, 1), (-1, 0), (-0.1, 0.1), (0, 0.1), (-0.2, 0), (-0.1, 0.1)
+              )       
     
-    res = differential_evolution(loss_func, bounds = bounds, args=(data_ref, fitting_class, False, True, save_folder), popsize=50)
+    res = differential_evolution(loss_func, bounds = bounds, args=(data_ref, fitting_class, diag, write, save_folder), popsize=50)
 
     # local_minimizer = {
     #     'method': 'BFGS',
