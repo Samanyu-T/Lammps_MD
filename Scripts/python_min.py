@@ -124,7 +124,7 @@ data_ref = np.loadtxt('dft_yang.txt')
 
 pot, potlines, pot_params = Handle_PotFiles_He.read_pot('git_folder/Potentials/init.eam.he')
 
-with open('fitting_genetic.json', 'r') as file:
+with open('fittin.json', 'r') as file:
     param_dict = json.load(file)
 
 eam_fit = He_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm_split, proc_id, param_dict['work_dir'])
@@ -158,7 +158,7 @@ if proc_id == 0:
 else:
 
     x_trial = samples[np.random.randint(low = 1, high = 1000)]
-
+    print(x_trial.shapes)
     x0 = np.hstack([ x_trial[:2],
                     0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0,
