@@ -799,7 +799,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
 
         loss += 5e-2 * np.abs(np.sum(pot[pot<0]))
         
-        loss += 5e-2 * np.sum(np.abs(pot[r > 3.25]))
+        loss += 5e-2 * np.sum(np.abs(pot[r > 3.5]))
 
         if diag:
             print(loss)
