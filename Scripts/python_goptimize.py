@@ -2,7 +2,7 @@ import numpy as np
 import sys
 import os
 sys.path.append(os.path.join(os.getcwd(), 'git_folder', 'Classes'))
-import FS_Fitting
+import He_Fitting
 import time
 import json, glob, shutil
 from mpi4py import MPI
@@ -74,10 +74,10 @@ comm.Barrier()
 
 n_knots = {}
 n_knots['He F'] = 2
-n_knots['H-He p'] = 0
-n_knots['He-W p'] = 0
-n_knots['He-H p'] = 0
-n_knots['He-He p'] = 0
+n_knots['H-He p'] = 3
+n_knots['He-W p'] = 3
+n_knots['He-H p'] = 3
+n_knots['He-He p'] = 3
 n_knots['W-He'] = 4
 n_knots['He-He'] = 0
 n_knots['H-He'] = 0
@@ -102,4 +102,4 @@ if not os.path.exists(rsamples_folder) and proc_id == 0:
 comm.Barrier()  
 
 t1 = time.perf_counter()
-FS_Fitting.genetic_alg(n_knots, comm_split, proc_id, work_dir, rsamples_folder)
+He_Fitting.genetic_alg(n_knots, comm_split, proc_id, work_dir, rsamples_folder)
