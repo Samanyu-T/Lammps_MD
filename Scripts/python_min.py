@@ -173,4 +173,4 @@ else:
 print('x_init')
 
 optimize.differential_evolution(He_Fitting.loss_func, bounds, args=(data_ref, eam_fit, False, True, rsamples_folder),
-                                init='latinhypercube', mutation=2, recombination=0.25, popsize=50, maxiter=50, polish=True, x0=x0)
+                                init='latinhypercube', mutation=1.5, recombination=0.25, popsize=50, maxiter=50, polish=True, x0=x0)
