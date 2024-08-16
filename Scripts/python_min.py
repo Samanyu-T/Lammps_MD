@@ -130,7 +130,7 @@ with open('fitting.json', 'r') as file:
 eam_fit = He_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm_split, proc_id, param_dict['work_dir'])
 
 loss = np.empty((0))
-samples = np.empty((0, 16))
+samples = np.empty((0, 14))
 
 
 for i in range(112):
@@ -158,7 +158,7 @@ if proc_id == 0:
 else:
 
     x_trial = samples[np.random.randint(low = 1, high = 1000)]
-    print(x_trial.shapes)
+
     x0 = np.hstack([ x_trial[:2],
                     0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0,
