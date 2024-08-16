@@ -135,9 +135,9 @@ pot, potlines, pot_params = Handle_PotFiles_He.read_pot('git_folder/Potentials/b
 
 n_knots = {}
 n_knots['He F'] = 2
-n_knots['H-He p'] = 2
+n_knots['H-He p'] = 3
 n_knots['He-W p'] = 0
-n_knots['He-H p'] = 2
+n_knots['He-H p'] = 3
 n_knots['He-He p'] = 0
 n_knots['W-He'] = 0
 n_knots['He-He'] = 0
@@ -152,8 +152,9 @@ eam_fit = He_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm,
 
 # x = np.array([-1.875e-01,  2.568e-01, -2.578e-01, -1.852e-02,  2.622e-02, -3.972e-02])
 
-x = np.array([ 1,  4, 1e-3 , 4.7, 4, 1,
-              -1.26327399e-01,  1.31954504e-01, -2.34140120e-01, -2.33344481e-02,  2.75030830e-02, -4.83606197e-02])
+
+x = np.array([0,0,0, 0,0,0, 0,0,0, 0,0,0,
+             -1.12250698e-01,  3.95622407e-02,  1.49297332e-01, -2.38165659e-02, 2.79419759e-02, -5.00556693e-02])
 
 print(eam_fit.gen_rand().shape, x.shape)
 eam_fit.sample_to_file(np.hstack([5.5, 0.6, x]))
@@ -164,15 +165,16 @@ plt.plot(r[400:], hhe[400:])
 plt.plot(data_dft[:,0], data_dft[:,1], label='dft', color='black')
 plt.show()
 
-x = np.array([1.36606702e+00,  4.35316203e+00, 1.00000000e-03,
-             -2.40898176e+00,  6.03993438e+00,  1.00000000e+00,
+
+x = np.array([0, 0, 0, 0, 0, 0,
+              0, 0, 0, 0, 0, 0,
              -1.12250698e-01,  3.95622407e-02,  1.49297332e-01, -2.38165659e-02, 2.79419759e-02, -5.00556693e-02])
 
-x_res = minimize(analytical_h_he, x, args=(eam_fit, data_dft), method='Powell',options={"maxfev":10}, tol=1e-4)
-print(x_res)
-x = x_res.x
+# x_res = minimize(analytical_h_he, x, args=(eam_fit, data_dft), method='Powell',options={"maxfev":1000}, tol=1e-4)
+# print(x_res)
+# x = x_res.x
 
-x = np.hstack([5.5, 0.6, x_res.x])
+x = np.hstack([5.5, 0.6, x])
 
 eam_fit.sample_to_file(x)
 
@@ -307,13 +309,13 @@ eam_fit = He_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm,
 #               -1.12250698e-01,  3.95622407e-02,  1.49297332e-01, -2.38165659e-02, 2.79419759e-02, -5.00556693e-02])
 
 x = np.array([   1.7015e+00,  4.2490e-01, 
-                 1.36606702e+00,  4.35316203e+00, 1.00000000e-03,
-                 0, 0, 0,
-                 2.40898176e+00,  6.03993438e+00,  1.00000000e+00,
-                 0, 0, 0,
+                 0, 0, 0, 0, 0, 0,
+                 0, 0, 0, 0, 0, 0,
+                 0, 0, 0, 0, 0, 0,
+                 0, 0, 0, 0, 0, 0,
                 -1.1982e+00,  3.1443e+00, -3.2970e-01, -2.2820e-01,  4.1590e-01, -4.7750e-01 ,
                 -3.670e-01,  4.789e-01 ,-3.762e-01, -2.760e-02,  4.344e-02, -7.470e-02, 
-                -0.12564656, 0.13166891, -0.23713911, -0.02355287 , 0.02697471 ,-0.04887022,
+                -1.16528663e-01,  3.91874603e-02, -3.51371220e-01, -1.95144898e-02,  1.28461069e-02,  5.09112338e-02,
                  6.8130e-01, -3.8090e-01,  6.3500e-02,  8.6000e-03,  -9.4000e-03, 1.3100e-02])
 
 # x = np.array([   6.08600e-01,  2.78500e-01, 
