@@ -129,17 +129,43 @@ with open('fitting.json', 'r') as file:
 
 eam_fit = He_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm_split, proc_id, param_dict['work_dir'])
 
+loss = np.empty((0))
+samples = np.empty((0, 16))
 
-x0 =  np.array([
-            1.7015e+00,  4.2490e-01, 
-            0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0,
-            -1.1982e+00,  3.1443e+00, -3.2970e-01, -2.2820e-01,  4.1590e-01, -4.7750e-01 ,
-            6.8130e-01, -3.8090e-01,  6.3500e-02,  8.6000e-03,  -9.4000e-03, 1.3100e-02
-            ])
 
+for i in range(112):
+    _loss = np.loadtxt('Fitting_Output_FS_Final/Genetic_Algorithm/Loss_%d.txt' % i)
+    _samples = np.loadtxt('Fitting_Output_FS_Final/Genetic_Algorithm/Samples_%d.txt' % i)
+
+    loss = np.hstack([loss, _loss])
+    samples = np.vstack([samples, _samples])
+
+idx = np.argsort(loss)
+loss = loss[idx]
+samples = samples[idx]
+
+if proc_id == 0:
+    
+    x0 =  np.array([
+                1.7015e+00,  4.2490e-01, 
+                0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0,
+                -1.1982e+00,  3.1443e+00, -3.2970e-01, -2.2820e-01,  4.1590e-01, -4.7750e-01 ,
+                6.8130e-01, -3.8090e-01,  6.3500e-02,  8.6000e-03,  -9.4000e-03, 1.3100e-02
+                ])
+else:
+
+    x_trial = samples[np.random.randint(low = 1, high = 1000)]
+
+    x0 = np.hstack([ x_trial[:2],
+                    0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0,
+                    x_trial[2:]
+                    ])
 
 optimize.differential_evolution(He_Fitting.loss_func, bounds, args=(data_ref, eam_fit, False, True, rsamples_folder),
-                                init='latinhypercube', mutation=1.5, recombination=0.25, popsize=50, maxiter=50, polish=True)
+                                init='latinhypercube', mutation=1.5, recombination=0.25, popsize=50, maxiter=50, polish=True, x0=x0)
