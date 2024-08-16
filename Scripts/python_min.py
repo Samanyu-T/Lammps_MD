@@ -156,16 +156,21 @@ if proc_id == 0:
                 6.8130e-01, -3.8090e-01,  6.3500e-02,  8.6000e-03,  -9.4000e-03, 1.3100e-02
                 ])
 else:
+    set = True
+    while set:
+        x_trial = samples[np.random.randint(low = 1, high = 1000)]
 
-    x_trial = samples[np.random.randint(low = 1, high = 1000)]
+        if x_trial[0] > 1:
+            x0 = np.hstack([ x_trial[:2],
+                            0, 0, 0, 0, 0, 0,
+                            0, 0, 0, 0, 0, 0,
+                            0, 0, 0, 0, 0, 0,
+                            0, 0, 0, 0, 0, 0,
+                            x_trial[2:]
+                            ])
+            break
 
-    x0 = np.hstack([ x_trial[:2],
-                    0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0,
-                    x_trial[2:]
-                    ])
+print('x_init')
 
 optimize.differential_evolution(He_Fitting.loss_func, bounds, args=(data_ref, eam_fit, False, True, rsamples_folder),
-                                init='latinhypercube', mutation=1.5, recombination=0.25, popsize=50, maxiter=50, polish=True, x0=x0)
+                                init='latinhypercube', mutation=2, recombination=0.25, popsize=50, maxiter=50, polish=True, x0=x0)
