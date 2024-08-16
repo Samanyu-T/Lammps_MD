@@ -8,6 +8,7 @@ import json, glob, shutil
 from mpi4py import MPI
 from scipy import optimize
 import Handle_PotFiles_He
+import sys
 
 # x0 = np.array([ 1.67840e+00,  6.53800e-01,  10, 5, 7.15027e+01,  7.24880e+00, 10, 5, 10, 5,
 #        -8.02100e-01,  1.00690e+00,  3.70660e+00, -3.12400e-01,
@@ -172,8 +173,7 @@ else:
     for i, _x in enumerate(x0):
         x0[i] = np.clip(_x, a_min=bounds_arr[i,0], a_max=bounds_arr[i, 1])
 
-
 print('x_init')
-
+sys.stdout.flush()
 optimize.differential_evolution(He_Fitting.loss_func, bounds, args=(data_ref, eam_fit, False, True, rsamples_folder),
                                 init='latinhypercube', mutation=1.5, recombination=0.25, popsize=50, maxiter=50, polish=True, x0=x0)
