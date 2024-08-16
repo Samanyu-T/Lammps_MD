@@ -124,7 +124,7 @@ data_ref = np.loadtxt('dft_yang.txt')
 
 pot, potlines, pot_params = Handle_PotFiles_He.read_pot('git_folder/Potentials/init.eam.he')
 
-with open('fitting.json', 'r') as file:
+with open('fitting_genetic.json', 'r') as file:
     param_dict = json.load(file)
 
 eam_fit = He_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm_split, proc_id, param_dict['work_dir'])
