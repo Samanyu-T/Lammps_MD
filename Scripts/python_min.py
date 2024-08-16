@@ -170,7 +170,7 @@ else:
     bounds_arr = np.array(bounds)
 
     for i, _x in enumerate(x0):
-        x0[i] = np.clip(_x, a_min=bounds[i,0], a_max=bounds[i, 1])
+        x0[i] = np.clip(_x, a_min=bounds_arr[i,0], a_max=bounds_arr[i, 1])
 
 
 print('x_init')
