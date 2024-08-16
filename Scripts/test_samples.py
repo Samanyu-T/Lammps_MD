@@ -38,7 +38,7 @@ def copy_files(w_he, he_he, h_he, work_dir, data_dir):
         files_to_copy.extend(glob.glob('%s/V*H0He1.0.txt' % data_dir))
 
     if he_he:
-        # files_to_copy.extend(glob.glob('%s/V*H0He*.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H0He*.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H0He2.*.txt' % data_dir))
         # files_to_copy.extend(glob.glob('%s/V*H0He3.*.txt' % data_dir))
         # files_to_copy.extend(glob.glob('%s/V*H0He4.*.txt' % data_dir))
@@ -77,7 +77,7 @@ n_knots['He-He p'] = 0
 n_knots['W-He'] = 4
 n_knots['He-He'] = 0
 n_knots['H-He'] = 0
-n_knots['W-He p'] = 3
+n_knots['W-He p'] = 0
 
 with open('fitting.json', 'r') as file:
     param_dict = json.load(file)
@@ -86,7 +86,7 @@ copy_files(True, True, True, param_dict['work_dir'], param_dict['data_dir'])
 
 eam_fit = FS_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
 
-x_init = np.loadtxt('x_init_new.txt')
+x_init = np.loadtxt('x_init.txt')
 
 loss = []
 
@@ -99,4 +99,4 @@ for _x in x_init:
 
 loss = np.array(loss)
 
-np.savetxt('loss_new.txt', loss)
+np.savetxt('loss.txt', loss)

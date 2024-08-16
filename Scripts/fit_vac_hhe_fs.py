@@ -7,7 +7,7 @@ sys.path.append(os.path.join(os.getcwd(), 'git_folder', 'Classes'))
 from lammps import lammps
 import matplotlib.pyplot as plt
 import math
-import FS_Fitting_Serial, Handle_PotFiles_FS
+import FS_Fitting, Handle_PotFiles_FS
 from scipy.optimize import minimize
 from scipy.interpolate import interp1d
 
@@ -75,7 +75,7 @@ with open('hhe_energy.dat', 'r') as file:
 data_dft = np.array(data_dft)
 
 r = np.linspace(1.5, 4, 100)
-zbl = FS_Fitting_Serial.ZBL(2, 1)
+zbl = FS_Fitting.ZBL(2, 1)
 y = zbl.eval_zbl(r)
 
 # data_dft = np.hstack([r.reshape(-1,1), y.reshape(-1,1)])
@@ -97,11 +97,12 @@ n_knots['He-He p'] = 0
 n_knots['W-He'] = 0
 n_knots['He-He'] = 0
 n_knots['H-He'] = 4
+n_knots['W-He p'] = 0
 
 with open('fitting.json', 'r') as file:
     param_dict = json.load(file)
 
-eam_fit = FS_Fitting_Serial.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
+eam_fit = FS_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
 
 
 # x = np.array([-1.875e-01,  2.568e-01, -2.578e-01, -1.852e-02,  2.622e-02, -3.972e-02])
@@ -132,7 +133,7 @@ k = 0.1366
 x = np.array([ 5.46 ,       0.09337089, 0.19000538 , 0.15436717,  0.03338267, 
               -0.12564656, 0.13166891, -0.23713911, -0.02355287 , 0.02697471 ,-0.04887022])
 
-x = np.array([ 5.46 ,       0.09337089, 0.19000538 , 0.15436717,  0.03338267, 
+x = np.array([ 5.46 ,    0.6,   0, 0 , 0,  0, 
               -0.12564656 , 0.13166891, -0.23713911, -0.02355287  ,0.02697471 ,-0.04887022])
 
 # x = np.array([5.46 ,  0.91861628,  1.27351374,  1.99999996,  0.78466961,
@@ -150,7 +151,7 @@ Handle_PotFiles_FS.write_pot(eam_fit.pot_lammps, eam_fit.potlines, 'git_folder/P
 
 
 # r_plt = np.linspace(0.5, 4, 100)
-# zbl = FS_Fitting_Serial.ZBL(2, 1)
+# zbl = FS_Fitting.ZBL(2, 1)
 # y = zbl.eval_zbl(r)
 
 r_plt = data_dft[:, 0]
@@ -175,7 +176,7 @@ h_he_ref = np.array([
 
 r = np.linspace(0, eam_fit.pot_params['rc'], eam_fit.pot_params['Nr'])[1:]
 
-zbl = FS_Fitting_Serial.ZBL(2, 1)
+zbl = FS_Fitting.ZBL(2, 1)
 plt.plot(r_plt, pe_arr, label='full inc eam')
 plt.plot(data_dft[:,0], zbl.eval_zbl(data_dft[:,0]), label = 'zbl')  
 plt.plot(data_dft[:,0], data_dft[:,1], label='dft', color='black')
@@ -202,13 +203,13 @@ F_h = interp1d(rho,eam_fit.pot_lammps['H F'])
 
 F_he = interp1d(rho,eam_fit.pot_lammps['He F'])
 
-zbl_hhe = FS_Fitting_Serial.ZBL(2, 1)
+zbl_hhe = FS_Fitting.ZBL(2, 1)
 
 r_plt = data_dft[:,0]
 
 coef_dict = eam_fit.fit_sample(x)
 
-pot_hhe = zbl_hhe.eval_zbl(r_plt) + FS_Fitting_Serial.splineval(r_plt, coef_dict['H-He'], eam_fit.knot_pts['H-He'])
+pot_hhe = zbl_hhe.eval_zbl(r_plt) + FS_Fitting.splineval(r_plt, coef_dict['H-He'], eam_fit.knot_pts['H-He'])
 
 emd_H_He = np.zeros(r_plt.shape)
 emd_He_H = np.zeros(r_plt.shape)
@@ -253,21 +254,23 @@ n_knots['He-He p'] = 2
 n_knots['W-He'] = 4
 n_knots['He-He'] = 4
 n_knots['H-He'] = 4
+n_knots['W-He p'] = 3
 
 pot, potlines, pot_params = Handle_PotFiles_FS.read_pot('git_folder/Potentials/beck.eam.fs')
 
-eam_fit = FS_Fitting_Serial.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
+eam_fit = FS_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
 
-x = np.array([ 5.46 ,  0.09337089, 0.19000538 , 2, 1,  0.15436717,  0.03338267, 2, 3e-4, 
-              -1.89051467,  3.00833016,  1.85408476, -0.64971704,  0.63928971, -0.32182122,
+x = np.array([ 2.564041820044147268e+00, 7.673252571523550003e-01,
+               0 , 0,  0, 0,  0, 0,  0, 0,
+               -1.362442135649557962e+00,  3.017975938716103368e+00, -3.095455570921608057e-01, -2.082051462898321381e-01, 4.118148898507874578e-01, -6.403327857480296537e-01,
               -3.670e-01,  4.789e-01 ,-3.762e-01, -2.760e-02,  4.344e-02, -7.470e-02, 
-              -0.12564656, 0.13166891, -0.23713911, -0.02355287 , 0.02697471 ,-0.04887022])
+              -0.12564656, 0.13166891, -0.23713911, -0.02355287 , 0.02697471 ,-0.04887022,
+            #    5.620183809092318405e-01, -2.963365548979551845e-01, 8.344025267887801578e-02, 3.544574863309217505e-03, 6.520676793246135000e-03, 1.515537943495539885e-01])
+                0.51304656, -0.26614197, 0.06274133, 0.04521507, -0.07499284, 0.06432726])
 
-# x = np.array([  5.46, 0.28674766 , 0.22296933,  0.782321 ,   0.66957067, 28.30868662 , 0.10724439, 2, 3e-4,
-#                 -2.16033878 , 3.34641422,  0.72020167 ,-0.67347082,  0.98436323, -0.80477617,
-#                 -3.670e-01,  4.789e-01 ,-3.762e-01, -2.760e-02,  4.344e-02, -7.470e-02, 
-#                 -0.19861687 , 0.38362381, -0.53700151, -0.03548229,  0.04469245, -0.05161365])
-print(eam_fit.map)
+
+
+# print(x.shape, eam_fit.gen_rand().shape)
 
 r = np.linspace(0, eam_fit.pot_params['rc'], eam_fit.pot_params['Nr'])
 rho = np.linspace(0, eam_fit.pot_params['rho_c'], eam_fit.pot_params['Nrho'])
@@ -280,13 +283,13 @@ F_h = interp1d(rho,eam_fit.pot_lammps['H F'])
 
 F_he = interp1d(rho,eam_fit.pot_lammps['He F'])
 
-zbl_hhe = FS_Fitting_Serial.ZBL(2, 1)
+zbl_hhe = FS_Fitting.ZBL(2, 1)
 
 r_plt = data_dft[:,0]
 
 coef_dict = eam_fit.fit_sample(x)
 
-pot_hhe = zbl_hhe.eval_zbl(r_plt) + FS_Fitting_Serial.splineval(r_plt, coef_dict['H-He'], eam_fit.knot_pts['H-He'])
+pot_hhe = zbl_hhe.eval_zbl(r_plt) + FS_Fitting.splineval(r_plt, coef_dict['H-He'], eam_fit.knot_pts['H-He'])
 
 emd_H_He = np.zeros(r_plt.shape)
 emd_He_H = np.zeros(r_plt.shape)
@@ -321,6 +324,7 @@ n_knots['He-He p'] = 0
 n_knots['W-He'] = 0
 n_knots['He-He'] = 0
 n_knots['H-He'] = 4
+n_knots['W-He p'] = 3
 
 x = np.array([ 5.46 ,  0.91861628,  1.27351374,  1.99999996,  0.78466961, -0.1294734, 
               0.1495497,  -0.36530064, -0.03049166,  0.03071201, -0.06344354])

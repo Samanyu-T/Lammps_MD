@@ -42,7 +42,7 @@ def copy_files(w_he, he_he, h_he, work_dir, data_dir):
     if he_he:
         # files_to_copy.extend(glob.glob('%s/V*H0He*.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H0He2.*.txt' % data_dir))
-        # files_to_copy.extend(glob.glob('%s/V*H0He3.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H0He3.*.txt' % data_dir))
         # files_to_copy.extend(glob.glob('%s/V*H0He4.*.txt' % data_dir))
 
     if h_he:
@@ -73,14 +73,14 @@ pot, potlines, pot_params = Handle_PotFiles_He.read_pot('git_folder/Potentials/i
 #  -0.19581129  0.37283166 -0.41408367 -0.03112508  0.05222353 -0.15153377
 n_knots = {}
 n_knots['He F'] = 2
-n_knots['H-He p'] = 0
-n_knots['He-W p'] = 0
-n_knots['He-H p'] = 0
-n_knots['He-He p'] = 0
+n_knots['H-He p'] = 3
+n_knots['He-W p'] = 3
+n_knots['He-H p'] = 3
+n_knots['He-He p'] = 3
 n_knots['W-He'] = 4
 n_knots['He-He'] = 0
 n_knots['H-He'] = 0
-n_knots['W-He p'] = 0
+n_knots['W-He p'] = 3
 
 with open('fitting.json', 'r') as file:
     param_dict = json.load(file)
@@ -116,13 +116,13 @@ whe = whe[1:]/r[1:]
 
 plt.plot(r[401:], whe[400:])
 
-plt.show()
+# plt.show()
 
-plt.plot(r, pot['W-He p'])
+plt.plot(r, pot['He-H p'])
 
-plt.show()
+# plt.show()
 
-He_Fitting.simplex(n_knots, comm, proc_id, sample, 1000, param_dict['work_dir'], param_dict['save_dir'], True)
+He_Fitting.simplex(n_knots, comm, proc_id, sample, 10000, param_dict['work_dir'], param_dict['save_dir'], True)
 
 t2 = time.perf_counter()
 print(t2 - t1)

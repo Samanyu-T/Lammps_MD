@@ -381,6 +381,7 @@ class Fit_EAM_Potential():
                        [3*(n_knots['He-W p'] - 2) + 2] + [3*(n_knots['He-H p'] - 2) + 2] + [3*(n_knots['He-He p'] - 2) + 2] + \
                        [3*(n_knots['W-He'] - 2)] + [3*(n_knots['He-He'] - 2)] + [3*(n_knots['H-He'] - 2)] + \
                        [3*(n_knots['W-He p'] - 1)]        
+        
         map_idx = []
         
         for idx, key in enumerate(self.bool_fit):
@@ -616,7 +617,7 @@ class Fit_EAM_Potential():
 
         for key in ['H-He p' ,'He-W p', 'He-H p', 'He-He p']:
             if self.bool_fit[key]:
-                self.pot_lammps[key] = exp(r,  sample[self.map[key]][0], sample[self.map[key]][1]) + \
+                self.pot_lammps[key] = (r < self.knot_pts[key][-1])* exp(r,  sample[self.map[key]][0], sample[self.map[key]][1]) + \
                     splineval(r, coef_dict[key], self.knot_pts[key], func = True, grad = False, hess = False) 
 
         charge = [[74, 2],[2, 2],[1, 2]]
@@ -777,12 +778,6 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
 
     loss = 0
 
-    if optim_class.bool_fit['W-He p']:
-        whe_p = optim_class.pot_lammps['W-He p']
-        if (whe_p < 0).any():
-            loss += 1000
-            return loss
-
     if optim_class.bool_fit['W-He']:
 
         whe = optim_class.pot_lammps['W-He']
@@ -791,8 +786,10 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
         
         pot = whe[1:]/r[1:]
 
-        loss += 1e-1 * np.abs(np.sum(pot[pot<0]))
+        loss += 5e-2 * np.abs(np.sum(pot[pot<0]))
         
+        loss += 5e-2 * np.sum(np.abs(pot[r > 3.5]))
+
         if diag:
             print(loss)
 
@@ -1042,7 +1039,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
             binding_ref = ref_mat[0, 1, 0, 0, 0] - binding_ref
 
             if v == 1:
-                loss += 10 * rel_abs_loss(binding_sample, binding_ref)
+                loss += 5 * rel_abs_loss(binding_sample, binding_ref)
             else:
                 loss += 1 * rel_abs_loss(binding_sample, binding_ref)
 
@@ -1062,12 +1059,12 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
                     r_ref = ref_mat[i, j, k, l, 1]
 
                     if not (np.isinf(r_ref) or np.isinf(r_sample)):
-                        loss += 5 * abs(r_sample - r_ref)
+                        loss += 1 * abs(r_sample - r_ref)
     if diag:
         t2 = time.perf_counter()
         
         print(sample,loss, t2 - t1)
-
+        
     if write:
 
         if loss < 40:
@@ -1477,8 +1474,7 @@ def genetic_alg(n_knots, comm, proc_id, work_dir = '../Optim_Local', save_folder
 
     bounds = (
                (1,  8), (0, 1),  #(1, 100), (1, 10),
-               (-3, -0.5), (1, 10), (-2, 10), (-1, 0.2), (-1, 5), (-3, 5),
-               (0.2, 1), (-1, 0), (-0.1, 0.1), (0, 0.1), (-0.2, 0), (-0.1, 0.1)
+                (0.2, 1), (-1, 0), (-0.1, 0.1), (0, 0.1), (-0.2, 0), (-0.1, 0.1)
     )
 
     res = differential_evolution(loss_func, bounds = bounds, args=(data_ref, fitting_class, diag, write, save_folder), popsize=50)

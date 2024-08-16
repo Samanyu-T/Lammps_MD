@@ -123,19 +123,19 @@ def nexp(x, A, b, c):
     A = abs(A)
     b = abs(b)
     c = abs(c)
-    return A * np.exp(-b * x) * (1 - c*x)
+    return A * np.exp(-b * x) * np.cos(c * x)
 
 def dnexp(x, A, b, c):
     A = abs(A)
     b = abs(b)
     c = abs(c)
-    return A * np.exp(-b * x) * (-c -b + b*c*x)
+    return A * np.exp(-b * x) * (-b * np.cos(c*x) - c * np.sin(c*x))
 
 def d2nexp(x, A, b, c):
     A = abs(A)
     b = abs(b)
     c = abs(c)
-    return A * np.exp(-b * x) * (b**2 + 2*b*c - c*b**2*x)
+    return A * np.exp(-b * x) * (b**2 * np.cos(c*x) + 2*b*c*np.sin(c*x) - c**2*np.cos(c*x))
 
 class ZBL():
 
@@ -398,7 +398,7 @@ class Fit_EAM_Potential():
         self.map = {}
 
         full_map_idx = [3*(n_knots['He F'] - 2) + 2] + [3*(n_knots['H-He p'] - 2) + 3] + \
-                       [3*(n_knots['He-W p'] - 2) + 3] + [3*(n_knots['He-H p'] - 2) + 3] + [3*(n_knots['He-He p'] - 2) + 3] + \
+                       [3*(n_knots['He-W p'] - 1)] + [3*(n_knots['He-H p'] - 1)] + [3*(n_knots['He-He p'] - 1)] + \
                        [3*(n_knots['W-He'] - 2)] + [3*(n_knots['He-He'] - 2)] + [3*(n_knots['H-He'] - 2)] + \
                        [3*(n_knots['W-He p'] - 1)]        
         map_idx = []
@@ -475,20 +475,13 @@ class Fit_EAM_Potential():
                 sample[self.map['H-He p']][3*i + 4] = dymax*(np.random.rand() - 0.5)
                 sample[self.map['H-He p']][3*i + 5] = d2ymax*(np.random.rand() - 0.5)
 
-        for key in ['He-W p', 'He-H p', 'He-He p']:
-    
+        for key in ['He-W p', 'He-H p', 'He-He p', 'W-He p']:
             if self.bool_fit[key]:
-
-                # Randomly Generate Knot Values for Rho(r)
-                sample[self.map[key]][0] = 1.5 + 0.5*np.random.rand()
-                sample[self.map[key]][1] = 1 + 0.5*(np.random.rand() - 0.5)
-                sample[self.map[key]][2] = 1 + 0.5*(np.random.rand() - 0.5)
-
-                for i in range(self.n_knots[key] - 2):
-
-                    sample[self.map[key]][3*i + 3] = ymax*(np.random.rand() - 0.5)
-                    sample[self.map[key]][3*i + 4] = dymax*(np.random.rand() - 0.5)
-                    sample[self.map[key]][3*i + 5] = d2ymax*(np.random.rand() - 0.5)
+                # Randomly Generate Knot Values for Phi(r)
+                for i in range(self.n_knots[key] - 1):
+                    sample[self.map[key]][3*i + 0] = np.random.rand()
+                    sample[self.map[key]][3*i + 1] = np.random.rand() - 0.5
+                    sample[self.map[key]][3*i + 2] = np.random.rand() - 0.5
 
         ymax = 4
         dymax = 10
@@ -503,14 +496,6 @@ class Fit_EAM_Potential():
                     sample[self.map[key]][3*i + 0] = ymax*(np.random.rand() - 0.5)
                     sample[self.map[key]][3*i + 1] = dymax*(np.random.rand() - 0.5)
                     sample[self.map[key]][3*i + 2] = d2ymax*(np.random.rand() - 0.5)
-
-        if self.bool_fit['W-He p']:
-            # Randomly Generate Knot Values for Phi(r)
-            for i in range(self.n_knots[key] - 1):
-
-                sample[self.map[key]][3*i + 0] = np.random.rand()
-                sample[self.map[key]][3*i + 1] = np.random.rand() - 0.5
-                sample[self.map[key]][3*i + 2] = np.random.rand() - 0.5
 
         return sample
     
@@ -542,32 +527,32 @@ class Fit_EAM_Potential():
 
             coef_dict['He F'] = splinefit(x, y, dy, d2y)
 
-        for key in ['H-He p' ,'He-W p', 'He-H p', 'He-He p']:
-            if self.bool_fit[key]:
+        # for key in ['H-He p' ,'He-W p', 'He-H p', 'He-He p']:
+        #     if self.bool_fit[key]:
 
-                x = np.copy(self.knot_pts[key])
+        #         x = np.copy(self.knot_pts[key])
 
-                y = np.zeros((self.n_knots[key],))
+        #         y = np.zeros((self.n_knots[key],))
 
-                dy = np.full(y.shape, None, dtype=object)
+        #         dy = np.full(y.shape, None, dtype=object)
 
-                d2y = np.full(y.shape, None, dtype=object)
+        #         d2y = np.full(y.shape, None, dtype=object)
 
-                y[0] = 0
+        #         y[0] = 0
 
-                y[-1] = - nexp(x[-1],  sample[self.map[key]][0], sample[self.map[key]][1], sample[self.map[key]][2])
+        #         y[-1] = - nexp(x[-1],  sample[self.map[key]][0], sample[self.map[key]][1], sample[self.map[key]][2])
                 
-                dy[-1] = - dnexp(x[-1],  sample[self.map[key]][0], sample[self.map[key]][1], sample[self.map[key]][2])
+        #         dy[-1] = - dnexp(x[-1],  sample[self.map[key]][0], sample[self.map[key]][1], sample[self.map[key]][2])
 
-                d2y[-1] = - d2nexp(x[-1],  sample[self.map[key]][0], sample[self.map[key]][1], sample[self.map[key]][2])
+        #         d2y[-1] = - d2nexp(x[-1],  sample[self.map[key]][0], sample[self.map[key]][1], sample[self.map[key]][2])
 
-                for i in range(self.n_knots[key] - 2):
+        #         for i in range(self.n_knots[key] - 2):
 
-                    y[i + 1]   = sample[self.map[key]][3*i + 2] 
-                    dy[i + 1]  = sample[self.map[key]][3*i + 3]
-                    d2y[i + 1] = sample[self.map[key]][3*i + 4]
+        #             y[i + 1]   = sample[self.map[key]][3*i + 2] 
+        #             dy[i + 1]  = sample[self.map[key]][3*i + 3]
+        #             d2y[i + 1] = sample[self.map[key]][3*i + 4]
                 
-                coef_dict[key] = splinefit(x, y, dy, d2y)
+        #         coef_dict[key] = splinefit(x, y, dy, d2y)
         
 
         charge = [[74, 2],[2, 2],[1, 2]]
@@ -598,25 +583,24 @@ class Fit_EAM_Potential():
 
                 coef_dict[key] = splinefit(x, y, dy, d2y)
 
-        key = 'W-He p'
+        for key in ['H-He p' ,'He-W p', 'He-H p', 'He-He p', 'W-He p']:
+            if self.bool_fit[key]:
+                
+                x = np.copy(self.knot_pts[key])
 
-        if self.bool_fit[key]:
-            
-            x = np.copy(self.knot_pts[key])
+                y = np.zeros((len(x),))
 
-            y = np.zeros((len(x),))
+                dy = np.zeros((len(x),))
 
-            dy = np.zeros((len(x),))
+                d2y = np.zeros((len(x),))
 
-            d2y = np.zeros((len(x),))
+                for i in range(self.n_knots[key] - 1):
 
-            for i in range(self.n_knots[key] - 1):
+                    y[i]   = sample[self.map[key]][3*i + 0] 
+                    dy[i]  = sample[self.map[key]][3*i + 1]
+                    d2y[i] = sample[self.map[key]][3*i + 2]
 
-                y[i]   = sample[self.map[key]][3*i + 0] 
-                dy[i]  = sample[self.map[key]][3*i + 1]
-                d2y[i] = sample[self.map[key]][3*i + 2]
-
-            coef_dict[key] = splinefit(x, y, dy, d2y)
+                coef_dict[key] = splinefit(x, y, dy, d2y)
 
         return coef_dict
     
@@ -636,10 +620,10 @@ class Fit_EAM_Potential():
             self.pot_lammps['He F'] = np.sqrt(a**2 * rho**2 + b**2 ) - b + \
             splineval(rho, coef_dict['He F'], self.knot_pts['He F'], func = True, grad = False, hess = False)
 
-        for key in ['H-He p' ,'He-W p', 'He-H p', 'He-He p']:
-            if self.bool_fit[key]:
-                self.pot_lammps[key] = nexp(r,  sample[self.map[key]][0], sample[self.map[key]][1], sample[self.map[key]][2]) + \
-                    splineval(r, coef_dict[key], self.knot_pts[key], func = True, grad = False, hess = False) 
+        # for key in ['H-He p' ,'He-W p', 'He-H p', 'He-He p']:
+        #     if self.bool_fit[key]:
+        #         self.pot_lammps[key] = nexp(r,  sample[self.map[key]][0], sample[self.map[key]][1], sample[self.map[key]][2]) + \
+        #             splineval(r, coef_dict[key], self.knot_pts[key], func = True, grad = False, hess = False) 
 
         charge = [[74, 2],[2, 2],[1, 2]]
 
@@ -654,9 +638,9 @@ class Fit_EAM_Potential():
 
                 self.pot_lammps[key][1:] = r[1:]*(zbl + poly)
 
-        if self.bool_fit['W-He p']:
-            self.pot_lammps['W-He p'] = splineval(r, coef_dict['W-He p'], self.knot_pts['W-He p'],
-                                                func = True, grad = False, hess = False) 
+        for key in ['H-He p' ,'He-W p', 'He-H p', 'He-He p', 'W-He p']:
+            if self.bool_fit[key]:
+                self.pot_lammps[key] = splineval(r, coef_dict[key], self.knot_pts[key], func = True, grad = False, hess = False) 
 
 def sim_defect_set(optim_class:Fit_EAM_Potential):
 
@@ -799,22 +783,24 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
 
     loss = 0
 
-    if optim_class.bool_fit['W-He p']:
-        whe_p = optim_class.pot_lammps['W-He p']
-        if (whe_p < 0).any():
-            loss += 1000
-            return loss
+    # if optim_class.bool_fit['W-He p']:
+    #     whe_p = optim_class.pot_lammps['W-He p']
+    #     if (whe_p < 0).any():
+    #         loss += 1000
+    #         return loss
 
     if optim_class.bool_fit['W-He']:
 
         whe = optim_class.pot_lammps['W-He']
 
-        r = np.linspace(0, optim_class.pot_params['rc'], optim_class.pot_params['Nr'])
+        r = np.linspace(0, optim_class.pot_params['rc'], optim_class.pot_params['Nr'])[1:]
         
-        pot = whe[1:]/r[1:]
+        pot = whe[1:]/r
 
-        loss += 1e-1 * np.abs(np.sum(pot[pot<0]))
+        loss += 5e-2 * np.abs(np.sum(pot[pot<0]))
         
+        loss += 5e-2 * np.sum(np.abs(pot[r > 3.25]))
+
         if diag:
             print(loss)
 
@@ -1037,7 +1023,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
         if v == 0:
             loss += 5 * rel_abs_loss(binding_sample, binding_ref)
         elif v == 3:
-            loss += 5 * rel_abs_loss(binding_sample, binding_ref)
+            loss += 7.5 * rel_abs_loss(binding_sample, binding_ref)
         else:
             loss += 1 * rel_abs_loss(binding_sample, binding_ref)
         if diag:
@@ -1064,7 +1050,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
             binding_ref = ref_mat[0, 1, 0, 0, 0] - binding_ref
 
             if v == 1:
-                loss += 10 * rel_abs_loss(binding_sample, binding_ref)
+                loss += 5 * rel_abs_loss(binding_sample, binding_ref)
             else:
                 loss += 1 * rel_abs_loss(binding_sample, binding_ref)
 
@@ -1092,7 +1078,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
 
     if write:
 
-        if loss < 20:
+        if loss < 25:
             with open(os.path.join(save_folder, 'Loss_%d.txt' % optim_class.proc_id), 'a') as file:
                 file.write('%f \n' % loss)
         
@@ -1228,7 +1214,7 @@ def min_w_he_lj(x):
 
     sample = np.hstack([-2,  2 ,-1, -0.2,  0.5, -1])
 
-    res = minimize(loss_w_he_lj, sample, args=(eam_fit, ref), method='Powell', options={'maxfev':1e4})
+    res = minimize(loss_w_he_lj, sample, args=(eam_fit, ref), method='COBYLA', options={'maxfev':1e4})
 
     return res.x
 

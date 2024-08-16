@@ -7,7 +7,7 @@
 #SBATCH --ntasks=112
 
 
-#SBATCH --time=12:00:00
+#SBATCH --time=16:00:00
 ##SBATCH --mail-type=NONE
 ##SBATCH --no-requeue
  
@@ -37,7 +37,7 @@ export PATH=$HOME/lammps/src/:$PATH
 
 
 #! Full path to application executable:
-application="python git_folder/Scripts/python_goptimize.py"
+application="python git_folder/Scripts/python_min.py"
  
 #! Run options for the application:
 options=""
