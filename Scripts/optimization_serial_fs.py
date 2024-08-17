@@ -40,13 +40,13 @@ def copy_files(w_he, he_he, h_he, work_dir, data_dir):
         files_to_copy.extend(glob.glob('%s/V*H0He1.0.txt' % data_dir))
 
     if he_he:
-        # files_to_copy.extend(glob.glob('%s/V*H0He*.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H0He*.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H0He2.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H0He3.*.txt' % data_dir))
         # files_to_copy.extend(glob.glob('%s/V*H0He4.*.txt' % data_dir))
 
     if h_he:
-        # files_to_copy.extend(glob.glob('%s/V*H*He*.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H*He*.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H1He0.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H1He1.*.txt' % data_dir))
         # files_to_copy.extend(glob.glob('%s/V*H1He2.*.txt' % data_dir))
@@ -75,8 +75,8 @@ n_knots = {}
 n_knots['He F'] = 2
 n_knots['H-He p'] = 3
 n_knots['He-W p'] = 3
-n_knots['He-H p'] = 3
-n_knots['He-He p'] = 3
+n_knots['He-H p'] = 0
+n_knots['He-He p'] = 0
 n_knots['W-He'] = 4
 n_knots['He-He'] = 0
 n_knots['H-He'] = 0
@@ -116,11 +116,14 @@ whe = whe[1:]/r[1:]
 
 plt.plot(r[401:], whe[400:])
 
-# plt.show()
-
+plt.show()
+plt.plot(r, pot['W-He p'])
+plt.plot(r, pot['H-He p'])
+plt.plot(r, pot['He-W p'])
 plt.plot(r, pot['He-H p'])
+plt.plot(r, pot['He-He p'])
 
-# plt.show()
+plt.show()
 
 He_Fitting.simplex(n_knots, comm, proc_id, sample, 10000, param_dict['work_dir'], param_dict['save_dir'], True)
 
