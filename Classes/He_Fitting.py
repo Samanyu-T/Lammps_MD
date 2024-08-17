@@ -1355,7 +1355,7 @@ def gaussian_sampling(n_knots, comm, proc_id, mean, cov, max_time=3, work_dir = 
 
         loss = loss_func(sample, data_ref, fitting_class)
         
-        print(loss)
+        # print(loss)
         
         idx += 1
 
