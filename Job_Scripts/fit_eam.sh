@@ -1,13 +1,13 @@
 #!/bin/bash
 #! Name of the job:
-#SBATCH -J fit_eam
+#SBATCH -J fit_eam2
 #SBATCH -A UKAEA-AP002-CPU
 #SBATCH -p sapphire
 #SBATCH --nodes=1
 #SBATCH --ntasks=112
 
 
-#SBATCH --time=24:00:00
+#SBATCH --time=16:00:00
 ##SBATCH --mail-type=NONE
 ##SBATCH --no-requeue
  
