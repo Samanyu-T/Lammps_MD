@@ -264,11 +264,11 @@ def main(json_file):
     # mean = np.load(os.path.join(save_folder, 'GMM_%d' % g_iteration, 'Mean.npy'))
     # cov = np.load(os.path.join(save_folder, 'GMM_%d' % g_iteration, 'Cov.npy'))
 
-    N_gaussian = 4
+    N_gaussian = 3
  
     mean, cov = gaussian_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time, g_iteration, N_gaussian, mean, cov)
     
-    g_iteration = 4
+    g_iteration = 3
 
     samples = np.loadtxt(os.path.join(save_folder, 'GMM_%d' % g_iteration, 'Filtered_Samples.txt'))
 
