@@ -31,12 +31,9 @@ def sim_hcp_helium(filepath, potfile, type='he'):
 
 def loss_func(x, eam_fit, data_dft):
 
-    A = 5.5
-    # Z = 2
-    # h = 1
-    # a0 = 0.529
-    # k = 0.1366
-    x = np.hstack([A, 0.6,  x])
+    A = 1.7015e+00
+    b = 4.2490e-01
+    x = np.hstack([A, b,  x])
     
     eam_fit.sample_to_file(x)
 
@@ -93,7 +90,7 @@ proc_id = 0
 
 n_procs = 1
 
-pot, potlines, pot_params = Handle_PotFiles_He.read_pot('git_folder/Potentials/beck.eam.he')
+pot, potlines, pot_params = Handle_PotFiles_He.read_pot('git_folder/Potentials/init.eam.he')
 
 
 n_knots = {}
@@ -101,9 +98,9 @@ n_knots['He F'] = 2
 n_knots['H-He p'] = 0
 n_knots['He-W p'] = 0
 n_knots['He-H p'] = 0
-n_knots['He-He p'] = 2
+n_knots['He-He p'] = 3
 n_knots['W-He'] = 0
-n_knots['He-He'] = 4
+n_knots['He-He'] = 0
 n_knots['H-He'] = 0
 n_knots['W-He p'] = 0
 
@@ -116,7 +113,11 @@ eam_fit = He_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm,
 # x = np.array([-4.078e-01, 6.777e-01, -1.038e+00, -2.816e-02,  4.515e-02, -7.875e-02])
 
 ''' CURRENT STABLE OPTIMA '''
-x =  np.array(  [0, 0, 0, -3.670e-01,  4.789e-01 ,-3.762e-01, -2.760e-02,  4.344e-02, -7.470e-02])
+x =  np.array(  [1.61712964, -3.670e-01,  4.789e-01 ,-3.762e-01,  3.23425928, -2.760e-02,  4.344e-02, -7.470e-02])
+
+x = np.array([0, 0, 0, 2, 0, 0, 0])
+
+x = np.hstack([1e-1*np.random.randn(3), 2, 1e-3*np.random.randn(3)])
 
 x_res = minimize(loss_func, x , args=(eam_fit, data_dft), method='Powell',options={"maxiter":100}, tol=1e-4)
 print(x_res)
@@ -127,11 +128,9 @@ stress_arr = np.zeros((len(data_dft,)))
 pe_arr = np.zeros((len(data_dft,)))
 
 
-A = 5.46
-Z = 2
-h = 1
-
-x = np.hstack([A, Z, x])
+A = 1.7015e+00
+b = 4.2490e-01
+x = np.hstack([A, b,  x])
 
 sample = x
 print(sample)
@@ -198,7 +197,7 @@ plt.plot(np.linspace(0, eam_fit.pot_params['rho_c'], eam_fit.pot_params['Nrho'])
 plt.show()
 
 
-pot = eam_fit.pot_lammps['He-He sp']
+pot = eam_fit.pot_lammps['He-He p']
 plt.ylabel('Electron Density / pot_units')
 plt.xlabel('Distance/ A')
 plt.title('Electron Density Function of Helium')

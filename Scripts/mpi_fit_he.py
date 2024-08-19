@@ -5,11 +5,13 @@ import glob
 import numpy as np
 import os
 import json
+from scipy import optimize
 sys.path.append(os.path.join(os.getcwd(), 'git_folder', 'Classes'))
 import He_Fitting
 import shutil
+import Handle_PotFiles_He
 
-def random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time, mean, cov):
+def random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time):
 
     ### START RANDOM SAMPLING ###
     rsamples_folder = ''
@@ -26,7 +28,7 @@ def random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, m
     comm.Barrier()  
     
     t1 = time.perf_counter()
-    He_Fitting.lj_gaussian_sampling(n_knots, comm_split, proc_id, mean[proc_id % mean.shape[0]], cov[proc_id % cov.shape[0]], max_time, work_dir, rsamples_folder)
+    He_Fitting.random_sampling(n_knots, comm_split, proc_id, max_time, work_dir, rsamples_folder)
     t2 = time.perf_counter()
 
     # Wait for the barrier to complete
@@ -211,49 +213,51 @@ def main(json_file):
     n_knots = {}
     n_knots['He F'] = 2
     n_knots['H-He p'] = 0
-    n_knots['He-W p'] = 2
+    n_knots['He-W p'] = 3
     n_knots['He-H p'] = 0
     n_knots['He-He p'] = 0
     n_knots['W-He'] = 4
     n_knots['He-He'] = 0
     n_knots['H-He'] = 0
+    n_knots['W-He p'] = 3
 
+    # n_knots = {}
+    # n_knots['He F'] = 2
+    # n_knots['H-He p'] = 0
+    # n_knots['He-W p'] = 2
+    # n_knots['He-H p'] = 0
+    # n_knots['He-He p'] = 0
+    # n_knots['W-He'] = 4
+    # n_knots['He-He'] = 0
+    # n_knots['H-He'] = 0
+    # n_knots['W-He p'] = 3
     if proc_id == 0:
         copy_files(True, True, True, work_dir, data_dir)
 
     comm.barrier()
 
+    # mean, cov = random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time)
     
-    mean = np.array([5.5, 0.6,
-                     10, 1e-1,  3,
-                     1e-3, 3])
-    
-    cov_diag = np.array([1, 0.2,
-                         10,  1e-2, 2,
-                         2e-6,  2e-1])    
+    mean = np.array([2.31417480e+00,  5.49782701e-01,
+                    #  0.5, -0.25, 0.06, 0.05, -0.075, 0.06,
+                     0.5, -0.25, 0.06, 2.5, 0.05, -0.075, 0.06,
+                     1.7, -1.57953485e+00,  2.93672469e+00, 4.46114577e+00 , 2.75, -2.31669793e-01,  5.90963970e-01, -1.23585493e+00,
+                     6.73573753e-01, -4.10681078e-01,  3.09498929e-04 , 3.27332980, 5.45488521e-02, -4.31581372e-02,  7.49014530e-03])
 
-
-    mean = np.array([5.5, 0.6,
-                     10, 1e-1,  3,
-                     -2,  0,  0, -0.2,  0,  0])
-    
-    cov_diag = np.array([1, 0.2,
-                         10,  1e-2, 2,
-                         2e-1, 4, 8, 2e-2, 1, 2])    
+    cov_diag = np.array([1.23095660e+00, 6.70333146e-02,
+                        #  0.5, 0.5, 0.5, 0.1, 0.1, 0.1,
+                         0.5, 0.5, 0.5, 0.5, 0.1, 0.1, 0.1,
+                         0.25, 0.5, 1, 10, 0.25, 0.25, 0.25, 1,
+                         3.79553078e-02, 4.82307171e-02, 3.71020893e-03, 1e-1, 1.49153683e-03, 1.96326022e-03, 3.65131131e-03])    
 
     cov = np.diag(cov_diag)
 
     mean = mean[np.newaxis, :]
     cov = cov[np.newaxis, :, :]
 
-
     if proc_id == 0:
         print('Init Cov and Mean')
         sys.stdout.flush()
-    comm.Barrier()
-
-    # mean, cov = random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time, mean, cov)
-
     ## START GAUSSIAN SAMPLING LOOP ###
     g_iteration = 0
 
@@ -263,6 +267,26 @@ def main(json_file):
     N_gaussian = 3
  
     mean, cov = gaussian_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time, g_iteration, N_gaussian, mean, cov)
+    
+    g_iteration = 3
+
+    samples = np.loadtxt(os.path.join(save_folder, 'GMM_%d' % g_iteration, 'Filtered_Samples.txt'))
+
+    x_init = samples[proc_id]
+
+    local_min_save = os.path.join(save_folder, 'Local_Minimizer')
+
+    if proc_id == 0 and not os.path.exists(local_min_save):
+        os.mkdir(local_min_save)
+    comm.Barrier()
+
+    pot, potlines, pot_params = Handle_PotFiles_He.read_pot('git_folder/Potentials/init.eam.he')
+
+    data_ref = np.loadtxt('dft_yang.txt')
+
+    eam_fit = He_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
+
+    optimize.minimize(He_Fitting.loss_func, x_init, args=(data_ref, eam_fit, False, True, local_min_save))
     
     exit()
 

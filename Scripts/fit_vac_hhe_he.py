@@ -10,6 +10,7 @@ import math
 import He_Fitting, Handle_PotFiles_He
 from scipy.optimize import minimize
 from scipy.interpolate import interp1d
+from scipy.signal import find_peaks
 
 def sim_h_he(r, potfile,type='he'):
     lmp = lammps( cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
@@ -38,7 +39,7 @@ def sim_h_he(r, potfile,type='he'):
 
 def analytical_h_he(x, eam_fit, data_dft):
 
-    x = np.hstack([0.05, 0.06, x])
+    # x = np.hstack([0.05, 0.06, x])
     eam_fit.sample_to_file(x)
 
     r = np.linspace(0, eam_fit.pot_params['rc'], eam_fit.pot_params['Nr'])
@@ -75,8 +76,18 @@ def analytical_h_he(x, eam_fit, data_dft):
 
     total_hhe = (emd_H_He + emd_He_H + pot_hhe)
 
-    loss = np.linalg.norm(total_hhe - data_dft[:,1])
+    pks, _ = find_peaks(pot_hhe)
+
+    loss = 0
+
+    loss += len(pks)
+
+    k = 0
+
+    loss += np.linalg.norm( (total_hhe[k:] - data_dft[k:,1]) )
     
+    if x[0] < 1:
+        loss += 10
     print(x, loss)
 
     return loss
@@ -134,10 +145,10 @@ pot, potlines, pot_params = Handle_PotFiles_He.read_pot('git_folder/Potentials/b
 
 
 n_knots = {}
-n_knots['He F'] = 2
-n_knots['H-He p'] = 3
+n_knots['He F'] = 0
+n_knots['H-He p'] = 0
 n_knots['He-W p'] = 0
-n_knots['He-H p'] = 3
+n_knots['He-H p'] = 0
 n_knots['He-He p'] = 0
 n_knots['W-He'] = 0
 n_knots['He-He'] = 0
@@ -153,28 +164,27 @@ eam_fit = He_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm,
 # x = np.array([-1.875e-01,  2.568e-01, -2.578e-01, -1.852e-02,  2.622e-02, -3.972e-02])
 
 
-x = np.array([0,0,0, 0,0,0, 0,0,0, 0,0,0,
-             -1.12250698e-01,  3.95622407e-02,  1.49297332e-01, -2.38165659e-02, 2.79419759e-02, -5.00556693e-02])
+x = np.array([1.10116422, -0.17191936,  0.37648485, -2.697355,  1.80101015, -0.1034058, 0.07422518, -0.01610268])
 
 print(eam_fit.gen_rand().shape, x.shape)
-eam_fit.sample_to_file(np.hstack([5.5, 0.6, x]))
+
+eam_fit.sample_to_file(x)
 r = np.linspace(0, eam_fit.pot_params['rc'], eam_fit.pot_params['Nr'])[1:]
 hhe = eam_fit.pot_lammps['H-He'][1:]
 hhe = hhe / r
 plt.plot(r[400:], hhe[400:])
 plt.plot(data_dft[:,0], data_dft[:,1], label='dft', color='black')
-plt.show()
 
+x = np.array([1.00000043, -0.21809812,  0.61560816, -3.40915359,  1.8661813,  -0.09889802, 0.07572234, -0.02700178])
+            #  -1.12250698e-01,  3.95622407e-02,  1.49297332e-01, -2.38165659e-02, 2.79419759e-02, -5.00556693e-02])
 
-x = np.array([0, 0, 0, 0, 0, 0,
-              0, 0, 0, 0, 0, 0,
-             -1.12250698e-01,  3.95622407e-02,  1.49297332e-01, -2.38165659e-02, 2.79419759e-02, -5.00556693e-02])
+# x = np.random.randn(6)
 
-# x_res = minimize(analytical_h_he, x, args=(eam_fit, data_dft), method='Powell',options={"maxfev":1000}, tol=1e-4)
+# x_res = minimize(analytical_h_he, x, args=(eam_fit, data_dft), method='Powell',options={"maxfev":10000}, tol=1e-4)
 # print(x_res)
 # x = x_res.x
 
-x = np.hstack([0.05, 0.06, x])
+# x = np.hstack([0.05, 0.06, x])
 
 eam_fit.sample_to_file(x)
 
@@ -299,6 +309,7 @@ pot, potlines, pot_params = Handle_PotFiles_He.read_pot('git_folder/Potentials/b
 eam_fit = He_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
 
 
+
 # x = np.array([ 2.25309532e+00,  5.78508321e-01,
 #                1.36606702e+00,  4.35316203e+00, 1.00000000e-03,
 #                4.78434000e+01,  6.79830000e+00, 1e-3,
@@ -309,15 +320,16 @@ eam_fit = He_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm,
 #               -1.12250698e-01,  3.95622407e-02,  1.49297332e-01, -2.38165659e-02, 2.79419759e-02, -5.00556693e-02])
 
 x = np.array([   1.7015e+00,  4.2490e-01, 
-                 0, 0, 0, 0, 0, 0,
-                 0, 0, 0, 0, 0, 0,
-                 0, 0, 0, 0, 0, 0,
-                 0, 0, 0, 0, 0, 0,
-                -1.1982e+00,  3.1443e+00, -3.2970e-01, -2.2820e-01,  4.1590e-01, -4.7750e-01 ,
-                -3.670e-01,  4.789e-01 ,-3.762e-01, -2.760e-02,  4.344e-02, -7.470e-02, 
-                -1.16182934e-01,  3.54156716e-02, -3.24990946e-01, -1.93872277e-02,  1.08731830e-02,  5.87895240e-02,
-                 6.8130e-01, -3.8090e-01,  6.3500e-02,  8.6000e-03,  -9.4000e-03, 1.3100e-02])
+                 0, 0, 0, 2.7236, 0, 0, 0,
+                 0, 0, 0, 2.7236, 0, 0, 0,
+                 0, 0, 0, 2.7236, 0, 0, 0,
+                 0, 0, 0, 2.7236, 0, 0, 0,
+                 1.7581, -1.1982e+00,  3.1443e+00, -3.2970e-01, 2.7236, -2.2820e-01,  4.1590e-01, -4.7750e-01 ,
+                 1.61712964, -3.670e-01,  4.789e-01 ,-3.762e-01,  3.23425928, -2.760e-02,  4.344e-02, -7.470e-02, 
+                 1.00000043, -0.21809812,  0.61560816, -3.40915359,  1.8661813,  -0.09889802, 0.07572234, -0.02700178,
+                 6.8130e-01, -3.8090e-01,  6.3500e-02,   3.27332980, 8.6000e-03,  -9.4000e-03, 1.3100e-02])
 
+print(x.shape, eam_fit.gen_rand().shape)
 # x = np.array([   6.08600e-01,  2.78500e-01, 
 #                  2.53408e+01,  6.75140e+00, 0,
 #                  0, 0, 0,
