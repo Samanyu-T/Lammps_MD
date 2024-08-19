@@ -797,12 +797,25 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
         
         pot = whe[1:]/r
 
-        loss += 5e-2 * np.abs(np.sum(pot[pot<0]))
+        loss += 1e-1 * np.abs(np.sum(pot[pot<0]))
         
-        loss += 5e-2 * np.sum(np.abs(pot[r > 3.5]))
+        loss += 1e-1 * np.sum(np.abs(pot[r > 3.5]))
 
         if diag:
             print(loss)
+
+    if optim_class.bool_fit['H-He p']:
+
+        loss += np.sum(np.abs(optim_class.pot_lammps['H-He p']))/len(optim_class.pot_lammps['H-He p'])
+
+    if optim_class.bool_fit['He-He p']:
+
+        loss += np.sum(np.abs(optim_class.pot_lammps['He-He p']))/len(optim_class.pot_lammps['He-He p'])
+
+
+    if optim_class.bool_fit['He-H p']:
+
+        loss += np.sum(np.abs(optim_class.pot_lammps['He-H p']))/len(optim_class.pot_lammps['He-H p'])
 
     if optim_class.bool_fit['He-He']:
         

@@ -40,18 +40,18 @@ def copy_files(w_he, he_he, h_he, work_dir, data_dir):
         files_to_copy.extend(glob.glob('%s/V*H0He1.0.txt' % data_dir))
 
     if he_he:
-        files_to_copy.extend(glob.glob('%s/V*H0He*.*.txt' % data_dir))
+        # files_to_copy.extend(glob.glob('%s/V*H0He*.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H0He2.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H0He3.*.txt' % data_dir))
-        # files_to_copy.extend(glob.glob('%s/V*H0He4.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H0He4.*.txt' % data_dir))
 
     if h_he:
-        files_to_copy.extend(glob.glob('%s/V*H*He*.*.txt' % data_dir))
+        # files_to_copy.extend(glob.glob('%s/V*H*He*.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H1He0.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H1He1.*.txt' % data_dir))
-        # files_to_copy.extend(glob.glob('%s/V*H1He2.*.txt' % data_dir))
-        # files_to_copy.extend(glob.glob('%s/V*H2He0.*.txt' % data_dir))
-        # files_to_copy.extend(glob.glob('%s/V*H2He1.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H1He2.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H2He0.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H2He1.*.txt' % data_dir))
 
     files_to_copy = list(set(files_to_copy))
 
@@ -71,6 +71,7 @@ pot, potlines, pot_params = Handle_PotFiles_He.read_pot('git_folder/Potentials/i
 # 0.48309483 -0.11809125  2.10966551 -0.33984664 28.67842118  0.41549807
 #  -1.9733587   3.66449741  1.60497915 -0.68848128  0.80103327 -0.74969712
 #  -0.19581129  0.37283166 -0.41408367 -0.03112508  0.05222353 -0.15153377
+
 n_knots = {}
 n_knots['He F'] = 2
 n_knots['H-He p'] = 3
@@ -92,6 +93,8 @@ eam_fit = He_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm,
 sample2 = eam_fit.gen_rand()
 
 sample = np.loadtxt('sample.txt') 
+
+# sample[eam_fit.map['He-H p']] = np.array([[ 0.6309, -2.1765,  0.5955,  -0.0599, 0.4942, 0.2246]])
 #  1.15577835  1.37018979  1.14701264  0.91343181  2.26586415  1.0037183
 #  -1.89165792  2.74925153  1.88329318 -0.63323941  0.63944221 -0.32335614
 #  -0.10747245  0.13973368 -0.36959604 -0.02580016  0.0362517  -0.05010032
@@ -117,14 +120,15 @@ whe = whe[1:]/r[1:]
 plt.plot(r[401:], whe[400:])
 
 plt.show()
-plt.plot(r, pot['W-He p'])
-plt.plot(r, pot['H-He p'])
-plt.plot(r, pot['He-W p'])
-plt.plot(r, pot['He-H p'])
-plt.plot(r, pot['He-He p'])
-
+plt.plot(r, pot['W-He p'], label='W-He')
+plt.plot(r, pot['H-He p'], label='H-He')
+plt.plot(r, pot['He-W p'], label='He-W')
+plt.plot(r, pot['He-H p'], label='He-H')
+plt.plot(r, pot['He-He p'], label='He-He')
+plt.legend()
 plt.show()
 
+# print(sample[eam_fit.map['He-H p']])
 He_Fitting.simplex(n_knots, comm, proc_id, sample, 10000, param_dict['work_dir'], param_dict['save_dir'], True)
 
 t2 = time.perf_counter()

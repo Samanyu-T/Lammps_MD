@@ -2,8 +2,8 @@ import numpy as np
 import sys
 import os
 sys.path.append(os.path.join(os.getcwd(), 'git_folder', 'Classes'))
-import FS_Fitting
-import Handle_PotFiles_FS
+import He_Fitting
+import Handle_PotFiles_He
 import time
 import json, glob, shutil
 from mpi4py import MPI
@@ -44,7 +44,7 @@ def copy_files(w_he, he_he, h_he, work_dir, data_dir):
         # files_to_copy.extend(glob.glob('%s/V*H0He4.*.txt' % data_dir))
 
     if h_he:
-        # files_to_copy.extend(glob.glob('%s/V*H*He*.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H*He*.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H1He0.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H1He1.*.txt' % data_dir))
         # files_to_copy.extend(glob.glob('%s/V*H1He2.*.txt' % data_dir))
@@ -61,7 +61,7 @@ proc_id = 0
 
 n_procs = 1
 
-pot, potlines, pot_params = Handle_PotFiles_FS.read_pot('git_folder/Potentials/init.eam.fs')
+pot, potlines, pot_params = Handle_PotFiles_He.read_pot('git_folder/Potentials/init.eam.he')
 
 # 5.60697527e+00  3.85118169e+00  9.49832030e+01  3.84392370e+00  1.19397215e+00  2.30219362e+01  7.76016391e-01  2.16019733e+00  1.45467904e+00 -1.85564438e+00  3.01824645e+00  1.86007434e+00 -6.61953938e-01  6.11439256e-01 -3.11273002e-01 -4.14029651e-01  6.77237863e-02 -3.78793307e-01  8.04632485e-01  1.49701602e+00 -1.10496938e-01 -1.01947712e-01  1.84336665e-01 -3.20069363e-01 -4.21210361e-02  3.50947646e-02  4.49373636e-02
 
@@ -70,33 +70,33 @@ pot, potlines, pot_params = Handle_PotFiles_FS.read_pot('git_folder/Potentials/i
 #  -0.19581129  0.37283166 -0.41408367 -0.03112508  0.05222353 -0.15153377
 n_knots = {}
 n_knots['He F'] = 2
-n_knots['H-He p'] = 0
-n_knots['He-W p'] = 2
+n_knots['H-He p'] = 3
+n_knots['He-W p'] = 3
 n_knots['He-H p'] = 0
 n_knots['He-He p'] = 0
 n_knots['W-He'] = 4
 n_knots['He-He'] = 0
 n_knots['H-He'] = 0
-n_knots['W-He p'] = 0
+n_knots['W-He p'] = 3
 
 with open('fitting.json', 'r') as file:
     param_dict = json.load(file)
 
 copy_files(True, True, True, param_dict['work_dir'], param_dict['data_dir'])
 
-eam_fit = FS_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
+eam_fit = He_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
 
-x_init = np.loadtxt('x_init.txt')
+x_init = np.loadtxt('x_init_partial.txt')
 
 loss = []
 
 data_ref = np.loadtxt('dft_yang.txt')
 
 for _x in x_init:
-    _loss = FS_Fitting.loss_func(_x, data_ref, eam_fit, False, False, None)
+    _loss = He_Fitting.loss_func(_x, data_ref, eam_fit, True, False, None)
     print(_loss, _x)
     loss.append(_loss)
 
 loss = np.array(loss)
 
-np.savetxt('loss.txt', loss)
+np.savetxt('loss_partial.txt', loss)
