@@ -42,16 +42,16 @@ def copy_files(w_he, he_he, h_he, work_dir, data_dir):
     if he_he:
         # files_to_copy.extend(glob.glob('%s/V*H0He*.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H0He2.*.txt' % data_dir))
-        files_to_copy.extend(glob.glob('%s/V*H0He3.*.txt' % data_dir))
-        files_to_copy.extend(glob.glob('%s/V*H0He4.*.txt' % data_dir))
+        # files_to_copy.extend(glob.glob('%s/V*H0He3.*.txt' % data_dir))
+        # files_to_copy.extend(glob.glob('%s/V*H0He4.*.txt' % data_dir))
 
     if h_he:
         # files_to_copy.extend(glob.glob('%s/V*H*He*.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H1He0.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H1He1.*.txt' % data_dir))
-        files_to_copy.extend(glob.glob('%s/V*H1He2.*.txt' % data_dir))
-        files_to_copy.extend(glob.glob('%s/V*H2He0.*.txt' % data_dir))
-        files_to_copy.extend(glob.glob('%s/V*H2He1.*.txt' % data_dir))
+        # files_to_copy.extend(glob.glob('%s/V*H1He2.*.txt' % data_dir))
+        # files_to_copy.extend(glob.glob('%s/V*H2He0.*.txt' % data_dir))
+        # files_to_copy.extend(glob.glob('%s/V*H2He1.*.txt' % data_dir))
 
     files_to_copy = list(set(files_to_copy))
 
@@ -74,7 +74,7 @@ pot, potlines, pot_params = Handle_PotFiles_He.read_pot('git_folder/Potentials/i
 
 n_knots = {}
 n_knots['He F'] = 2
-n_knots['H-He p'] = 3
+n_knots['H-He p'] = 0
 n_knots['He-W p'] = 3
 n_knots['He-H p'] = 0
 n_knots['He-He p'] = 0
@@ -111,7 +111,7 @@ t1 = time.perf_counter()
 
 eam_fit.sample_to_file(sample)
 
-whe = eam_fit.pot_lammps['W-He']
+whe = eam_fit.pot_lammps['H-He']
 
 r = np.linspace(0, eam_fit.pot_params['rc'], eam_fit.pot_params['Nr'])
 

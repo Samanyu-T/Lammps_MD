@@ -72,8 +72,8 @@ n_knots = {}
 n_knots['He F'] = 2
 n_knots['H-He p'] = 3
 n_knots['He-W p'] = 3
-n_knots['He-H p'] = 0
-n_knots['He-He p'] = 0
+n_knots['He-H p'] = 3
+n_knots['He-He p'] = 3
 n_knots['W-He'] = 4
 n_knots['He-He'] = 0
 n_knots['H-He'] = 0
@@ -86,17 +86,17 @@ copy_files(True, True, True, param_dict['work_dir'], param_dict['data_dir'])
 
 eam_fit = He_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
 
-x_init = np.loadtxt('x_init_partial.txt')
+x_init = np.loadtxt('x_init_full.txt')
 
 loss = []
 
 data_ref = np.loadtxt('dft_yang.txt')
 
 for _x in x_init:
-    _loss = He_Fitting.loss_func(_x, data_ref, eam_fit, True, False, None)
+    _loss = He_Fitting.loss_func(_x, data_ref, eam_fit, False, False, None)
     print(_loss, _x)
     loss.append(_loss)
 
 loss = np.array(loss)
 
-np.savetxt('loss_partial.txt', loss)
+np.savetxt('loss_full_3.txt', loss)

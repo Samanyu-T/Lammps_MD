@@ -44,6 +44,10 @@ init_dict['surface'] = 0
 
 init_dict['output_folder'] = output_folder
 
+init_dict['potfile'] = 'Fitting_Runtime/Potentials/optim.0.eam.he'
+
+init_dict['pottype'] = 'he'
+
 lmp_class = LammpsParentClass(init_dict, comm, proc_id)
 
 lmp = lammps()# cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])

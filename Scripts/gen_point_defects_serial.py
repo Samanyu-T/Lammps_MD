@@ -97,7 +97,7 @@ for i, pt in enumerate(points[1:]):
 
     # print(input_filepath, output_filepath, init_pt, pt, action)
     
-    ef, rvol = lmp.add_defect(input_filepath, output_filepath, target_species, action, defect_centre, minimizer='geometric')
+    ef, rvol = lmp.add_defect(input_filepath, output_filepath, target_species, action, defect_centre, minimizer='random')
     
     data.append([pt[0], pt[1], pt[2], ef, rvol])
 

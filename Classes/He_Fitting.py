@@ -806,16 +806,16 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
 
     if optim_class.bool_fit['H-He p']:
 
-        loss += np.sum(np.abs(optim_class.pot_lammps['H-He p']))/len(optim_class.pot_lammps['H-He p'])
+        loss += 100 * np.sum(np.abs(optim_class.pot_lammps['H-He p']))/len(optim_class.pot_lammps['H-He p'])
 
     if optim_class.bool_fit['He-He p']:
 
-        loss += np.sum(np.abs(optim_class.pot_lammps['He-He p']))/len(optim_class.pot_lammps['He-He p'])
+        loss += 100 * np.sum(np.abs(optim_class.pot_lammps['He-He p']))/len(optim_class.pot_lammps['He-He p'])
 
 
     if optim_class.bool_fit['He-H p']:
 
-        loss += np.sum(np.abs(optim_class.pot_lammps['He-H p']))/len(optim_class.pot_lammps['He-H p'])
+        loss += 100 * np.sum(np.abs(optim_class.pot_lammps['He-H p']))/len(optim_class.pot_lammps['He-H p'])
 
     if optim_class.bool_fit['He-He']:
         

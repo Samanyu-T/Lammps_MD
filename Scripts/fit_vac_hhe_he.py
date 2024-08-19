@@ -38,7 +38,7 @@ def sim_h_he(r, potfile,type='he'):
 
 def analytical_h_he(x, eam_fit, data_dft):
 
-    x = np.hstack([5.5, 0.6, x])
+    x = np.hstack([0.05, 0.06, x])
     eam_fit.sample_to_file(x)
 
     r = np.linspace(0, eam_fit.pot_params['rc'], eam_fit.pot_params['Nr'])
@@ -174,7 +174,7 @@ x = np.array([0, 0, 0, 0, 0, 0,
 # print(x_res)
 # x = x_res.x
 
-x = np.hstack([5.5, 0.6, x])
+x = np.hstack([0.05, 0.06, x])
 
 eam_fit.sample_to_file(x)
 
@@ -285,10 +285,10 @@ plt.show()
 
 n_knots = {}
 n_knots['He F'] = 2
-n_knots['H-He p'] = 2
-n_knots['He-W p'] = 2
-n_knots['He-H p'] = 2
-n_knots['He-He p'] = 2
+n_knots['H-He p'] = 3
+n_knots['He-W p'] = 3
+n_knots['He-H p'] = 3
+n_knots['He-He p'] = 3
 n_knots['W-He'] = 4
 n_knots['He-He'] = 4
 n_knots['H-He'] = 4
@@ -315,7 +315,7 @@ x = np.array([   1.7015e+00,  4.2490e-01,
                  0, 0, 0, 0, 0, 0,
                 -1.1982e+00,  3.1443e+00, -3.2970e-01, -2.2820e-01,  4.1590e-01, -4.7750e-01 ,
                 -3.670e-01,  4.789e-01 ,-3.762e-01, -2.760e-02,  4.344e-02, -7.470e-02, 
-                -1.16528663e-01,  3.91874603e-02, -3.51371220e-01, -1.95144898e-02,  1.28461069e-02,  5.09112338e-02,
+                -1.16182934e-01,  3.54156716e-02, -3.24990946e-01, -1.93872277e-02,  1.08731830e-02,  5.87895240e-02,
                  6.8130e-01, -3.8090e-01,  6.3500e-02,  8.6000e-03,  -9.4000e-03, 1.3100e-02])
 
 # x = np.array([   6.08600e-01,  2.78500e-01, 
@@ -329,6 +329,7 @@ x = np.array([   1.7015e+00,  4.2490e-01,
 #                  6.57300e-01, -4.56100e-01, -5.06000e-02,  2.86000e-02, -1.43000e-02,  -1.01000e-02])
 eam_fit.sample_to_file(x)
 
+print(x[eam_fit.map['H-He']])
 Handle_PotFiles_He.write_pot(eam_fit.pot_lammps, eam_fit.potlines, eam_fit.lammps_param['potfile'])
 
 Handle_PotFiles_He.write_pot(eam_fit.pot_lammps, eam_fit.potlines, 'git_folder/Potentials/init.eam.he')
@@ -337,4 +338,14 @@ plt.plot(rho[:1000], eam_fit.pot_lammps['H F'][:1000])
 plt.plot(rho[:1000], eam_fit.pot_lammps['He F'][:1000])
 plt.plot(rho[:1000], eam_fit.pot_lammps['W F'][:1000])
 
+plt.show()
+
+
+r = np.linspace(0, eam_fit.pot_params['rc'], eam_fit.pot_params['Nr'])[1:]
+plt.plot(data_dft[:,0], data_dft[:,1], label='dft', color='black')
+
+pot = eam_fit.pot_lammps['H-He'][1:]/r
+plt.plot(r[125:], pot[125:], label='pairwise component')
+
+plt.scatter(h_he_ref[:,0], h_he_ref[:,1], label='qmc', color='red')
 plt.show()
