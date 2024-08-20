@@ -42,14 +42,14 @@ def copy_files(w_he, he_he, h_he, work_dir, data_dir):
     if he_he:
         # files_to_copy.extend(glob.glob('%s/V*H0He*.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H0He2.*.txt' % data_dir))
-        # files_to_copy.extend(glob.glob('%s/V*H0He3.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H0He3.*.txt' % data_dir))
         # files_to_copy.extend(glob.glob('%s/V*H0He4.*.txt' % data_dir))
 
     if h_he:
         # files_to_copy.extend(glob.glob('%s/V*H*He*.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H1He0.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H1He1.*.txt' % data_dir))
-        # files_to_copy.extend(glob.glob('%s/V*H1He2.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H1He2.*.txt' % data_dir))
         # files_to_copy.extend(glob.glob('%s/V*H2He0.*.txt' % data_dir))
         # files_to_copy.extend(glob.glob('%s/V*H2He1.*.txt' % data_dir))
 
@@ -94,6 +94,14 @@ sample2 = eam_fit.gen_rand()
 
 sample = np.loadtxt('sample.txt') 
 
+'''Samples '''
+# 4.04418578  1.5686086   1.75723945 -1.38616247  1.5895147   2.24968674
+#   2.72359989 -0.11628429  0.17846521 -0.69014962  0.46294404 -0.08422526
+#  -0.06079003  3.2733298   0.00868395  0.05599773  0.21078752
+
+# 4.97167138e+00  8.71373715e-01  2.24725834e+00  3.50801232e-01 -7.52852715e-01  1.94688228e+00 -3.11534783e-03 -6.84004563e-02  2.25654264e-01  1.12128196e+00 -2.35231674e+00  2.68201258e+00  5.32830000e+00  2.87950000e+00 -1.84800000e-01  2.89500000e-01 -8.27800000e-01  2.84200000e-01 -5.88000000e-01 -1.11100000e-01  3.28350000e+00  2.72000000e-02 -7.88000000e-02 -2.88000000e-02
+
+
 # sample[eam_fit.map['He-H p']] = np.array([[ 0.6309, -2.1765,  0.5955,  -0.0599, 0.4942, 0.2246]])
 #  1.15577835  1.37018979  1.14701264  0.91343181  2.26586415  1.0037183
 #  -1.89165792  2.74925153  1.88329318 -0.63323941  0.63944221 -0.32335614
@@ -111,7 +119,7 @@ t1 = time.perf_counter()
 
 eam_fit.sample_to_file(sample)
 
-whe = eam_fit.pot_lammps['H-He']
+whe = eam_fit.pot_lammps['W-He']
 
 r = np.linspace(0, eam_fit.pot_params['rc'], eam_fit.pot_params['Nr'])
 
