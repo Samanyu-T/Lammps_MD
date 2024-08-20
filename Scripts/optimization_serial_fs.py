@@ -50,8 +50,8 @@ def copy_files(w_he, he_he, h_he, work_dir, data_dir):
         files_to_copy.extend(glob.glob('%s/V*H1He0.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H1He1.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H1He2.*.txt' % data_dir))
-        # files_to_copy.extend(glob.glob('%s/V*H2He0.*.txt' % data_dir))
-        # files_to_copy.extend(glob.glob('%s/V*H2He1.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H2He0.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H2He1.*.txt' % data_dir))
 
     files_to_copy = list(set(files_to_copy))
 
