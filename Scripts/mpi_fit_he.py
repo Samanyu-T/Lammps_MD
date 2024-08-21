@@ -288,7 +288,16 @@ def main(json_file):
     data_ref = np.loadtxt('dft_yang.txt')
 
     eam_fit = He_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
+    data_files_folder = os.path.join(work_dir, 'Data_Files')
 
+    lammps_folder = os.path.join(work_dir, 'Data_Files_%d' % proc_id)
+
+    if os.path.exists(lammps_folder):
+
+        shutil.rmtree(lammps_folder)
+    
+    shutil.copytree(data_files_folder, lammps_folder)
+    
     optimize.minimize(He_Fitting.loss_func, x_init, args=(data_ref, eam_fit, False, True, local_min_save))
     
     exit()
