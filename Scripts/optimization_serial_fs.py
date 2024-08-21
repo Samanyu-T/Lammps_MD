@@ -50,9 +50,11 @@ def copy_files(w_he, he_he, h_he, work_dir, data_dir):
         files_to_copy.extend(glob.glob('%s/V*H1He0.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H1He1.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H1He2.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H1He3.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H2He0.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H2He1.*.txt' % data_dir))
-
+        files_to_copy.extend(glob.glob('%s/V*H2He2.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H2He3.*.txt' % data_dir))
     files_to_copy = list(set(files_to_copy))
 
     for file in files_to_copy:
@@ -73,15 +75,17 @@ pot, potlines, pot_params = Handle_PotFiles_He.read_pot('git_folder/Potentials/i
 #  -0.19581129  0.37283166 -0.41408367 -0.03112508  0.05222353 -0.15153377
 
 n_knots = {}
-n_knots['He F'] = 2
-n_knots['H-He p'] = 0
-n_knots['He-W p'] = 3
+n_knots['He F'] = 0
+n_knots['H-He p'] = 3
+n_knots['He-W p'] = 0
 n_knots['He-H p'] = 0
 n_knots['He-He p'] = 0
-n_knots['W-He'] = 4
+n_knots['W-He'] = 0
+# 2.51029847 -0.34896591  0.47865807 -0.3762      3.23425928 -0.0276
+#   0.04344    -0.0747
 n_knots['He-He'] = 0
 n_knots['H-He'] = 0
-n_knots['W-He p'] = 3
+n_knots['W-He p'] = 0
 
 with open('fitting.json', 'r') as file:
     param_dict = json.load(file)
@@ -102,6 +106,11 @@ sample = np.loadtxt('sample.txt')
 # 4.97167138e+00  8.71373715e-01  2.24725834e+00  3.50801232e-01 -7.52852715e-01  1.94688228e+00 -3.11534783e-03 -6.84004563e-02  2.25654264e-01  1.12128196e+00 -2.35231674e+00  2.68201258e+00  5.32830000e+00  2.87950000e+00 -1.84800000e-01  2.89500000e-01 -8.27800000e-01  2.84200000e-01 -5.88000000e-01 -1.11100000e-01  3.28350000e+00  2.72000000e-02 -7.88000000e-02 -2.88000000e-02
 
 # 5.88150144e+00  8.79567188e-01  3.11368088e+00  3.61655251e-01 -5.04077537e-01  1.94688228e+00 -3.10890120e-03 -6.84004533e-02  2.25654264e-01  1.12125439e+00 -2.36179526e+00  2.69050899e+00  5.32829999e+00  2.87950000e+00 -1.84800000e-01  2.89500000e-01 -8.27800000e-01  2.84200000e-01 -5.88000000e-01 -1.11100000e-01  3.28350000e+00  2.72000000e-02 -7.88000000e-02 -2.88000000e-02
+# 5.95210384  0.56392213  0.5754907 -0.57020189 -0.07348795  2.14479997 -0.03072961 -0.01334507  0.25942299  1.50669441 -1.27460585  3.74833262  2.01991162  2.20357552 -0.42493117  0.37492672 -0.02326983  0.45681563  -0.4344291  -0.0468169   3.27625827 -0.01210053 -0.08589632  0.10210008
+# 5.54383005  0.57615736 -0.46529765 -0.56742808 -0.07346408  2.1448
+#  -0.0314     -0.0138      0.26069786  1.5067     -1.2939      3.605
+#  -1.7596      2.2029     -0.4349      0.3961     -0.0432      0.4542
+#  -0.435      -0.0468      3.2763     -0.0121     -0.0859      0.1021
 
 # sample[eam_fit.map['He-H p']] = np.array([[ 0.6309, -2.1765,  0.5955,  -0.0599, 0.4942, 0.2246]])
 #  1.15577835  1.37018979  1.14701264  0.91343181  2.26586415  1.0037183
@@ -142,3 +151,4 @@ He_Fitting.simplex(n_knots, comm, proc_id, sample, 10000, param_dict['work_dir']
 
 t2 = time.perf_counter()
 print(t2 - t1)
+

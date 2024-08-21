@@ -2,7 +2,7 @@ import sys
 import os
 import json
 import numpy as np
-# from mpi4py import MPI
+from mpi4py import MPI
 import matplotlib.pyplot as plt
 from lammps import lammps
 
@@ -10,11 +10,11 @@ sys.path.append(os.path.join(os.getcwd(), 'git_folder', 'Classes'))
 
 from Lammps_Classes_Serial import LammpsParentClass
 
-# comm = MPI.COMM_WORLD
+comm = MPI.COMM_WORLD
 
-# proc_id = comm.Get_rank()
+proc_id = comm.Get_rank()
 
-# n_procs = comm.Get_size()
+n_procs = comm.Get_size()
 
 comm = 0
 
@@ -67,9 +67,9 @@ init_dict['orientz'] = [0, 0, 1]
 
 # init_dict['potfile'] = 'Fitting_Runtime/Potentials/optim.0.eam.fs'
 
-init_dict['potfile'] = 'git_folder/Potentials/init.eam.fs'
+init_dict['potfile'] = 'git_folder/Potentials/init.eam.he'
 
-init_dict['pottype'] = 'fs'
+init_dict['pottype'] = 'he'
 
 depth = np.linspace(0, 10, 10)
 
@@ -80,7 +80,7 @@ lmp_class.perfect_crystal()
 cmd = lmp_class.init_from_datafile(os.path.join(output_folder, 'Data_Files', 'V0H0He0.data'))
 
 
-lmp = lammps()
+lmp = lammps( cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
 
 lmp.commands_list(cmd)
 
@@ -96,7 +96,7 @@ lmp.command('write_dump all custom %s id type x y z'  % os.path.join(output_fold
 
 lmp.close()
 
-lmp = lammps()
+lmp = lammps( cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
 
 lmp.commands_list(cmd)
 
@@ -108,13 +108,17 @@ pe_sia = lmp_class.get_formation_energy(lmp, np.array([2*7**3 + 1, 0 , 0]))
 
 lmp.command('write_data %s' % os.path.join(output_folder, 'Data_Files', 'sia.data'))
 
+lmp.command('write_data %s' % os.path.join(output_folder, 'Data_Files', 'sia_he_0.data'))
+
 lmp.command('write_dump all custom %s id type x y z'  % os.path.join(output_folder, 'Atom_Files', 'sia.atom'))
+
+lmp.command('write_dump all custom %s id type x y z'  % os.path.join(output_folder, 'Atom_Files', 'sia_he_0.atom'))
 
 lmp.close()
 
 cmd = lmp_class.init_from_datafile(os.path.join(output_folder, 'Data_Files', 'sia.data'))
 
-lmp = lammps()
+lmp = lammps( cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
 
 lmp.commands_list(cmd)
 
@@ -130,4 +134,25 @@ lmp.command('write_dump all custom %s id type x y z'  % os.path.join(output_fold
 
 lmp.close()
 
-print(pe_sia + pe_he_int - pe_he)
+print(pe_sia, pe_he_int, pe_he)
+
+n_int = 7
+
+ef_lst = [pe_sia]
+
+for i in range(1, n_int):
+    input_filepath  = os.path.join(output_folder, 'Data_Files', 'sia_he_%d.data' % (i - 1))
+    output_filepath = os.path.join(output_folder, 'Data_Files', 'sia_he_%d.data' % i)
+    target_species = 3
+    action = 1
+    defect_centre = 2.25 * 3.14* np.array([1,1,1])
+
+    ef, rvol = lmp_class.add_defect(input_filepath, output_filepath, target_species, action, defect_centre, minimizer='random', run_MD=True)
+    print(ef,rvol)
+    ef_lst.append(ef)
+
+ef_arr = np.array(ef_lst)
+eb = []
+for i in range(1, len(ef_arr)):
+    _eb =  ef_arr[i - 1] + pe_he - ef_arr[i]
+    print(_eb)

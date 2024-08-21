@@ -19,24 +19,26 @@ def copy_files(w_he, he_he, h_he, work_dir, data_dir):
     files_to_copy = []
     
     files_to_copy.extend(glob.glob('%s/V*H0He0.0.txt' % data_dir))
-
+    
     if w_he:
         files_to_copy.extend(glob.glob('%s/V0H0He1.*.txt' % data_dir))
-        files_to_copy.extend(glob.glob('%s/V3H0He1.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H0He1.0.txt' % data_dir))
 
     if he_he:
         # files_to_copy.extend(glob.glob('%s/V*H0He*.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H0He2.*.txt' % data_dir))
-        # files_to_copy.extend(glob.glob('%s/V*H0He3.*.txt' % data_dir))
-        # files_to_copy.extend(glob.glob('%s/V*H0He4.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H0He3.*.txt' % data_dir))
 
     if h_he:
         # files_to_copy.extend(glob.glob('%s/V*H*He*.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H1He0.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H1He1.*.txt' % data_dir))
-        # files_to_copy.extend(glob.glob('%s/V*H1He2.*.txt' % data_dir))
-        # files_to_copy.extend(glob.glob('%s/V*H1He3.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H1He2.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H1He3.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H2He0.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H2He1.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H2He2.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H2He3.*.txt' % data_dir))
 
     files_to_copy = list(set(files_to_copy))
 
@@ -73,15 +75,15 @@ if (not os.path.exists(os.path.join(work_dir, 'Potentials'))) and proc_id == 0:
 comm.Barrier()
 
 n_knots = {}
-n_knots['He F'] = 2
+n_knots['He F'] = 0
 n_knots['H-He p'] = 3
-n_knots['He-W p'] = 3
+n_knots['He-W p'] = 0
 n_knots['He-H p'] = 0
 n_knots['He-He p'] = 0
-n_knots['W-He'] = 4
+n_knots['W-He'] = 0
 n_knots['He-He'] = 0
 n_knots['H-He'] = 0
-n_knots['W-He p'] = 3
+n_knots['W-He p'] = 0
  
 if proc_id == 0:
     copy_files(True, True, True, work_dir, data_dir)

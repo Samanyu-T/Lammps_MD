@@ -68,13 +68,14 @@ pot, potlines, pot_params = Handle_PotFiles_He.read_pot('git_folder/Potentials/i
 # 0.48309483 -0.11809125  2.10966551 -0.33984664 28.67842118  0.41549807
 #  -1.9733587   3.66449741  1.60497915 -0.68848128  0.80103327 -0.74969712
 #  -0.19581129  0.37283166 -0.41408367 -0.03112508  0.05222353 -0.15153377
+
 n_knots = {}
-n_knots['He F'] = 2
-n_knots['H-He p'] = 0
-n_knots['He-W p'] = 3
+n_knots['He F'] = 0
+n_knots['H-He p'] = 3
+n_knots['He-W p'] = 0
 n_knots['He-H p'] = 0
-n_knots['He-He p'] = 0 
-n_knots['W-He'] = 4
+n_knots['He-He p'] = 0
+n_knots['W-He'] = 0
 n_knots['He-He'] = 0
 n_knots['H-He'] = 0
 n_knots['W-He p'] = 0
@@ -86,7 +87,7 @@ copy_files(True, True, True, param_dict['work_dir'], param_dict['data_dir'])
 
 eam_fit = He_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
 
-x_init = np.loadtxt('x_init1.txt')
+x_init = np.loadtxt('x_init4.txt')
 
 # x_init = np.hstack([x_init[:, :2], 1.7581 * np.ones((len(x_init),1)), x_init[:, 4:7],  2.7236 * np.ones((len(x_init),1)),
 #                     x_init[:, 7:10], x_init[:, 10:13], 3.27332980 * np.ones((len(x_init),1)), x_init[:, 13:]])
@@ -103,4 +104,4 @@ for _x in x_init:
 
 loss = np.array(loss)
 
-np.savetxt('loss2.txt', loss)
+np.savetxt('loss4.txt', loss)

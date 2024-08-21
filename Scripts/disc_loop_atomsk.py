@@ -19,6 +19,10 @@ init_dict = {}
 with open('init_param.json', 'r') as file:
     init_dict = json.load(file)
 
+init_dict['potfile'] = 'Fitting_Runtime/Potentials/optim.0.eam.he'
+
+init_dict['pottype'] = 'he'
+
 output_folder = 'Dislocation_Loops'
 
 if not os.path.exists(output_folder):

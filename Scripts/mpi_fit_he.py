@@ -176,8 +176,11 @@ def copy_files(w_he, he_he, h_he, work_dir, data_dir):
         files_to_copy.extend(glob.glob('%s/V*H1He0.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H1He1.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H1He2.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H1He3.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H2He0.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H2He1.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H2He2.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H2He3.*.txt' % data_dir))
 
     files_to_copy = list(set(files_to_copy))
 
@@ -214,15 +217,15 @@ def main(json_file):
     comm.Barrier()
 
     n_knots = {}
-    n_knots['He F'] = 2
-    n_knots['H-He p'] = 0
-    n_knots['He-W p'] = 3
+    n_knots['He F'] = 0
+    n_knots['H-He p'] = 3
+    n_knots['He-W p'] = 0
     n_knots['He-H p'] = 0
     n_knots['He-He p'] = 0
-    n_knots['W-He'] = 4
+    n_knots['W-He'] = 0
     n_knots['He-He'] = 0
     n_knots['H-He'] = 0
-    n_knots['W-He p'] = 3
+    n_knots['W-He p'] = 0
 
     # n_knots = {}
     # n_knots['He F'] = 2
@@ -241,17 +244,21 @@ def main(json_file):
 
     # mean, cov = random_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time)
     
-    mean = np.array([2.31417480e+00,  5.49782701e-01,
-                    #  0.5, -0.25, 0.06, 0.05, -0.075, 0.06,
-                     4.47690380e-01, -3.00183634e-01, -2.27587430e-02,  1.67530723e+00,  1.34292627e-02, -2.52458957e-02,  3.20353254e-02,
-                     1.5e+00, -1.88635914e+00,  2.26888743e+00, 4.15436869e+00,  2.67e+00, -2.46904591e-01,  4.49475735e-01, -3.89764744e-01,
-                     6.63086073e-01, -4.78320541e-01, -7.66529041e-04, 3.22855838e+00,  4.63897669e-02, -2.87137611e-02,  1.28601830e-02])
+    # mean = np.array([2.31417480e+00,  5.49782701e-01,
+    #                 #  0.5, -0.25, 0.06, 0.05, -0.075, 0.06,
+    #                  4.47690380e-01, -3.00183634e-01, -2.27587430e-02,  1.67530723e+00,  1.34292627e-02, -2.52458957e-02,  3.20353254e-02,
+    #                  1.5e+00, -1.88635914e+00,  2.26888743e+00, 4.15436869e+00,  2.67e+00, -2.46904591e-01,  4.49475735e-01, -3.89764744e-01,
+    #                  6.63086073e-01, -4.78320541e-01, -7.66529041e-04, 3.22855838e+00,  4.63897669e-02, -2.87137611e-02,  1.28601830e-02])
 
-    cov_diag = np.array([1.23095660e+00, 6.70333146e-02,
-                        #  0.5, 0.5, 0.5, 0.1, 0.1, 0.1,
-                         4.42143516e-01, 3.76908424e-01,  5.02918233e-01, 1.93735310e-01, 5.52308886e-03, 1.34491729e-02,  5.85653930e-02,
-                         0.25, 0.5, 1, 10, 0.25, 0.25, 0.25, 1,
-                         3.79553078e-02, 4.82307171e-02, 3.71020893e-03, 1e-1, 1.49153683e-03, 1.96326022e-03, 3.65131131e-03])    
+    # cov_diag = np.array([1.23095660e+00, 6.70333146e-02,
+    #                     #  0.5, 0.5, 0.5, 0.1, 0.1, 0.1,
+    #                      4.42143516e-01, 3.76908424e-01,  5.02918233e-01, 1.93735310e-01, 5.52308886e-03, 1.34491729e-02,  5.85653930e-02,
+    #                      0.25, 0.5, 1, 10, 0.25, 0.25, 0.25, 1,
+    #                      3.79553078e-02, 4.82307171e-02, 3.71020893e-03, 1e-1, 1.49153683e-03, 1.96326022e-03, 3.65131131e-03])    
+    
+    mean = np.array([0, 0, 0, 2, 0, 0, 0])
+
+    cov_diag = np.array([1, 0.5, 0.5, 0.5, 1e-1, 1e-1, 1e-1])
 
     cov = np.diag(cov_diag)
 
@@ -269,7 +276,7 @@ def main(json_file):
 
     N_gaussian = 3
  
-    # mean, cov = gaussian_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time, g_iteration, N_gaussian, mean, cov)
+    mean, cov = gaussian_sampling(comm, comm_split, proc_id, n_knots, save_folder, work_dir, max_time, g_iteration, N_gaussian, mean, cov)
     
     g_iteration = 3
 
@@ -297,7 +304,7 @@ def main(json_file):
         shutil.rmtree(lammps_folder)
     
     shutil.copytree(data_files_folder, lammps_folder)
-    
+
     optimize.minimize(He_Fitting.loss_func, x_init, args=(data_ref, eam_fit, False, True, local_min_save))
     
     exit()

@@ -30,9 +30,9 @@ init_dict['size'] = 7
 
 init_dict['surface'] = 0
 
-# init_dict['potfile'] = 'git_folder/Potentials/init.eam.he'
+init_dict['potfile'] = 'git_folder/Potentials/init.eam.he'
 
-init_dict['potfile'] = 'Fitting_Runtime/Potentials/optim.0.eam.he'
+# init_dict['potfile'] = 'Fitting_Runtime/Potentials/optim.0.eam.he'
 
 
 init_dict['pottype'] = 'he'

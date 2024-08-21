@@ -871,17 +871,20 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
             print(loss)
 
     if optim_class.bool_fit['H-He p']:
+        r = np.linspace(0, optim_class.pot_params['rc'], optim_class.pot_params['Nr'])
+        y = np.abs(optim_class.pot_lammps['H-He p'][r > 1.25])
+        dx = optim_class.pot_params['dr']
+        integral = 1e-2 * simpson(y,dx= dx)
+        loss += integral
 
-        loss += 100 * np.sum(np.abs(optim_class.pot_lammps['H-He p']))/len(optim_class.pot_lammps['H-He p'])
+    # if optim_class.bool_fit['He-He p']:
 
-    if optim_class.bool_fit['He-He p']:
-
-        loss += 100 * np.sum(np.abs(optim_class.pot_lammps['He-He p']))/len(optim_class.pot_lammps['He-He p'])
+    #     loss += 100 * np.sum(np.abs(optim_class.pot_lammps['He-He p']))/len(optim_class.pot_lammps['He-He p'])
 
 
-    if optim_class.bool_fit['He-H p']:
+    # if optim_class.bool_fit['He-H p']:
 
-        loss += 100 * np.sum(np.abs(optim_class.pot_lammps['He-H p']))/len(optim_class.pot_lammps['He-H p'])
+    #     loss += 100 * np.sum(np.abs(optim_class.pot_lammps['He-H p']))/len(optim_class.pot_lammps['He-H p'])
 
     if optim_class.bool_fit['He-He']:
         
@@ -1102,7 +1105,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
         if v == 0:
             loss += 15 * rel_abs_loss(binding_sample, binding_ref)
         elif v == 3:
-            loss += 7.5 * rel_abs_loss(binding_sample, binding_ref)
+            loss += 15 * rel_abs_loss(binding_sample, binding_ref)
         else:
             loss += 1 * rel_abs_loss(binding_sample, binding_ref)
         if diag:
@@ -1434,7 +1437,7 @@ def gaussian_sampling(n_knots, comm, proc_id, mean, cov, max_time=3, work_dir = 
 
         loss = loss_func(sample, data_ref, fitting_class)
         
-        # print(loss)
+        print(sample, loss)
         
         idx += 1
 
@@ -1565,17 +1568,19 @@ def genetic_alg(n_knots, comm, proc_id, work_dir = '../Optim_Local', save_folder
     color = proc_id % 8
 
 
+    # bounds = (
+    #         (1, 7),  (0, 2),
+    #         (0, 1), (-1, 1), (-0.1, 0.1), (-0.2, 0.2), (-0.5, 0.5), (-0.5, 0.5),
+    #         (0, 1), (-1, 1), (-0.1, 0.1), (-0.2, 0.2), (-0.5, 0.5), (-0.5, 0.5),
+    #         # (0, 1), (-1, 1), (-0.1, 0.1), (-0.2, 0.2), (-0.5, 0.5), (-0.5, 0.5),
+    #         # (0, 1), (-1, 1), (-0.1, 0.1), (-0.2, 0.2), (-0.5, 0.5), (-0.5, 0.5),
+    #         (-3, 0),  (1, 5), (-2, 5), (-1, 0.2), (-1, 2), (-3, 3),
+    #         (0.2, 1), (-1, 0), (-0.1, 0.1), (0, 0.2), (-0.5, 0.5), (-0.5, 0.5),
+
+    #         )       
     bounds = (
-            (1, 7),  (0, 2),
-            (0, 1), (-1, 1), (-0.1, 0.1), (-0.2, 0.2), (-0.5, 0.5), (-0.5, 0.5),
-            (0, 1), (-1, 1), (-0.1, 0.1), (-0.2, 0.2), (-0.5, 0.5), (-0.5, 0.5),
-            # (0, 1), (-1, 1), (-0.1, 0.1), (-0.2, 0.2), (-0.5, 0.5), (-0.5, 0.5),
-            # (0, 1), (-1, 1), (-0.1, 0.1), (-0.2, 0.2), (-0.5, 0.5), (-0.5, 0.5),
-            (-3, 0),  (1, 5), (-2, 5), (-1, 0.2), (-1, 2), (-3, 3),
-            (0.2, 1), (-1, 0), (-0.1, 0.1), (0, 0.2), (-0.5, 0.5), (-0.5, 0.5),
-
+            (-10, 10), (-10, 10), (-10, 10), (1, 4),(-0.2, 0.2), (-1, 1), (-1, 1),
             )       
-
     # loss = np.empty((0))
     # samples = np.empty((0, 14))
 
@@ -1619,10 +1624,10 @@ def genetic_alg(n_knots, comm, proc_id, work_dir = '../Optim_Local', save_folder
     #     for i, _x in enumerate(x0):
     #         x0[i] = np.clip(_x, a_min=bounds_arr[i,0], a_max=bounds_arr[i, 1])
 
-    print('x_init')
-    sys.stdout.flush()
+    # print('x_init')
+    # sys.stdout.flush()
     differential_evolution(loss_func, bounds, args=(data_ref, fitting_class, False, True, save_folder),
-                                    init='latinhypercube', mutation=1.5, recombination=0.25, popsize=50, maxiter=50, polish=True)
+                                    init='latinhypercube', popsize=50, maxiter=50, polish=True)
 
     # res = differential_evolution(loss_func, bounds = bounds, args=(data_ref, fitting_class, diag, write, save_folder), popsize=50)
 
