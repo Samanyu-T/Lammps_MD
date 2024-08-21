@@ -1157,7 +1157,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
 
     if write:
 
-        if loss < 40:
+        if loss < 50:
             with open(os.path.join(save_folder, 'Loss_%d.txt' % optim_class.proc_id), 'a') as file:
                 file.write('%f \n' % loss)
         
