@@ -64,9 +64,9 @@ init_dict['orienty'] = [0, 1, 0]
 
 init_dict['orientz'] = [0, 0, 1]
 
-init_dict['potfile'] = 'Fitting_Runtime/Potentials/optim.0.eam.fs'
+init_dict['potfile'] = 'Fitting_Runtime/Potentials/optim.0.eam.he'
 
-init_dict['pottype'] = 'fs'
+init_dict['pottype'] = 'he'
 
 depth = np.linspace(0, 10, 10)
 
