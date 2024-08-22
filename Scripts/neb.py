@@ -3,8 +3,9 @@ import os
 import json
 import numpy as np
 from mpi4py import MPI
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from lammps import lammps
+import subprocess 
 
 sys.path.append(os.path.join(os.getcwd(), 'git_folder', 'Classes'))
 
