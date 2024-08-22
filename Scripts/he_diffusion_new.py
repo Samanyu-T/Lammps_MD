@@ -62,6 +62,11 @@ if replica_id == 0:
         os.makedirs(save_folder,exist_ok=True)
 comm.Barrier()
 
+
+print(save_folder, temp, temp_id, replica_id, n_replica)
+sys.stdout.flush()
+exit()
+
 n_iterations = 5
 
 for _iterations in range(n_iterations):
@@ -70,47 +75,45 @@ for _iterations in range(n_iterations):
 
     lcl_replica_id = replica_id + _iterations * n_replica
     
-    print(save_folder, temp, lcl_replica_id)
-    sys.stdout.flush()
-    # init_dict['output_folder'] = output_folder
+    init_dict['output_folder'] = output_folder
 
-    # lmp_class = LammpsParentClass(init_dict, comm, proc_id)
+    lmp_class = LammpsParentClass(init_dict, comm, proc_id)
 
-    # lmp = lammps(comm=comm_split,cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
+    lmp = lammps(comm=comm_split,cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
 
-    # lmp.commands_list(lmp_class.init_from_box()) 
+    lmp.commands_list(lmp_class.init_from_box()) 
 
-    # _xyz = init_dict['size'] // 2 + np.array([0.25, 0.5, 0])
+    _xyz = init_dict['size'] // 2 + np.array([0.25, 0.5, 0])
 
-    # lmp.command('create_atoms 3 single %f %f %f' % (_xyz[0], _xyz[1], _xyz[2]))
+    lmp.command('create_atoms 3 single %f %f %f' % (_xyz[0], _xyz[1], _xyz[2]))
 
-    # rng = np.random.randint(low = 1, high = 100000)
+    rng = np.random.randint(low = 1, high = 100000)
 
-    # lmp.command('group mobile type 2 3')
+    lmp.command('group mobile type 2 3')
 
-    # lmp.command('velocity all create %f %d rot no dist gaussian' % (2*temp, rng))
+    lmp.command('velocity all create %f %d rot no dist gaussian' % (2*temp, rng))
 
-    # lmp.command('fix fix_temp all nve')
+    lmp.command('fix fix_temp all nve')
 
-    # lmp.command('compute msd_mobile mobile msd com no average yes')
+    lmp.command('compute msd_mobile mobile msd com no average yes')
 
-    # lmp.command('timestep 1e-3')
+    lmp.command('timestep 1e-3')
 
-    # n_steps = 5000
+    n_steps = 5000
 
-    # msd = np.zeros((n_steps,))
+    msd = np.zeros((n_steps,))
 
-    # for _steps in range(n_steps):
+    for _steps in range(n_steps):
         
-    #     lmp.command('run %d' % (1e3))
+        lmp.command('run %d' % (1e3))
 
-    #     _msd = np.copy(lmp.numpy.extract_compute('msd_mobile', 0, 1))
+        _msd = np.copy(lmp.numpy.extract_compute('msd_mobile', 0, 1))
 
-    #     msd[_steps] = _msd[-1]
+        msd[_steps] = _msd[-1]
 
-    # t2 = time.perf_counter()
+    t2 = time.perf_counter()
 
-    # print(t2 - t1, n_steps)
-    # sys.stdout.flush()
+    print(t2 - t1, n_steps)
+    sys.stdout.flush()
 
-    # np.savez_compressed('%s/msd_data_%d.npz' % (save_folder, lcl_replica_id))
+    np.savez_compressed('%s/msd_data_%d.npz' % (save_folder, lcl_replica_id))
