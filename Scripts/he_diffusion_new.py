@@ -66,7 +66,7 @@ comm.Barrier()
 print(save_folder, temp, temp_id, replica_id, n_replica)
 sys.stdout.flush()
 
-n_iterations = 10
+n_iterations = 20
 
 for _iterations in range(n_iterations):
 
