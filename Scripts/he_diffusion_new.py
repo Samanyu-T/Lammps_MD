@@ -65,7 +65,6 @@ comm.Barrier()
 
 print(save_folder, temp, temp_id, replica_id, n_replica)
 sys.stdout.flush()
-exit()
 
 n_iterations = 5
 
