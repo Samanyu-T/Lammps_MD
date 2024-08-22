@@ -46,7 +46,7 @@ class LammpsParentClass:
         self.stress_perfect = np.zeros((6,))
         self.vol_perfect = (self.alattice*self.size)**3
 
-    def init_from_datafile(self, filepath, pot_type='alloy'):
+    def init_from_datafile(self, filepath):
         """
         Initialize a Lammps simulation from a .data file
 
@@ -67,14 +67,7 @@ class LammpsParentClass:
 
         cmdlist.append('read_data %s' % filepath)
 
-        if pot_type=='alloy':
-            cmdlist.append('pair_style eam/alloy')
-        elif pot_type=='fs':
-            cmdlist.append('pair_style eam/fs')
-        elif pot_type=='he':
-            cmdlist.append('pair_style eam/he')
-        else:
-            cmdlist.append('pair_style eam/%s' % self.pottype)
+        cmdlist.append('pair_style eam/%s' % self.pottype)
 
         cmdlist.append('pair_coeff * * %s W H He' % self.potfile)
 
@@ -86,87 +79,74 @@ class LammpsParentClass:
 
         return cmdlist
     
-    def init_from_box(self, pot_type='alloy'):
+    def init_from_box(self, lmp):
         """
         Initialize a Lammps simulation by creating a box of atoms defined by the attributes of the Parent Class (JSON) file
-
-        Returns:
-        cmdlist (list): List of Lammps commands
         """
 
-        cmdlist = []
 
-        cmdlist.append('units metal')
+        lmp.command('units metal')
 
-        cmdlist.append('atom_style atomic')
+        lmp.command('atom_style atomic')
 
-        cmdlist.append('atom_modify map array sort 0 0.0')
+        lmp.command('atom_modify map array sort 0 0.0')
 
-        cmdlist.append('boundary p p p')
+        lmp.command('boundary p p p')
 
-        cmdlist.append('lattice %s %f orient x %d %d %d orient y %d %d %d orient z %d %d %d' % 
+        lmp.command('lattice %s %f orient x %d %d %d orient y %d %d %d orient z %d %d %d' % 
                     (self.lattice_type, self.alattice,
                     self.orientx[0], self.orientx[1], self.orientx[2],
                     self.orienty[0], self.orienty[1], self.orienty[2], 
                     self.orientz[0], self.orientz[1], self.orientz[2]
                     ))
 
-        cmdlist.append('region r_simbox block %f %f %f %f %f %f units lattice' % (
+        lmp.command('region r_simbox block %f %f %f %f %f %f units lattice' % (
             -1e-9, self.size + 1e-9,
             -1e-9, self.size + 1e-9,
             -1e-9 - 0.5*self.surface, self.size + 1e-9 + 0.5*self.surface
         )
         )
 
-        cmdlist.append('region r_atombox block %f %f %f %f %f %f units lattice' % (
+        lmp.command('region r_atombox block %f %f %f %f %f %f units lattice' % (
             -1e-4, self.size + 1e-4,
             -1e-4, self.size + 1e-4,
             -1e-4, self.size + 1e-4
         )
         )
 
-        # cmdlist.append('region r_simbox block %f %f %f %f %f %f units lattice' % (
+        # lmp.command('region r_simbox block %f %f %f %f %f %f units lattice' % (
         #     0, self.size,
         #     0, self.size,
         #     - 0.5*self.surface, self.size + 0.5*self.surface
         # )
         # )
 
-        # cmdlist.append('region r_atombox block %f %f %f %f %f %f units lattice' % (
+        # lmp.command('region r_atombox block %f %f %f %f %f %f units lattice' % (
         #     0, self.size,
         #     0, self.size,
         #     0, self.size
         # )
         # )
 
-        cmdlist.append('create_box 3 r_simbox')
+        lmp.command('create_box 3 r_simbox')
         
-        cmdlist.append('create_atoms 1 region r_atombox')
+        lmp.command('create_atoms 1 region r_atombox')
 
-        cmdlist.append('mass 1 183.84')
+        lmp.command('mass 1 183.84')
 
-        cmdlist.append('mass 2 1.00784')
+        lmp.command('mass 2 1.00784')
 
-        cmdlist.append('mass 3 4.002602')
+        lmp.command('mass 3 4.002602')
 
-        if pot_type=='alloy':
-            cmdlist.append('pair_style eam/alloy')
-        elif pot_type=='fs':
-            cmdlist.append('pair_style eam/fs')
-        elif pot_type=='he':
-            cmdlist.append('pair_style eam/he')
-        else:
-            cmdlist.append('pair_style eam/%s' % self.pottype)
+        lmp.command('pair_style eam/%s' % self.pottype)
 
-        cmdlist.append('pair_coeff * * %s W H He' % self.potfile)
+        lmp.command('pair_coeff * * %s W H He' % self.potfile)
         
-        cmdlist.append('thermo_style custom step temp pe pxx pyy pzz pxy pxz pyz vol')
+        lmp.command('thermo_style custom step temp pe pxx pyy pzz pxy pxz pyz vol')
 
-        cmdlist.append('thermo 100')
+        lmp.command('thermo 100')
 
-        cmdlist.append('run 0')
-
-        return cmdlist
+        lmp.command('run 0')
     
     def cg_min(self, lmp, conv = None, fix_aniso=False):
         """
@@ -200,12 +180,12 @@ class LammpsParentClass:
         
         lmp = lammps(comm=self.comm, cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
 
-        lmp.commands_list(self.init_from_box())
+        self.init_from_box(lmp)
 
         lmp.command('run 0')
 
-        self.cg_min(lmp, 100000, True)
-
+        self.cg_min(lmp, 100000, True)  
+        
         lmp.command('write_data %s' % os.path.join(self.output_folder, 'Data_Files', 'V0H0He0.data'))
         
         lmp.command('write_dump all custom %s id type x y z' % os.path.join(self.output_folder, 'Atom_Files', 'V0H0He0.atom'))

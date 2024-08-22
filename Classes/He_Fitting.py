@@ -733,7 +733,7 @@ def sim_defect_set(optim_class:Fit_EAM_Potential):
 
         lmp = lammps(comm=optim_class.comm, cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
 
-        lmp.commands_list(lmp_class.init_from_box(pot_type='he')) 
+        lmp_class.init_from_box(lmp)
 
         if os.path.getsize(file) > 0:
             xyz = np.loadtxt(file)

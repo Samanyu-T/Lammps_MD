@@ -115,4 +115,4 @@ for _iterations in range(n_iterations):
     print(t2 - t1, n_steps)
     sys.stdout.flush()
 
-    np.savez_compressed('%s/msd_data_%d.npz' % (save_folder, lcl_replica_id))
+    np.save('%s/msd_data_%d.npy' % (save_folder, lcl_replica_id), msd)

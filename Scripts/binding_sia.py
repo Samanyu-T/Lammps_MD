@@ -8,7 +8,7 @@ from lammps import lammps
 
 sys.path.append(os.path.join(os.getcwd(), 'git_folder', 'Classes'))
 
-from Lammps_Classes_Serial import LammpsParentClass
+from Lammps_Classes import LammpsParentClass
 
 comm = MPI.COMM_WORLD
 
