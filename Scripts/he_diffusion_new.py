@@ -4,7 +4,7 @@ import json
 import numpy as np
 sys.path.append(os.path.join(os.getcwd(), 'git_folder', 'Classes'))
 from lammps import lammps
-from Lammps_Classes_Serial import LammpsParentClass
+from Lammps_Classes import LammpsParentClass
 from mpi4py import MPI
 import time
 import sys
