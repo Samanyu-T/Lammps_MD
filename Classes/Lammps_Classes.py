@@ -198,7 +198,7 @@ class LammpsParentClass:
         Generate a perfect Tungsten crystal to use as reference for the rest of the point defects
         """
         
-        lmp = lammps(name = self.machine, comm=self.comm, cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
+        lmp = lammps(comm=self.comm, cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
 
         lmp.commands_list(self.init_from_box())
 
