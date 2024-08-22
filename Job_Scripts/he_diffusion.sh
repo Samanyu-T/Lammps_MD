@@ -7,7 +7,7 @@
 #SBATCH --ntasks=112
 
 
-#SBATCH --time=8:00:00
+#SBATCH --time=1:00:00
 ##SBATCH --mail-type=NONE
 ##SBATCH --no-requeue
  
@@ -37,7 +37,7 @@ export PATH=$HOME/lammps/src/:$PATH
 
 
 #! Full path to application executable:
-application="python git_folder/Scripts/he_diffusion_parallel.py"
+application="python git_folder/Scripts/he_diffusion_new.py"
  
 #! Run options for the application:
 options=""

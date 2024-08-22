@@ -87,7 +87,7 @@ copy_files(True, True, True, param_dict['work_dir'], param_dict['data_dir'])
 
 eam_fit = He_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
 
-x_init = np.loadtxt('x_init4.txt')
+x_init = np.loadtxt('x_init_hhe_1.txt')
 
 # x_init = np.hstack([x_init[:, :2], 1.7581 * np.ones((len(x_init),1)), x_init[:, 4:7],  2.7236 * np.ones((len(x_init),1)),
 #                     x_init[:, 7:10], x_init[:, 10:13], 3.27332980 * np.ones((len(x_init),1)), x_init[:, 13:]])
@@ -104,4 +104,4 @@ for _x in x_init:
 
 loss = np.array(loss)
 
-np.savetxt('loss4.txt', loss)
+np.savetxt('loss_hhe_1.txt', loss)

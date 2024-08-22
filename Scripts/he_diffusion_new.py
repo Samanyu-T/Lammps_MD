@@ -2,27 +2,41 @@ import sys
 import os
 import json
 import numpy as np
-import shutil
 sys.path.append(os.path.join(os.getcwd(), 'git_folder', 'Classes'))
 from lammps import lammps
 from Lammps_Classes_Serial import LammpsParentClass
+from mpi4py import MPI
 
-comm = 0
+comm = MPI.COMM_WORLD
 
-proc_id = 0
+proc_id = comm.Get_rank()
 
-n_procs = 1
+n_procs = comm.Get_size()
+
+comm_split = comm.Split(proc_id, n_procs)
+
+n_temp = 2
+
+temp_arr = np.linspace(100, 2000, n_temp)
+
+n_replica = n_procs // n_temp
+
+temp_id = proc_id // n_temp
+
+replica_id = proc_id % n_temp
+
+output_folder = 'He_Diffusion'
+
+if proc_id == 0:
+    if not os.path.exists(output_folder):
+        os.mkdir(output_folder)
+comm.barrier()
+
 
 init_dict = {}
 
 with open('init_param.json', 'r') as file:
     init_dict = json.load(file)
-
-output_folder = 'He_Diffusion_Serial'
-
-if not os.path.exists(output_folder):
-    os.mkdir(output_folder)
-    os.mkdir(os.path.join(output_folder,'Iteration_0'))
 
 init_dict['orientx'] = [1, 0, 0]
 
@@ -34,35 +48,59 @@ init_dict['size'] = 7
 
 init_dict['surface'] = 0
 
-init_dict['output_folder'] = output_folder
+init_dict['potfile'] = 'git_folder/Potentials/init.eam.he'
 
-lmp_class = LammpsParentClass(init_dict, comm, proc_id)
+init_dict['pottype'] = 'he'
 
-lmp = lammps( cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
+temp = temp_arr[temp_id]
 
-temp = 1000 
+save_folder = os.path.join(output_folder,'Temp_%d' % temp)
 
-init_file = 'Lammps_Files_7x7/Data_Files/V0H0He1.data'
+if replica_id == 0:
+    if not os.path.exists(save_folder):
+        os.makedirs(save_folder,exist_ok=True)
+comm.Barrier()
 
-lmp.commands_list(lmp_class.init_from_datafile(init_file)) 
+n_iterations = 5
 
-rng = np.random.randint(low = 1, high = 100000)
+for _iterations in range(n_iterations):
 
-lmp.command('group mobile type 2 3')
-
-lmp.command('velocity all create %f %d rot no dist gaussian' % (2*temp, rng))
-
-lmp.command('fix fix_temp all nve')
-
-lmp.command('compute msd_mobile mobile msd com yes average yes')
-
-
-lmp.command('timestep 1e-3')
-
-for i in range(100):
+    lcl_replica_id = replica_id + _iterations * n_replica
     
-    lmp.command('run %d' % (1e3))
+    init_dict['output_folder'] = output_folder
 
-    msd = lmp.numpy.extract_compute('msd_mobile', 0, 1)
+    lmp_class = LammpsParentClass(init_dict, comm, proc_id)
 
-    print(msd)
+    lmp = lammps(comm=comm_split,cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
+
+    lmp.commands_list(lmp_class.init_from_box()) 
+
+    _xyz = init_dict['size'] // 2 + np.array([0.25, 0.5, 0])
+
+    lmp.command('create_atoms 3 single %f %f %f' % (_xyz[0], _xyz[1], _xyz[2]))
+
+    rng = np.random.randint(low = 1, high = 100000)
+
+    lmp.command('group mobile type 2 3')
+
+    lmp.command('velocity all create %f %d rot no dist gaussian' % (2*temp, rng))
+
+    lmp.command('fix fix_temp all nve')
+
+    lmp.command('compute msd_mobile mobile msd com no average yes')
+
+    lmp.command('timestep 1e-3')
+
+    n_steps = 5000
+
+    msd = np.zeros((n_steps,))
+
+    for _steps in range(n_steps):
+        
+        lmp.command('run %d' % (1e3))
+
+        _msd = np.copy(lmp.numpy.extract_compute('msd_mobile', 0, 1))
+
+        msd[_steps] = _msd[-1]
+
+    np.savez_compressed('%s/msd_data_%d.npz' % (save_folder, lcl_replica_id))
