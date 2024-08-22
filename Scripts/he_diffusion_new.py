@@ -22,9 +22,9 @@ temp_arr = np.linspace(100, 2000, n_temp)
 
 n_replica = n_procs // n_temp
 
-temp_id = proc_id // n_temp
+temp_id = proc_id // n_replica
 
-replica_id = proc_id % n_temp
+replica_id = proc_id % n_replica
 
 output_folder = 'He_Diffusion'
 
