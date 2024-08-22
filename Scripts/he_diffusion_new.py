@@ -70,45 +70,47 @@ for _iterations in range(n_iterations):
 
     lcl_replica_id = replica_id + _iterations * n_replica
     
-    init_dict['output_folder'] = output_folder
+    print(save_folder, temp, lcl_replica_id)
 
-    lmp_class = LammpsParentClass(init_dict, comm, proc_id)
+    # init_dict['output_folder'] = output_folder
 
-    lmp = lammps(comm=comm_split,cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
+    # lmp_class = LammpsParentClass(init_dict, comm, proc_id)
 
-    lmp.commands_list(lmp_class.init_from_box()) 
+    # lmp = lammps(comm=comm_split,cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
 
-    _xyz = init_dict['size'] // 2 + np.array([0.25, 0.5, 0])
+    # lmp.commands_list(lmp_class.init_from_box()) 
 
-    lmp.command('create_atoms 3 single %f %f %f' % (_xyz[0], _xyz[1], _xyz[2]))
+    # _xyz = init_dict['size'] // 2 + np.array([0.25, 0.5, 0])
 
-    rng = np.random.randint(low = 1, high = 100000)
+    # lmp.command('create_atoms 3 single %f %f %f' % (_xyz[0], _xyz[1], _xyz[2]))
 
-    lmp.command('group mobile type 2 3')
+    # rng = np.random.randint(low = 1, high = 100000)
 
-    lmp.command('velocity all create %f %d rot no dist gaussian' % (2*temp, rng))
+    # lmp.command('group mobile type 2 3')
 
-    lmp.command('fix fix_temp all nve')
+    # lmp.command('velocity all create %f %d rot no dist gaussian' % (2*temp, rng))
 
-    lmp.command('compute msd_mobile mobile msd com no average yes')
+    # lmp.command('fix fix_temp all nve')
 
-    lmp.command('timestep 1e-3')
+    # lmp.command('compute msd_mobile mobile msd com no average yes')
 
-    n_steps = 5000
+    # lmp.command('timestep 1e-3')
 
-    msd = np.zeros((n_steps,))
+    # n_steps = 5000
 
-    for _steps in range(n_steps):
+    # msd = np.zeros((n_steps,))
+
+    # for _steps in range(n_steps):
         
-        lmp.command('run %d' % (1e3))
+    #     lmp.command('run %d' % (1e3))
 
-        _msd = np.copy(lmp.numpy.extract_compute('msd_mobile', 0, 1))
+    #     _msd = np.copy(lmp.numpy.extract_compute('msd_mobile', 0, 1))
 
-        msd[_steps] = _msd[-1]
+    #     msd[_steps] = _msd[-1]
 
-    t2 = time.perf_counter()
+    # t2 = time.perf_counter()
 
-    print(t2 - t1, n_steps)
-    sys.stdout.flush()
+    # print(t2 - t1, n_steps)
+    # sys.stdout.flush()
 
-    np.savez_compressed('%s/msd_data_%d.npz' % (save_folder, lcl_replica_id))
+    # np.savez_compressed('%s/msd_data_%d.npz' % (save_folder, lcl_replica_id))
