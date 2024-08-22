@@ -18,7 +18,7 @@ comm_split = comm.Split(proc_id, n_procs)
 
 n_temp = 28
 
-temp_arr = np.linspace(100, 2000, n_temp)
+temp_arr = np.linspace(100, 3000, n_temp)
 
 n_replica = n_procs // n_temp
 
@@ -45,7 +45,7 @@ init_dict['orienty'] = [0, 1, 0]
 
 init_dict['orientz'] = [0, 0, 1]
 
-init_dict['size'] = 5
+init_dict['size'] = 7
 
 init_dict['surface'] = 0
 
@@ -66,7 +66,7 @@ comm.Barrier()
 print(save_folder, temp, temp_id, replica_id, n_replica)
 sys.stdout.flush()
 
-n_iterations = 5
+n_iterations = 10
 
 for _iterations in range(n_iterations):
 
@@ -98,7 +98,7 @@ for _iterations in range(n_iterations):
 
     lmp.command('timestep 1e-3')
 
-    n_steps = 5000
+    n_steps = 25000
 
     msd = np.zeros((n_steps,))
 
