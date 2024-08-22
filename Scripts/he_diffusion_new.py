@@ -6,7 +6,8 @@ sys.path.append(os.path.join(os.getcwd(), 'git_folder', 'Classes'))
 from lammps import lammps
 from Lammps_Classes_Serial import LammpsParentClass
 from mpi4py import MPI
-
+import time
+import sys
 comm = MPI.COMM_WORLD
 
 proc_id = comm.Get_rank()
@@ -15,7 +16,7 @@ n_procs = comm.Get_size()
 
 comm_split = comm.Split(proc_id, n_procs)
 
-n_temp = 2
+n_temp = 14
 
 temp_arr = np.linspace(100, 2000, n_temp)
 
@@ -44,7 +45,7 @@ init_dict['orienty'] = [0, 1, 0]
 
 init_dict['orientz'] = [0, 0, 1]
 
-init_dict['size'] = 7
+init_dict['size'] = 5
 
 init_dict['surface'] = 0
 
@@ -64,6 +65,8 @@ comm.Barrier()
 n_iterations = 5
 
 for _iterations in range(n_iterations):
+
+    t1 = time.perf_counter()
 
     lcl_replica_id = replica_id + _iterations * n_replica
     
@@ -103,4 +106,9 @@ for _iterations in range(n_iterations):
 
         msd[_steps] = _msd[-1]
 
+    t2 = time.perf_counter()
+
+    print(t2 - t1, n_steps)
+    sys.stdout.flush()
+    
     np.savez_compressed('%s/msd_data_%d.npz' % (save_folder, lcl_replica_id))
