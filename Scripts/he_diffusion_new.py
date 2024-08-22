@@ -80,7 +80,7 @@ for _iterations in range(n_iterations):
 
     lmp = lammps(comm=comm_split,cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
 
-    lmp.commands_list(lmp_class.init_from_box()) 
+    lmp_class.init_from_box(lmp)
 
     _xyz = init_dict['size'] // 2 + np.array([0.25, 0.5, 0])
 
