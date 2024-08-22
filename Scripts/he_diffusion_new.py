@@ -71,7 +71,7 @@ for _iterations in range(n_iterations):
     lcl_replica_id = replica_id + _iterations * n_replica
     
     print(save_folder, temp, lcl_replica_id)
-
+    sys.stdout.flush()
     # init_dict['output_folder'] = output_folder
 
     # lmp_class = LammpsParentClass(init_dict, comm, proc_id)
