@@ -45,7 +45,7 @@ init_dict['orienty'] = [0, 1, 0]
 
 init_dict['orientz'] = [0, 0, 1]
 
-init_dict['size'] = 7
+init_dict['size'] = 5
 
 init_dict['surface'] = 0
 
@@ -66,7 +66,7 @@ comm.Barrier()
 print(save_folder, temp, temp_id, replica_id, n_replica)
 sys.stdout.flush()
 
-n_iterations = 20
+n_iterations = 10
 
 for _iterations in range(n_iterations):
 
@@ -98,7 +98,7 @@ for _iterations in range(n_iterations):
 
     lmp.command('timestep 1e-3')
 
-    n_steps = 25000
+    n_steps = 10000
 
     msd = np.zeros((n_steps,))
 
