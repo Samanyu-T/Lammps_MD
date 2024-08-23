@@ -24,6 +24,8 @@ pair_style eam/%s
 pair_coeff * * %s W H He
 thermo 10
 run 0
+partition yes 1 fix freeze all setforce 0.0 0.0 0.0
+partition yes 7 fix freeze all setforce 0.0 0.0 0.0
 fix 1 all neb 1
 timestep 1e-3
 min_style quickmin
@@ -92,7 +94,7 @@ lmp_class.init_from_box(lmp)
 
 pe_0 = lmp.get_thermo('pe')
 
-lmp.command('create_atoms 3 single %f %f %f units lattice' % (2.15, 2.5, 2))
+lmp.command('create_atoms 3 single %f %f %f units lattice' % (2.25, 2.5, 2))
 
 lmp_class.cg_min(lmp)
 
@@ -113,7 +115,7 @@ lmp_class.init_from_box(lmp)
 
 pe_0 = lmp.get_thermo('pe')
 
-lmp.command('create_atoms 3 single %f %f %f units lattice' % (2, 2.5, 2.15))
+lmp.command('create_atoms 3 single %f %f %f units lattice' % (2, 2.5, 2.25))
 
 lmp_class.cg_min(lmp)
 

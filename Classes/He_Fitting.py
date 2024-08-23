@@ -772,6 +772,7 @@ def sim_defect_set(optim_class:Fit_EAM_Potential):
         ef = lmp_class.get_formation_energy(lmp)
 
         rvol = lmp_class.get_rvol(lmp)
+        # lmp.command('write_dump all custom test_sim/V%dH%dHe%d.%d.atom id type x y z' % (vac, h, he, image))
 
         _data =  [vac, h, he, image, ef, rvol]
         
@@ -1054,14 +1055,14 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
     Image 2: <110>
     Image 3: Oct
     Image 5: <111> 
-    
+
     '''
     # Loss due to difference in Tet Formation Energy
     loss += 5 * np.abs(sample_mat[0, 0, 1, 0, 0] - ref_mat[0, 0, 1, 0, 0]) ** 2
 
     loss += rel_abs_loss(sample_mat[0, 0, 1, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 1, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
 
-    loss += 5 * abs(1 - (sample_mat[0, 0, 1, 2, 0] - sample_mat[0, 0, 1, 0, 0])/(ref_mat[0, 0, 1, 2, 0] - ref_mat[0, 0, 1, 0, 0]) )
+    loss += 10 * abs(1 - (sample_mat[0, 0, 1, 2, 0] - sample_mat[0, 0, 1, 0, 0])/(ref_mat[0, 0, 1, 2, 0] - ref_mat[0, 0, 1, 0, 0]) )
 
     # Loss due to difference in Relaxation Volume
     loss += np.abs(1 - sample_mat[0, 0, 1, 0, 1]/ref_mat[0, 0, 1, 0, 1])
@@ -1073,13 +1074,22 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
     # print(sample_mat[0, 0, 1, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 1, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
     ''' Constraint '''
 
-    constraint = not (np.arange(sample_mat.shape[3]) == np.round(sample_mat[0, 0, 1, :, 0], 3).argsort()).all()
+    # constraint = not (np.arange(sample_mat.shape[3]) == np.round(sample_mat[0, 0, 1, :, 0], 3).argsort()).all()
     
-    loss += 100*constraint  
+    # loss += 100*constraint  
 
-    constraint = not len(np.unique(np.round(sample_mat[0, 0, 1, :, 0], 2))) == sample_mat.shape[3]
+    # constraint = not len(np.unique(np.round(sample_mat[0, 0, 1, :, 0], 2))) == sample_mat.shape[3]
 
-    loss += 100*constraint  
+    # loss += 100*constraint  
+
+    constraint = (np.round(sample_mat[0, 0, 1, -1, 0], 8) == np.round(sample_mat[0, 0, 1, 0, 0], 8)) and \
+                 (np.round(sample_mat[0, 0, 1, -1, 1], 8) == np.round(sample_mat[0, 0, 1, 0, 1], 8))
+
+    constraint = not constraint
+
+    # constraint = np.round(sample_mat[0, 0, 1, -1, 0], 8) < np.round(sample_mat[0, 0, 1, 0, 0], 8)
+
+    loss += 100 *  constraint  
 
     if sample_mat.shape[2]  > 2:
         loss += rel_abs_loss(sample_mat[0, 0, 2, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 2, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
@@ -1105,7 +1115,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
         if v == 0:
             loss += 15 * rel_abs_loss(binding_sample, binding_ref)
         elif v == 3:
-            loss += 15 * rel_abs_loss(binding_sample, binding_ref)
+            loss += 1 * rel_abs_loss(binding_sample, binding_ref)
         else:
             loss += 1 * rel_abs_loss(binding_sample, binding_ref)
         if diag:
@@ -1155,8 +1165,11 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
                         loss += 5 * abs(r_sample - r_ref)
     if diag:
         t2 = time.perf_counter()
-        
-        print(sample,loss, t2 - t1)
+        _str = ''
+        for _x in sample:
+            _str += '%.12f  ,' % _x
+        print(_str)
+        print(loss, t2 - t1)
 
     if write:
 
