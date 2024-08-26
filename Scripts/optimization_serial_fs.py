@@ -43,23 +43,26 @@ def copy_files(w_he, he_he, h_he, work_dir, data_dir):
         # files_to_copy.extend(glob.glob('%s/V*H0He*.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H0He2.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H0He3.*.txt' % data_dir))
-        # files_to_copy.extend(glob.glob('%s/V*H0He4.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H0He4.*.txt' % data_dir))
 
     if h_he:
-        files_to_copy.extend(glob.glob('%s/V*H*He*.*.txt' % data_dir))
+        # files_to_copy.extend(glob.glob('%s/V*H*He*.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H1He0.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H1He1.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H1He2.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H1He3.*.txt' % data_dir))
-        # files_to_copy.extend(glob.glob('%s/V*H2He0.*.txt' % data_dir))
-        # files_to_copy.extend(glob.glob('%s/V*H2He1.*.txt' % data_dir))
-        # files_to_copy.extend(glob.glob('%s/V*H2He2.*.txt' % data_dir))
-        # files_to_copy.extend(glob.glob('%s/V*H2He3.*.txt' % data_dir))
+        # files_to_copy.extend(glob.glob('%s/V*H1He4.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H2He0.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H2He1.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H2He2.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H2He3.*.txt' % data_dir))
+        # files_to_copy.extend(glob.glob('%s/V*H2He4.*.txt' % data_dir))
+
     files_to_copy = list(set(files_to_copy))
 
     for file in files_to_copy:
         shutil.copy(file, data_files_folder)
-    
+# 0.757998409172  ,-0.149264550264  ,0.615848584083  ,-3.409149303432  ,2.913708564876  ,-0.098886153644  ,0.075722340000  ,-0.027001780000  ,
 comm = MPI.COMM_WORLD
 
 proc_id = 0
@@ -73,18 +76,18 @@ pot, potlines, pot_params = Handle_PotFiles_He.read_pot('git_folder/Potentials/i
 # 0.48309483 -0.11809125  2.10966551 -0.33984664 28.67842118  0.41549807
 #  -1.9733587   3.66449741  1.60497915 -0.68848128  0.80103327 -0.74969712
 #  -0.19581129  0.37283166 -0.41408367 -0.03112508  0.05222353 -0.15153377
-
 n_knots = {}
-n_knots['He F'] = 2
+n_knots['He F'] = 0
 n_knots['H-He p'] = 0
 n_knots['He-W p'] = 0
 n_knots['He-H p'] = 0
-n_knots['He-He p'] = 0
+n_knots['He-He p'] = 3
 n_knots['W-He'] = 0
 # 2.51029847 -0.34896591  0.47865807 -0.3762      3.23425928 -0.0276
 #   0.04344    -0.0747
 n_knots['He-He'] = 0
 n_knots['H-He'] = 0
+
 n_knots['W-He p'] = 0
 
 with open('fitting.json', 'r') as file:
@@ -129,13 +132,13 @@ t1 = time.perf_counter()
 
 eam_fit.sample_to_file(sample)
 
-whe = eam_fit.pot_lammps['W-He']
+whe = eam_fit.pot_lammps['H-He']
 
 r = np.linspace(0, eam_fit.pot_params['rc'], eam_fit.pot_params['Nr'])
 
 whe = whe[1:]/r[1:]
 
-plt.plot(r[401:], whe[400:])
+plt.plot(r[201:], whe[200:])
 
 plt.show()
 plt.plot(r, pot['W-He p'], label='W-He')

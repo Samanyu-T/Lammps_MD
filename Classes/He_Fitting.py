@@ -877,7 +877,19 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
         dx = optim_class.pot_params['dr']
         integral = 1e-2 * simpson(y,dx= dx)
         loss += integral
-
+    if optim_class.bool_fit['He-H p']:
+        r = np.linspace(0, optim_class.pot_params['rc'], optim_class.pot_params['Nr'])
+        y = np.abs(optim_class.pot_lammps['H-He p'][r > 1.25])
+        dx = optim_class.pot_params['dr']
+        integral = 1e-2 * simpson(y,dx= dx)
+        loss += integral
+    
+    if optim_class.bool_fit['He-He p']:
+        r = np.linspace(0, optim_class.pot_params['rc'], optim_class.pot_params['Nr'])
+        y = np.abs(optim_class.pot_lammps['He-He p'][r > 1.25])
+        dx = optim_class.pot_params['dr']
+        integral = 25 * simpson(y,dx= dx)
+        loss += integral
     # if optim_class.bool_fit['He-He p']:
 
     #     loss += 100 * np.sum(np.abs(optim_class.pot_lammps['He-He p']))/len(optim_class.pot_lammps['He-He p'])
@@ -965,61 +977,75 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
 
     if optim_class.bool_fit['H-He']:
 
-        h_he_ref = np.array([
-        [ 1.00000000e+00,  1.53136336e+00],
-        [ 1.10000000e+00,  1.14179759e+00],
-        [ 1.20000000e+00,  8.52145780e-01],
-        [ 1.30000000e+00,  6.35693600e-01],
-        [ 1.40000000e+00,  4.73397030e-01],
-        [ 1.50000000e+00,  3.51379120e-01],
-        [ 1.60000000e+00,  2.59463250e-01],
-        [ 1.70000000e+00,  1.90180340e-01],
-        [ 1.80000000e+00,  1.38007440e-01],
-        [ 1.90000000e+00,  9.88157400e-02],
-        [ 2.00000000e+00,  6.94959100e-02],
-        [ 2.10000000e+00,  4.76901800e-02],
-        [ 2.20000000e+00,  3.15964000e-02],
-        [ 2.30000000e+00,  1.98300300e-02],
-        [ 2.40000000e+00,  1.13274800e-02],
-        [ 2.50000000e+00,  5.27342000e-03],
-        [ 2.60000000e+00,  1.04497000e-03],
-        [ 2.70000000e+00, -1.83194000e-03],
-        [ 2.80000000e+00, -3.71714000e-03],
-        [ 2.90000000e+00, -4.88409000e-03],
-        [ 3.00000000e+00, -5.53906000e-03],
-        [ 3.10000000e+00, -5.83668000e-03],
-        [ 3.20000000e+00, -5.89115000e-03],
-        [ 3.30000000e+00, -5.78615000e-03],
-        [ 3.40000000e+00, -5.58149000e-03],
-        [ 3.50000000e+00, -5.32012000e-03],
-        [ 3.60000000e+00, -5.03204000e-03],
-        [ 3.70000000e+00, -4.73785000e-03],
-        [ 3.80000000e+00, -4.45179000e-03],
-        [ 3.90000000e+00, -4.18335000e-03],
-        [ 4.00000000e+00, -3.93853000e-03]])
+        if sample[optim_class.map['H-He']][0] < 0:
+            return 1000
         
+        # h_he_ref = np.array([
+        # [ 1.00000000e+00,  1.53136336e+00],
+        # [ 1.10000000e+00,  1.14179759e+00],
+        # [ 1.20000000e+00,  8.52145780e-01],
+        # [ 1.30000000e+00,  6.35693600e-01],
+        # [ 1.40000000e+00,  4.73397030e-01],
+        # [ 1.50000000e+00,  3.51379120e-01],
+        # [ 1.60000000e+00,  2.59463250e-01],
+        # [ 1.70000000e+00,  1.90180340e-01],
+        # [ 1.80000000e+00,  1.38007440e-01],
+        # [ 1.90000000e+00,  9.88157400e-02],
+        # [ 2.00000000e+00,  6.94959100e-02],
+        # [ 2.10000000e+00,  4.76901800e-02],
+        # [ 2.20000000e+00,  3.15964000e-02],
+        # [ 2.30000000e+00,  1.98300300e-02],
+        # [ 2.40000000e+00,  1.13274800e-02],
+        # [ 2.50000000e+00,  5.27342000e-03],
+        # [ 2.60000000e+00,  1.04497000e-03],
+        # [ 2.70000000e+00, -1.83194000e-03],
+        # [ 2.80000000e+00, -3.71714000e-03],
+        # [ 2.90000000e+00, -4.88409000e-03],
+        # [ 3.00000000e+00, -5.53906000e-03],
+        # [ 3.10000000e+00, -5.83668000e-03],
+        # [ 3.20000000e+00, -5.89115000e-03],
+        # [ 3.30000000e+00, -5.78615000e-03],
+        # [ 3.40000000e+00, -5.58149000e-03],
+        # [ 3.50000000e+00, -5.32012000e-03],
+        # [ 3.60000000e+00, -5.03204000e-03],
+        # [ 3.70000000e+00, -4.73785000e-03],
+        # [ 3.80000000e+00, -4.45179000e-03],
+        # [ 3.90000000e+00, -4.18335000e-03],
+        # [ 4.00000000e+00, -3.93853000e-03]])
+        data_dft = []
+
+        with open('hhe_energy.dat', 'r') as file:
+            for line in file:
+                split = [txt for txt in line.split(' ') if txt != '']
+                r =  float(split[0][-3:])
+                pe = float(split[-1])
+                data_dft.append([r, pe])
+        h_he_ref = np.array(data_dft)
+
         coef_dict = optim_class.fit_sample(sample)
 
-        r = np.linspace(0, optim_class.pot_params['rc'], optim_class.pot_params['Nr'])
 
-        rho = np.linspace(optim_class.pot_params['rhomin'], optim_class.pot_params['rho_c'], optim_class.pot_params['Nrho'])
+        r = np.linspace(0,  optim_class.pot_params['rc'],  optim_class.pot_params['Nr'])
+        rho = np.linspace( optim_class.pot_params['rhomin'],  optim_class.pot_params['rho_c'],  optim_class.pot_params['Nrho'])
 
-        rho_h_he = interp1d(r, optim_class.pot_lammps['H-He p'])
+        rho_h_he = interp1d(r,  optim_class.pot_lammps['H-He p'])
 
-        rho_he_h = interp1d(r,optim_class.pot_lammps['He-H p'])
+        rho_he_h = interp1d(r, optim_class.pot_lammps['He-H p'])
 
-        F_h = interp1d(rho,optim_class.pot_lammps['H F'])
+        F_h = interp1d(rho, optim_class.pot_lammps['H F'])
 
-        F_he = interp1d(rho,optim_class.pot_lammps['He F'])
+        F_he = interp1d(rho, optim_class.pot_lammps['He F'])
 
         zbl_hhe = ZBL(2, 1)
 
-        pot_hhe = zbl_hhe.eval_zbl(h_he_ref[:,0]) + splineval(h_he_ref[:,0], coef_dict['H-He'], optim_class.knot_pts['H-He'])
+        r_plt = h_he_ref[:,0]
 
-        emd_H_He = np.zeros(h_he_ref[:,0].shape)
-        emd_He_H = np.zeros(h_he_ref[:,0].shape)
+        pot_hhe = zbl_hhe.eval_zbl(r_plt) + splineval(r_plt, coef_dict['H-He'],  optim_class.knot_pts['H-He'])
 
-        for i, _r in enumerate(h_he_ref[:,0]):
+        emd_H_He = np.zeros(r_plt.shape)
+        emd_He_H = np.zeros(r_plt.shape)
+
+        for i, _r in enumerate(r_plt):
 
             _rho_h_he = rho_h_he(_r)
 
@@ -1028,10 +1054,10 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
             _rho_h_he = rho_he_h(_r)
 
             emd_He_H[i] = F_h(_rho_h_he)
-        
-        pairwise = (emd_H_He + emd_He_H + pot_hhe)
 
-        # loss += 1e-1 * np.sum((1 - pairwise/h_he_ref[:, 1])**2, axis=0)
+        total_hhe = (emd_H_He + emd_He_H + pot_hhe)
+
+        loss += 4 * np.linalg.norm( (total_hhe[:] - h_he_ref[:,1]) )
         
         if diag:
             print('H-He Gas Loss: ', loss)
@@ -1113,15 +1139,14 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
         binding_ref = ref_mat[0, 0, 1, 0, 0] - binding_ref
 
         if v == 0:
-            loss += 15 * rel_abs_loss(binding_sample, binding_ref)
+            loss += 25 * rel_abs_loss(binding_sample, binding_ref)
         elif v == 3:
             loss += 1 * rel_abs_loss(binding_sample, binding_ref)
         else:
             loss += 1 * rel_abs_loss(binding_sample, binding_ref)
         if diag:
             print(v, 0 ,binding_sample, binding_ref, loss)
-
-    '''
+    ''' 
     Loss from H-He Binding
 
     Interstital 
@@ -1141,10 +1166,10 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
             
             binding_ref = ref_mat[0, 1, 0, 0, 0] - binding_ref
 
-            if v == 1:
-                loss += 15 * rel_abs_loss(binding_sample, binding_ref)
+            if v == 1 and h == 1:
+                loss += 25 * rel_abs_loss(binding_sample, binding_ref)
             else:
-                loss += 2.5 * rel_abs_loss(binding_sample, binding_ref)
+                loss += 5 * rel_abs_loss(binding_sample, binding_ref)
 
             if diag:
                 print( v, h ,binding_sample, binding_ref, loss )
@@ -1162,7 +1187,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
                     r_ref = ref_mat[i, j, k, l, 1]
 
                     if not (np.isinf(r_ref) or np.isinf(r_sample)):
-                        loss += 5 * abs(r_sample - r_ref)
+                        loss += 8 * abs(r_sample - r_ref)
     if diag:
         t2 = time.perf_counter()
         _str = ''

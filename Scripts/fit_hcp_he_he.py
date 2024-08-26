@@ -115,13 +115,15 @@ eam_fit = He_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm,
 ''' CURRENT STABLE OPTIMA '''
 x =  np.array(  [1.61712964, -3.670e-01,  4.789e-01 ,-3.762e-01,  3.23425928, -2.760e-02,  4.344e-02, -7.470e-02])
 
-x = np.array([0, 0, 0, 2, 0, 0, 0])
+# x = np.array([0.594690952901  ,-0.003014856809  ,-0.000185516565  ,2.000000166982  ,0  ,0  ,0  ,]) 
 
-x = np.hstack([1e-1*np.random.randn(3), 2, 1e-3*np.random.randn(3)])
+x = np.array([0.185479465811  ,0.008470616936  ,0.001077780079  ,1.999949607675  ,0.000000000000  ,0.000000000000  ,0.000000000000  ,])
+# x = np.array([1.644640508158  ,-0.362544854109  ,0.502218297628  ,-0.401297022906  ,3.232716794870  ,-0.027598698231  ,0.043451534835  ,-0.074820445456 ])
+# x = np.hstack([1e-1*np.random.randn(3), 2, 1e-3*np.random.randn(3)])
 
-x_res = minimize(loss_func, x , args=(eam_fit, data_dft), method='Powell',options={"maxiter":100}, tol=1e-4)
-print(x_res)
-x = x_res.x
+# x_res = minimize(loss_func, x , args=(eam_fit, data_dft), method='Powell',options={"maxiter":100}, tol=1e-4)
+# print(x_res)
+# x = x_res.x
 
 loss_func(x, eam_fit, data_dft)
 stress_arr = np.zeros((len(data_dft,)))
