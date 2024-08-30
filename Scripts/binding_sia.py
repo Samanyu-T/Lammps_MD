@@ -16,11 +16,11 @@ proc_id = comm.Get_rank()
 
 n_procs = comm.Get_size()
 
-comm = 0
+# comm = 0
 
-proc_id = 0
+# proc_id = 0
 
-n_procs = 1
+# n_procs = 1
 
 init_dict = {}
 
@@ -147,7 +147,7 @@ for i in range(1, n_int):
     action = 1
     defect_centre = 2.25 * 3.14* np.array([1,1,1])
 
-    ef, rvol = lmp_class.add_defect(input_filepath, output_filepath, target_species, action, defect_centre, minimizer='random', run_MD=True)
+    ef, rvol = lmp_class.add_defect(input_filepath, output_filepath, target_species, action, defect_centre, minimizer='random', run_MD=False)
     print(ef,rvol)
     ef_lst.append(ef)
 

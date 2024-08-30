@@ -31,9 +31,9 @@ def sim_hcp_helium(filepath, potfile, type='he'):
 
 def loss_func(x, eam_fit, data_dft):
 
-    A = 1.7015e+00
-    b = 4.2490e-01
-    x = np.hstack([A, b,  x])
+    # A = 1.7015e+00
+    # b = 4.2490e-01
+    # x = np.hstack([A, b,  x])
     
     eam_fit.sample_to_file(x)
 
@@ -94,7 +94,7 @@ pot, potlines, pot_params = Handle_PotFiles_He.read_pot('git_folder/Potentials/i
 
 
 n_knots = {}
-n_knots['He F'] = 2
+n_knots['He F'] = 0
 n_knots['H-He p'] = 0
 n_knots['He-W p'] = 0
 n_knots['He-H p'] = 0
@@ -113,15 +113,16 @@ eam_fit = He_Fitting.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm,
 # x = np.array([-4.078e-01, 6.777e-01, -1.038e+00, -2.816e-02,  4.515e-02, -7.875e-02])
 
 ''' CURRENT STABLE OPTIMA '''
-x =  np.array(  [1.61712964, -3.670e-01,  4.789e-01 ,-3.762e-01,  3.23425928, -2.760e-02,  4.344e-02, -7.470e-02])
+x =  np.array(  [1.62963646, -0.3658247,   0.48055115, -0.36578079,  3.23371698, -0.02758561, 0.04354402, -0.07569902])
 
-# x = np.array([0.594690952901  ,-0.003014856809  ,-0.000185516565  ,2.000000166982  ,0  ,0  ,0  ,]) 
+x = np.array([1.644081838560815  ,-0.364089653944737  ,0.486755140426219  ,-0.370503077147278  ,3.238489844285963  ,-0.027611696678638  ,0.044106180101373  ,-0.075079529972039  ,])
+x = np.array([0.110985815036664  ,0.119457045129806  ,0.109536792754895  ,1.800222855256981  ,0.000000000000000  ,0.000000000000000  ,0.000000000000000  ,]) 
 
-x = np.array([0.185479465811  ,0.008470616936  ,0.001077780079  ,1.999949607675  ,0.000000000000  ,0.000000000000  ,0.000000000000  ,])
+# x = np.array([0.383091837975847  ,0.009079475509070  ,0.001077780079000  ,1.999949607675000  ,0.000000000000000  ,0.000000000000000  ,0.000000000000000  ,])
 # x = np.array([1.644640508158  ,-0.362544854109  ,0.502218297628  ,-0.401297022906  ,3.232716794870  ,-0.027598698231  ,0.043451534835  ,-0.074820445456 ])
 # x = np.hstack([1e-1*np.random.randn(3), 2, 1e-3*np.random.randn(3)])
 
-# x_res = minimize(loss_func, x , args=(eam_fit, data_dft), method='Powell',options={"maxiter":100}, tol=1e-4)
+# x_res = minimize(loss_func, x, args=(eam_fit, data_dft), method='Nelder-Mead',options={"maxiter":1000}, tol=1e-4)
 # print(x_res)
 # x = x_res.x
 
@@ -130,9 +131,9 @@ stress_arr = np.zeros((len(data_dft,)))
 pe_arr = np.zeros((len(data_dft,)))
 
 
-A = 1.7015e+00
-b = 4.2490e-01
-x = np.hstack([A, b,  x])
+# A = 1.7015e+00
+# b = 4.2490e-01
+# x = np.hstack([A, b,  x])
 
 sample = x
 print(sample)

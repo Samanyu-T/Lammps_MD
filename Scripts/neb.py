@@ -94,7 +94,9 @@ lmp_class.init_from_box(lmp)
 
 pe_0 = lmp.get_thermo('pe')
 
-lmp.command('create_atoms 3 single %f %f %f units lattice' % (2.25, 2.5, 2))
+# lmp.command('create_atoms 3 single %f %f %f units lattice' % (2.150, 2.500, 2.000))
+
+lmp.command('create_atoms 3 single %f %f %f units lattice' % (2.2500, 2.500, 2.000))
 
 lmp_class.cg_min(lmp)
 
@@ -115,7 +117,9 @@ lmp_class.init_from_box(lmp)
 
 pe_0 = lmp.get_thermo('pe')
 
-lmp.command('create_atoms 3 single %f %f %f units lattice' % (2, 2.5, 2.25))
+# lmp.command('create_atoms 3 single %f %f %f units lattice' % (0.2500, 2.500, 2.00))
+
+lmp.command('create_atoms 3 single %f %f %f units lattice' % (2.500, 2.500, 2.000))
 
 lmp_class.cg_min(lmp)
 

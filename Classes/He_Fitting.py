@@ -384,6 +384,8 @@ class Fit_EAM_Potential():
 
         self.knot_pts['H-He p'] = np.linspace(0, self.pot_params['rc'], n_knots['H-He p'])
         self.knot_pts['He-W p'] = np.linspace(0, self.pot_params['rc'], n_knots['He-W p'])
+        # if n_knots['He-W p'] == 3:
+        #     self.knot_pts['He-W p'][-1] = 3.5
         self.knot_pts['He-H p'] = np.linspace(0, self.pot_params['rc'], n_knots['He-H p'])
         self.knot_pts['He-He p'] = np.linspace(0, self.pot_params['rc'], n_knots['He-He p'])
 
@@ -404,6 +406,8 @@ class Fit_EAM_Potential():
                        [4*(n_knots['He-W p'] - 1) - 1] + [4*(n_knots['He-H p'] - 1) - 1] + [4*(n_knots['He-He p'] - 1) - 1] + \
                        [4*(n_knots['W-He'] - 2)] + [4*(n_knots['He-He'] - 2)] + [4*(n_knots['H-He'] - 2)] + \
                        [4*(n_knots['W-He p'] - 1) - 1]        
+        
+
         map_idx = []
         
         for idx, key in enumerate(self.bool_fit):
@@ -767,12 +771,12 @@ def sim_defect_set(optim_class:Fit_EAM_Potential):
                             (_x[0], _x[1], _x[2], _x[3])
                             )
         
-        lmp_class.cg_min(lmp)
+        lmp_class.cg_min(lmp, conv=1000)
         
         ef = lmp_class.get_formation_energy(lmp)
 
         rvol = lmp_class.get_rvol(lmp)
-        # lmp.command('write_dump all custom test_sim/V%dH%dHe%d.%d.atom id type x y z' % (vac, h, he, image))
+        lmp.command('write_dump all custom test_sim/V%dH%dHe%d.%d.atom id type x y z' % (vac, h, he, image))
 
         _data =  [vac, h, he, image, ef, rvol]
         
@@ -864,32 +868,59 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
         
         pot = whe[1:]/r
 
-        loss += 1e-1 * np.abs(np.sum(pot[pot<0]))
-        
-        loss += 1e-1 * np.sum(np.abs(pot[r > 3.5]))
+        # loss += 1e-1 * np.abs(np.sum(pot[pot<0]))
+        loss +=   1e-1* abs(1 - pot.min()/-1e-3)
+
+        # loss +=  np.sum(np.abs(pot[r > 3.5]))
 
         if diag:
-            print(loss)
+            print(loss, pot.min())
 
     if optim_class.bool_fit['H-He p']:
         r = np.linspace(0, optim_class.pot_params['rc'], optim_class.pot_params['Nr'])
-        y = np.abs(optim_class.pot_lammps['H-He p'][r > 1.25])
+        y = np.abs(optim_class.pot_lammps['H-He p'][r > 1.5])
         dx = optim_class.pot_params['dr']
-        integral = 1e-2 * simpson(y,dx= dx)
+        integral = 25 * simpson(y,dx= dx)
         loss += integral
+
+        if diag:
+            print('H-He p %f' % loss)
+
     if optim_class.bool_fit['He-H p']:
         r = np.linspace(0, optim_class.pot_params['rc'], optim_class.pot_params['Nr'])
         y = np.abs(optim_class.pot_lammps['H-He p'][r > 1.25])
         dx = optim_class.pot_params['dr']
-        integral = 1e-2 * simpson(y,dx= dx)
+        integral = 5 * simpson(y,dx= dx)
         loss += integral
     
     if optim_class.bool_fit['He-He p']:
         r = np.linspace(0, optim_class.pot_params['rc'], optim_class.pot_params['Nr'])
-        y = np.abs(optim_class.pot_lammps['He-He p'][r > 1.25])
+        y = np.abs(optim_class.pot_lammps['He-He p'][r > 0.25])
         dx = optim_class.pot_params['dr']
-        integral = 25 * simpson(y,dx= dx)
+        integral = 15 * simpson(y,dx= dx)
         loss += integral
+    
+    if optim_class.bool_fit['W-He p']:
+        r = np.linspace(0, optim_class.pot_params['rc'], optim_class.pot_params['Nr'])
+        y = optim_class.pot_lammps['W-He p']
+        dx = optim_class.pot_params['dr']
+        integral = 5 * simpson(y,dx= dx)
+        # loss -= integral
+
+        if diag:
+            print('W-He p Loss: %.3f' % loss)
+
+    if optim_class.bool_fit['He-W p']:
+        r = np.linspace(0, optim_class.pot_params['rc'], optim_class.pot_params['Nr'])
+        y = np.abs(optim_class.pot_lammps['He-W p'][r > 3])
+        dx = optim_class.pot_params['dr']
+        integral = 2500 * simpson(y,dx= dx)
+        # loss += integral
+    
+
+        if diag:
+            print('He-W p Loss: %.3f' % loss)
+
     # if optim_class.bool_fit['He-He p']:
 
     #     loss += 100 * np.sum(np.abs(optim_class.pot_lammps['He-He p']))/len(optim_class.pot_lammps['He-He p'])
@@ -1057,7 +1088,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
 
         total_hhe = (emd_H_He + emd_He_H + pot_hhe)
 
-        loss += 4 * np.linalg.norm( (total_hhe[:] - h_he_ref[:,1]) )
+        loss += 500 * np.linalg.norm( (total_hhe[:] - h_he_ref[:,1]) )
         
         if diag:
             print('H-He Gas Loss: ', loss)
@@ -1084,16 +1115,16 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
 
     '''
     # Loss due to difference in Tet Formation Energy
-    loss += 5 * np.abs(sample_mat[0, 0, 1, 0, 0] - ref_mat[0, 0, 1, 0, 0]) ** 2
+    loss += 5 * np.abs(sample_mat[0, 0, 1, 0, 0] - ref_mat[0, 0, 1, 0, 0]) 
 
-    loss += rel_abs_loss(sample_mat[0, 0, 1, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 1, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
+    loss += 10 * rel_abs_loss(sample_mat[0, 0, 1, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 1, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
 
-    loss += 10 * abs(1 - (sample_mat[0, 0, 1, 2, 0] - sample_mat[0, 0, 1, 0, 0])/(ref_mat[0, 0, 1, 2, 0] - ref_mat[0, 0, 1, 0, 0]) )
+    loss +=  abs(1 - (sample_mat[0, 0, 1, 2, 0] - sample_mat[0, 0, 1, 0, 0])/(ref_mat[0, 0, 1, 2, 0] - ref_mat[0, 0, 1, 0, 0]) )
 
     # Loss due to difference in Relaxation Volume
-    loss += np.abs(1 - sample_mat[0, 0, 1, 0, 1]/ref_mat[0, 0, 1, 0, 1])
+    loss += 5 * np.abs(1 - sample_mat[0, 0, 1, 0, 1]/ref_mat[0, 0, 1, 0, 1])
 
-    loss += np.abs(1 - sample_mat[0, 0, 1, 3, 1]/ref_mat[0, 0, 1, 3, 1])
+    loss += 1 * np.abs(1 - sample_mat[0, 0, 1, 3, 1]/ref_mat[0, 0, 1, 3, 1])
     
     if diag:
         print(sample_mat[0, 0, 1, :, :], ref_mat[0, 0, 1, :, :])
@@ -1166,8 +1197,8 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
             
             binding_ref = ref_mat[0, 1, 0, 0, 0] - binding_ref
 
-            if v == 1 and h == 1:
-                loss += 25 * rel_abs_loss(binding_sample, binding_ref)
+            if v == 0:
+                loss += 5 * rel_abs_loss(binding_sample, binding_ref)
             else:
                 loss += 5 * rel_abs_loss(binding_sample, binding_ref)
 
@@ -1187,12 +1218,12 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
                     r_ref = ref_mat[i, j, k, l, 1]
 
                     if not (np.isinf(r_ref) or np.isinf(r_sample)):
-                        loss += 8 * abs(r_sample - r_ref)
+                        loss += 5 * abs(r_sample - r_ref)
     if diag:
         t2 = time.perf_counter()
         _str = ''
         for _x in sample:
-            _str += '%.12f  ,' % _x
+            _str += '%.15f  ,' % _x
         print(_str)
         print(loss, t2 - t1)
 
@@ -1544,7 +1575,7 @@ def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_
         print('Average Time: %.2f s' % (t2 - t1))
         sys.stdout.flush()    
     
-    res = minimize(loss_func, x_init, args=(data_ref, fitting_class, diag, False, None), method='Powell',
+    res = minimize(loss_func, x_init, args=(data_ref, fitting_class, diag, False, None), method='Nelder-Mead',
                    options={"maxfev":maxiter, "return_all":True}, tol=1e-4)
 
     res.allvecs = np.array(res.allvecs)

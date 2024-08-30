@@ -51,13 +51,14 @@ def copy_files(w_he, he_he, h_he, work_dir, data_dir):
         files_to_copy.extend(glob.glob('%s/V*H1He1.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H1He2.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H1He3.*.txt' % data_dir))
-        # files_to_copy.extend(glob.glob('%s/V*H1He4.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H2He0.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H2He1.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H2He2.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H2He3.*.txt' % data_dir))
-        # files_to_copy.extend(glob.glob('%s/V*H2He4.*.txt' % data_dir))
-
+        files_to_copy.extend(glob.glob('%s/V*H3He0.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H3He1.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H3He2.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H3He3.*.txt' % data_dir))
     files_to_copy = list(set(files_to_copy))
 
     for file in files_to_copy:
@@ -71,7 +72,7 @@ n_procs = 1
 
 pot, potlines, pot_params = Handle_PotFiles_He.read_pot('git_folder/Potentials/init.eam.he')
 
-# 5.60697527e+00  3.85118169e+00  9.49832030e+01  3.84392370e+00  1.19397215e+00  2.30219362e+01  7.76016391e-01  2.16019733e+00  1.45467904e+00 -1.85564438e+00  3.01824645e+00  1.86007434e+00 -6.61953938e-01  6.11439256e-01 -3.11273002e-01 -4.14029651e-01  6.77237863e-02 -3.78793307e-01  8.04632485e-01  1.49701602e+00 -1.10496938e-01 -1.01947712e-01  1.84336665e-01 -3.20069363e-01 -4.21210361e-02  3.50947646e-02  4.49373636e-02
+# 1.510231228597197  ,-1.468340827434945  ,4.087238819276577  ,2.197917203259067  ,2.184035325825760  ,-0.416439283365776  ,0.396477830267865  ,-0.035264094255146  ,
 
 # 0.48309483 -0.11809125  2.10966551 -0.33984664 28.67842118  0.41549807
 #  -1.9733587   3.66449741  1.60497915 -0.68848128  0.80103327 -0.74969712
@@ -81,15 +82,16 @@ n_knots['He F'] = 0
 n_knots['H-He p'] = 0
 n_knots['He-W p'] = 0
 n_knots['He-H p'] = 0
-n_knots['He-He p'] = 3
+n_knots['He-He p'] = 0
 n_knots['W-He'] = 0
+# 1.509145543093065  ,-1.463700330113199  ,4.083683514861796  ,2.213287790918133  ,2.168181352311828  ,-0.418858034035005  ,0.399063366842790  ,-0.035033031442598  ,
+# 1.527317670536826  ,-1.487419794162301  ,4.201509188838966  ,2.204655472293622  ,2.206021527173542  ,-0.409756736495524  ,0.391280786005535  ,-0.035724816849591  ,
 # 2.51029847 -0.34896591  0.47865807 -0.3762      3.23425928 -0.0276
 #   0.04344    -0.0747
 n_knots['He-He'] = 0
-n_knots['H-He'] = 0
-
+n_knots['H-He'] = 4
 n_knots['W-He p'] = 0
-
+# -0.111008003931170  ,0.257370491090823  ,0.005965998599381  ,2.449325455281385  ,-0.006037000006585  ,0.072594422931774  ,-0.038927822536880  ,
 with open('fitting.json', 'r') as file:
     param_dict = json.load(file)
 
@@ -132,7 +134,7 @@ t1 = time.perf_counter()
 
 eam_fit.sample_to_file(sample)
 
-whe = eam_fit.pot_lammps['H-He']
+whe = eam_fit.pot_lammps['W-He']
 
 r = np.linspace(0, eam_fit.pot_params['rc'], eam_fit.pot_params['Nr'])
 

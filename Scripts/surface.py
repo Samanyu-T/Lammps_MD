@@ -36,7 +36,7 @@ if not os.path.exists(output_folder):
 
 def surface_binding(lmp, depth):
 
-    pe_arr = np.zeros((10,))
+    pe_arr = np.zeros(depth.shape)
 
     for i, _d in enumerate(depth):
         pe, _ = lmp.add_defect(os.path.join(output_folder, 'Data_Files', 'V0H0He0.data'), 
@@ -69,7 +69,7 @@ init_dict['potfile'] = 'git_folder/Potentials/init.eam.he'
 
 init_dict['pottype'] = 'he'
 
-depth = np.linspace(0, 10, 10)
+depth = np.linspace(0, 5, 5)
 
 lmp = LammpsParentClass(init_dict, comm, proc_id)
 
