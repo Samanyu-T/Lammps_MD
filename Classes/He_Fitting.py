@@ -355,7 +355,7 @@ class Fit_EAM_Potential():
             0,
             1
         ],
-        "size": 4,
+        "size": 7,
         "surface": 0,
         "potfile": os.path.join(self.pot_folder, 'optim.%d.eam.he' % self.proc_id), #"git_folder/Potentials/init.eam.he"
         "pottype":"he",
@@ -1173,6 +1173,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
             loss += 25 * rel_abs_loss(binding_sample, binding_ref)
         elif v == 3:
             loss += 1 * rel_abs_loss(binding_sample, binding_ref)
+            print(sample_mat[v, 0, :, :, 0])
         else:
             loss += 1 * rel_abs_loss(binding_sample, binding_ref)
         if diag:
