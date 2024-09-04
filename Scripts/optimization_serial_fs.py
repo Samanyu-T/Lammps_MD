@@ -46,19 +46,19 @@ def copy_files(w_he, he_he, h_he, work_dir, data_dir):
         files_to_copy.extend(glob.glob('%s/V*H0He4.*.txt' % data_dir))
 
     if h_he:
-        files_to_copy.extend(glob.glob('%s/V*H*He*.*.txt' % data_dir))
+        # files_to_copy.extend(glob.glob('%s/V*H*He*.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H1He0.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H1He1.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H1He2.*.txt' % data_dir))
-        files_to_copy.extend(glob.glob('%s/V*H1He3.*.txt' % data_dir))
-        files_to_copy.extend(glob.glob('%s/V*H2He0.*.txt' % data_dir))
-        files_to_copy.extend(glob.glob('%s/V*H2He1.*.txt' % data_dir))
-        files_to_copy.extend(glob.glob('%s/V*H2He2.*.txt' % data_dir))
-        files_to_copy.extend(glob.glob('%s/V*H2He3.*.txt' % data_dir))
-        files_to_copy.extend(glob.glob('%s/V*H3He0.*.txt' % data_dir))
-        files_to_copy.extend(glob.glob('%s/V*H3He1.*.txt' % data_dir))
-        files_to_copy.extend(glob.glob('%s/V*H3He2.*.txt' % data_dir))
-        files_to_copy.extend(glob.glob('%s/V*H3He3.*.txt' % data_dir))
+        # files_to_copy.extend(glob.glob('%s/V*H1He3.*.txt' % data_dir))
+        # files_to_copy.extend(glob.glob('%s/V*H2He0.*.txt' % data_dir))
+        # files_to_copy.extend(glob.glob('%s/V*H2He1.*.txt' % data_dir))
+        # files_to_copy.extend(glob.glob('%s/V*H2He2.*.txt' % data_dir))
+        # files_to_copy.extend(glob.glob('%s/V*H2He3.*.txt' % data_dir))
+        # files_to_copy.extend(glob.glob('%s/V*H3He0.*.txt' % data_dir))
+        # files_to_copy.extend(glob.glob('%s/V*H3He1.*.txt' % data_dir))
+        # files_to_copy.extend(glob.glob('%s/V*H3He2.*.txt' % data_dir))
+        # files_to_copy.extend(glob.glob('%s/V*H3He3.*.txt' % data_dir))
     files_to_copy = list(set(files_to_copy))
 
     for file in files_to_copy:
@@ -69,8 +69,8 @@ comm = MPI.COMM_WORLD
 proc_id = 0
 
 n_procs = 1
-
-pot, potlines, pot_params = Handle_PotFiles_He.read_pot('git_folder/Potentials/init.eam.he')
+ 
+pot, potlines, pot_params = Handle_PotFiles_He.read_pot('git_folder/Potentials/final.eam.he')
 
 # 1.510231228597197  ,-1.468340827434945  ,4.087238819276577  ,2.197917203259067  ,2.184035325825760  ,-0.416439283365776  ,0.396477830267865  ,-0.035264094255146  ,
 
@@ -80,7 +80,7 @@ pot, potlines, pot_params = Handle_PotFiles_He.read_pot('git_folder/Potentials/i
 n_knots = {}
 n_knots['He F'] = 0
 n_knots['H-He p'] = 0
-n_knots['He-W p'] = 0
+n_knots['He-W p'] = 3
 n_knots['He-H p'] = 0
 n_knots['He-He p'] = 0
 n_knots['W-He'] = 0
@@ -89,7 +89,7 @@ n_knots['W-He'] = 0
 # 2.51029847 -0.34896591  0.47865807 -0.3762      3.23425928 -0.0276
 #   0.04344    -0.0747
 n_knots['He-He'] = 0
-n_knots['H-He'] = 4
+n_knots['H-He'] = 0
 n_knots['W-He p'] = 0
 # -0.111008003931170  ,0.257370491090823  ,0.005965998599381  ,2.449325455281385  ,-0.006037000006585  ,0.072594422931774  ,-0.038927822536880  ,
 with open('fitting.json', 'r') as file:

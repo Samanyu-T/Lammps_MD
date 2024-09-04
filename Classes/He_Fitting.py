@@ -308,7 +308,7 @@ def create_init_file(filepath):
     ],
     "size": 4,
     "surface": 0,
-    "potfile": "git_folder/Potentials/init.eam.he",
+    "potfile": "git_folder/Potentials/final.eam.he",
     "conv": 100,
     "machine": "",
     "save_folder": "Monte_Carlo_HSurface"
@@ -355,9 +355,9 @@ class Fit_EAM_Potential():
             0,
             1
         ],
-        "size": 7,
+        "size": 4,
         "surface": 0,
-        "potfile": os.path.join(self.pot_folder, 'optim.%d.eam.he' % self.proc_id), #"git_folder/Potentials/init.eam.he"
+        "potfile": os.path.join(self.pot_folder, 'optim.%d.eam.he' % self.proc_id), #"git_folder/Potentials/final.eam.he"
         "pottype":"he",
         "conv": 1000,
         "machine": "",
@@ -878,7 +878,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
 
     if optim_class.bool_fit['H-He p']:
         r = np.linspace(0, optim_class.pot_params['rc'], optim_class.pot_params['Nr'])
-        y = np.abs(optim_class.pot_lammps['H-He p'][r > 1.5])
+        y = np.abs(optim_class.pot_lammps['H-He p'][r > 2])
         dx = optim_class.pot_params['dr']
         integral = 25 * simpson(y,dx= dx)
         loss += integral
@@ -914,8 +914,8 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
         r = np.linspace(0, optim_class.pot_params['rc'], optim_class.pot_params['Nr'])
         y = np.abs(optim_class.pot_lammps['He-W p'][r > 3])
         dx = optim_class.pot_params['dr']
-        integral = 2500 * simpson(y,dx= dx)
-        # loss += integral
+        integral = 2000 * simpson(y,dx= dx)
+        loss += integral
     
 
         if diag:
@@ -1088,7 +1088,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
 
         total_hhe = (emd_H_He + emd_He_H + pot_hhe)
 
-        loss += 500 * np.linalg.norm( (total_hhe[:] - h_he_ref[:,1]) )
+        loss += 15 * np.linalg.norm( (total_hhe[:] - h_he_ref[:,1]) )
         
         if diag:
             print('H-He Gas Loss: ', loss)
@@ -1173,7 +1173,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
             loss += 25 * rel_abs_loss(binding_sample, binding_ref)
         elif v == 3:
             loss += 1 * rel_abs_loss(binding_sample, binding_ref)
-            print(sample_mat[v, 0, :, :, 0])
+            # print(sample_mat[v, 0, :, :, 0])
         else:
             loss += 1 * rel_abs_loss(binding_sample, binding_ref)
         if diag:
@@ -1199,7 +1199,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
             binding_ref = ref_mat[0, 1, 0, 0, 0] - binding_ref
 
             if v == 0:
-                loss += 5 * rel_abs_loss(binding_sample, binding_ref)
+                loss += 7.5 * rel_abs_loss(binding_sample, binding_ref)
             else:
                 loss += 5 * rel_abs_loss(binding_sample, binding_ref)
 
@@ -1258,7 +1258,7 @@ def random_sampling(n_knots, comm, proc_id, max_time=3, work_dir = '../Optim_Loc
     shutil.copytree(data_files_folder, lammps_folder)
 
     # Read Daniel's potential to initialize the W-H potential and the params for writing a .eam.he file
-    pot, potlines, pot_params = read_pot('git_folder/Potentials/init.eam.he')
+    pot, potlines, pot_params = read_pot('git_folder/Potentials/final.eam.he')
 
     # pot_params['rho_c'] = (pot_params['Nrho'] - 1)*pot_params['drho']
     
@@ -1352,7 +1352,7 @@ def min_w_he_lj(x):
     n_knots['He-He'] = 0
     n_knots['H-He'] = 0
 
-    pot, potlines, pot_params = read_pot('git_folder/Potentials/init.eam.he')
+    pot, potlines, pot_params = read_pot('git_folder/Potentials/final.eam.he')
 
     eam_fit = Fit_EAM_Potential(pot, n_knots, pot_params, potlines, None, 0, '')
 
@@ -1383,7 +1383,7 @@ def lj_sampling(n_knots, comm, proc_id, mean, cov, max_time=3, work_dir = '../Op
     shutil.copytree(data_files_folder, lammps_folder)
 
     # Read Daniel's potential to initialize the W-H potential and the params for writing a .eam.he file
-    pot, potlines, pot_params = read_pot('git_folder/Potentials/init.eam.he')
+    pot, potlines, pot_params = read_pot('git_folder/Potentials/final.eam.he')
 
     # pot_params['rho_c'] = (pot_params['Nrho'] - 1)*pot_params['drho']
     
@@ -1471,7 +1471,7 @@ def gaussian_sampling(n_knots, comm, proc_id, mean, cov, max_time=3, work_dir = 
     shutil.copytree(data_files_folder, lammps_folder)
 
     # Read Daniel's potential to initialize the W-H potential and the params for writing a .eam.he file
-    pot, potlines, pot_params = read_pot('git_folder/Potentials/init.eam.he')
+    pot, potlines, pot_params = read_pot('git_folder/Potentials/final.eam.he')
 
     # pot_params['rho_c'] = (pot_params['Nrho'] - 1)*pot_params['drho']
     
@@ -1555,7 +1555,7 @@ def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_
 
 
     # Read Daniel's potential to initialize the W-H potential and the params for writing a .eam.he file
-    pot, potlines, pot_params = read_pot('git_folder/Potentials/init.eam.he')
+    pot, potlines, pot_params = read_pot('git_folder/Potentials/final.eam.he')
     # pot, potlines, pot_params = read_pot('Fitting_Runtime/Potentials/optim.0.eam.he' )
 
     # pot_params['rho_c'] = (pot_params['Nrho'] - 1)*pot_params['drho']
@@ -1614,7 +1614,7 @@ def genetic_alg(n_knots, comm, proc_id, work_dir = '../Optim_Local', save_folder
 
 
     # Read Daniel's potential to initialize the W-H potential and the params for writing a .eam.he file
-    pot, potlines, pot_params = read_pot('git_folder/Potentials/init.eam.he')
+    pot, potlines, pot_params = read_pot('git_folder/Potentials/final.eam.he')
     # pot, potlines, pot_params = read_pot('Fitting_Runtime/Potentials/optim.0.eam.he' )
 
     # pot_params['rho_c'] = (pot_params['Nrho'] - 1)*pot_params['drho']

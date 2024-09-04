@@ -542,8 +542,9 @@ class LammpsParentClass:
             self.cg_min(lmp)
         
         if run_MD:
-            self.run_MD(lmp, 30, 1e-3, 1000)
-            
+            self.run_MD(lmp, 800, 1e-3, 2000)
+            self.run_MD(lmp, 400, 1e-3, 2000)
+
             self.cg_min(lmp)
 
         rvol = self.get_rvol(lmp)

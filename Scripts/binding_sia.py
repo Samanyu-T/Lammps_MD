@@ -71,6 +71,10 @@ init_dict['potfile'] = 'git_folder/Potentials/init.eam.he'
 
 init_dict['pottype'] = 'he'
 
+init_dict['potfile'] = 'git_folder/Potentials/beck.eam.alloy'
+
+init_dict['pottype'] = 'alloy'
+
 depth = np.linspace(0, 10, 10)
 
 lmp_class = LammpsParentClass(init_dict, comm, proc_id)
@@ -146,9 +150,9 @@ for i in range(1, n_int):
     output_filepath = os.path.join(output_folder, 'Data_Files', 'sia_he_%d.data' % i)
     target_species = 3
     action = 1
-    defect_centre = 2.25 * 3.14* np.array([1,1,1])
+    defect_centre = 2.25 * 3.14* np.array([[1,1,1]])
 
-    ef, rvol = lmp_class.add_defect(input_filepath, output_filepath, target_species, action, defect_centre, minimizer='random', run_MD=False)
+    ef, rvol = lmp_class.add_defect(input_filepath, output_filepath, target_species, action, defect_centre, minimizer='random', run_MD=True)
     print(ef,rvol)
     ef_lst.append(ef)
 

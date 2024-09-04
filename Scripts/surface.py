@@ -52,7 +52,7 @@ def surface_binding(lmp, depth):
 
 
 
-init_dict['size'] = 6
+init_dict['size'] = 10
 
 init_dict['surface'] = 10
 
@@ -65,7 +65,7 @@ init_dict['orienty'] = [0, 1, 0]
 init_dict['orientz'] = [0, 0, 1]
 
 init_dict['potfile'] = 'Fitting_Runtime/Potentials/optim.0.eam.he'
-init_dict['potfile'] = 'git_folder/Potentials/init.eam.he'
+init_dict['potfile'] = 'git_folder/Potentials/final.eam.he'
 
 init_dict['pottype'] = 'he'
 
