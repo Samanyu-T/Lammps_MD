@@ -30,7 +30,7 @@ init_dict['size'] = 5
 
 init_dict['surface'] = 0
 
-init_dict['potfile'] = 'git_folder/Potentials/final.eam.he'
+init_dict['potfile'] = 'git_folder/Potentials/beck_full.eam.he'
 
 # init_dict['conv'] = 10000
 

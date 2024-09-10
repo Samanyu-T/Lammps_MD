@@ -19,7 +19,7 @@ init_dict = {}
 with open('init_param.json', 'r') as file:
     init_dict = json.load(file)
 
-init_dict['potfile'] = 'Fitting_Runtime/Potentials/optim.0.eam.he'
+init_dict['potfile'] = 'git_folder/Potentials/final.eam.he'
 
 init_dict['pottype'] = 'he'
 
@@ -37,35 +37,56 @@ lmp_class = LammpsParentClass(init_dict, comm, proc_id)
 
 # fix_length = 10
 
-# lmp.command('region centre block %f %f %f %f %f %f side in units box' % (fix_length, lmp.get_thermo('xhi') - fix_length ,
-#                                                   fix_length, lmp.get_thermo('yhi') - fix_length ,
-#                                                   0, lmp.get_thermo('zhi')  ))
+# # lmp.command('region centre block %f %f %f %f %f %f side in units box' % (fix_length, lmp.get_thermo('xhi') - fix_length ,
+# #                                                   fix_length, lmp.get_thermo('yhi') - fix_length ,
+# #                                                   0, lmp.get_thermo('zhi')  ))
 
-# lmp.command('group fix_atoms_0 region centre')
+# # lmp.command('group fix_atoms_0 region centre')
 
-# lmp.command('fix freeze_0 fix_atoms_0 setforce 0.0 0.0 0.0')
+# # lmp.command('fix freeze_0 fix_atoms_0 setforce 0.0 0.0 0.0')
 
-# lmp_class.cg_min(lmp, conv=10000, fix_aniso=True)
-
-
-# lmp.command('unfix freeze_0')
+# # lmp_class.cg_min(lmp, conv=1000, fix_aniso=False)
 
 
-# lmp.command('region out_centre block %f %f %f %f %f %f side out units box' % (fix_length, lmp.get_thermo('xhi') - fix_length ,
-#                                                   fix_length, lmp.get_thermo('yhi') - fix_length ,
-#                                                   0, lmp.get_thermo('zhi') ))
+# # lmp.command('unfix freeze_0')
 
-# lmp.command('group fix_atoms_1 region centre')
 
-# lmp.command('fix freeze_1 fix_atoms_1 setforce 0.0 0.0 0.0')
+# # lmp.command('region out_centre block %f %f %f %f %f %f side out units box' % (fix_length, lmp.get_thermo('xhi') - fix_length ,
+# #                                                   fix_length, lmp.get_thermo('yhi') - fix_length ,
+# #                                                   0, lmp.get_thermo('zhi') ))
 
-# lmp_class.cg_min(lmp, conv=10000, fix_aniso=False)
+# # lmp.command('group fix_atoms_1 region centre')
+
+# # lmp.command('fix freeze_1 fix_atoms_1 setforce 0.0 0.0 0.0')
+
+# # lmp_class.cg_min(lmp, conv=10000, fix_aniso=False)
 
 # pe_loop_0 = lmp.get_thermo('pe')
 
-# lmp.command('create_atoms 3 single 33 33 1 units box')
+# lmp.command('write_dump all custom %s/test.0.atom id type x y z' % output_folder)
 
-# lmp_class.cg_min(lmp, conv=10000)
+# lmp.command('create_atoms 3 single 33 33 20 units box')
+
+
+# lmp.command('fix 1 all nve')
+
+# rng_seed = np.random.randint(1, 10000)
+
+# temp = 10
+
+# timestep = 1e-3
+
+# N_steps = 1000
+
+# lmp.command('velocity all create %f %d mom yes rot no dist gaussian units box' % (temp, rng_seed))
+
+# lmp.command('run 0')
+
+# lmp.command('timestep %f' % timestep)
+
+# lmp.command('run %d' % N_steps)
+
+# # lmp_class.cg_min(lmp, conv=10000)
 
 # pe_loop_1 = lmp.get_thermo('pe')
 
@@ -80,45 +101,64 @@ lmp_class = LammpsParentClass(init_dict, comm, proc_id)
 # xyz_loop_he[0] -= xhi * 0.501
 # xyz_loop_he[1] -= yhi * 0.501
 
-# lmp.command('write_dump all custom %s/test.0.atom id type x y z' % output_folder)
+# lmp.command('write_dump all custom %s/test.1.atom id type x y z' % output_folder)
 
 # lmp.close()
 
+# print(pe_loop_0 + 6.73 - pe_loop_1, pe_loop_0, pe_loop_1)
 
 lmp = lammps()# cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
 
 lmp.commands_list(lmp_class.init_from_datafile('Atomsk_Files/Dislocations/W_edge_111.lmp')) 
 
 
-fix_length = 10
+# fix_length = 10
 
-lmp.command('region centre block %f %f %f %f %f %f side in units box' % (fix_length, lmp.get_thermo('xhi') - fix_length ,
-                                                  fix_length, lmp.get_thermo('yhi') - fix_length ,
-                                                  0, lmp.get_thermo('zhi') ))
+# lmp.command('region centre block %f %f %f %f %f %f side in units box' % (fix_length, lmp.get_thermo('xhi') - fix_length ,
+#                                                   fix_length, lmp.get_thermo('yhi') - fix_length ,
+#                                                   0, lmp.get_thermo('zhi') ))
 
-lmp.command('group fix_atoms_0 region centre')
+# lmp.command('group fix_atoms_0 region centre')
 
-lmp.command('fix freeze_0 fix_atoms_0 setforce 0.0 0.0 0.0')
+# lmp.command('fix freeze_0 fix_atoms_0 setforce 0.0 0.0 0.0')
 
-lmp_class.cg_min(lmp, conv=10000, fix_aniso=True)
-
-
-lmp.command('unfix freeze_0')
+# lmp_class.cg_min(lmp, conv=10000, fix_aniso=False)
 
 
-lmp.command('region out_centre block %f %f %f %f %f %f side out units box' % (fix_length, lmp.get_thermo('xhi') - fix_length ,
-                                                  fix_length, lmp.get_thermo('yhi') - fix_length ,
-                                                  0, lmp.get_thermo('zhi')))
+# lmp.command('unfix freeze_0')
 
-lmp.command('group fix_atoms_1 region centre')
 
-lmp.command('fix freeze_1 fix_atoms_1 setforce 0.0 0.0 0.0')
+# lmp.command('region out_centre block %f %f %f %f %f %f side out units box' % (fix_length, lmp.get_thermo('xhi') - fix_length ,
+#                                                   fix_length, lmp.get_thermo('yhi') - fix_length ,
+#                                                   0, lmp.get_thermo('zhi')))
+
+# lmp.command('group fix_atoms_1 region centre')
+
+# lmp.command('fix freeze_1 fix_atoms_1 setforce 0.0 0.0 0.0')
 
 lmp_class.cg_min(lmp, conv=10000, fix_aniso=False)
 
 pe_edge_0 = lmp.get_thermo('pe')
 
 lmp.command('create_atoms 3 single 33 33 1 units box')
+
+lmp.command('fix 1 all nve')
+
+rng_seed = np.random.randint(1, 10000)
+
+temp = 10
+
+timestep = 1e-3
+
+N_steps = 1000
+
+lmp.command('velocity all create %f %d mom yes rot no dist gaussian units box' % (temp, rng_seed))
+
+lmp.command('run 0')
+
+lmp.command('timestep %f' % timestep)
+
+lmp.command('run %d' % N_steps)
 
 lmp_class.cg_min(lmp, conv=10000)
 
@@ -139,8 +179,10 @@ lmp.command('write_dump all custom %s/test.1.atom id type x y z' % output_folder
 
 lmp.close()
 
+print(pe_edge_0 + 6.73 - pe_edge_1)
+exit()
 
-lmp = lammps()# cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
+lmp = lammps( cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
 
 lmp.commands_list(lmp_class.init_from_datafile('Atomsk_Files/Dislocations/W_screw_111.lmp')) 
 

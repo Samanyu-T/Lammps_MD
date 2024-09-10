@@ -24,10 +24,10 @@ pair_style eam/%s
 pair_coeff * * %s W H He
 thermo 10
 run 0
-#partition yes 1 fix freeze all setforce 0.0 0.0 0.0
-#partition yes 7 fix freeze all setforce 0.0 0.0 0.0
-fix 1 all neb 1
-timestep 1e-3
+# partition yes 1 fix freeze all setforce 0.0 0.0 0.0
+# partition yes 7 fix freeze all setforce 0.0 0.0 0.0
+fix 1 all neb 10000
+timestep 1e-4
 min_style quickmin
 thermo 100 
 variable i equal part
@@ -64,14 +64,16 @@ init_dict['surface'] = 10
 # init_dict['orientz'] = [0, 0, 1]
 
 
-init_dict['orientx'] = [1, 1, 0]
-init_dict['orienty'] = [0, 0, 1]
-init_dict['orientz'] = [1, -1, 0]
+# init_dict['orientx'] = [1, 1, 0]
+# init_dict['orienty'] = [0, 0, 1]
+# init_dict['orientz'] = [1, -1, 0]
 
-
+init_dict['orientx'] = [1, 1, 1]
+init_dict['orienty'] = [-1,2,-1]
+init_dict['orientz'] = [-1,0, 1]
 # init_dict['potfile'] = 'Fitting_Runtime/Potentials/optim.0.eam.fs'
 
-init_dict['potfile'] = 'git_folder/Potentials/init.eam.he'
+init_dict['potfile'] = 'git_folder/Potentials/final.eam.he'
 
 init_dict['pottype'] = 'he'
 
@@ -102,11 +104,17 @@ lmp_class.cg_min(lmp)
 
 pe_0 = lmp.get_thermo('pe')
 
-# lmp.command('create_atoms 3 single %f %f %f units lattice' % (2.150, 2.500, 2.000))
+# lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.350, 3.3500, 3.000))
 
-lmp.command('create_atoms 3 single %f %f %f units lattice' % (2.3500, 2.3500, 0.0000))
+# lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.4500, 3.85000, 3.0000))
+
+lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.2500, 3.5000, 0.0000))
+
+# lmp_class.run_MD(lmp, temp=600, timestep=1e-3, N_steps=1000)
+
 
 lmp_class.cg_min(lmp)
+
 
 pe_1 = lmp.get_thermo('pe')
 
@@ -127,9 +135,11 @@ lmp_class.cg_min(lmp)
 
 pe_0 = lmp.get_thermo('pe')
 
-# lmp.command('create_atoms 3 single %f %f %f units lattice' % (0.2500, 2.500, 2.00))
+# lmp.command('create_atoms 3 single %f %f %f units lattice' % (2.2500, 3.500, 3.00))
 
-lmp.command('create_atoms 3 single %f %f %f units lattice' % (2.350, 2.350, 0.2500))
+# lmp.command('create_atoms 3 single %f %f %f units lattice' % (5.2500, 3.500, 3.000))
+
+lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.2500, 3.500, 1.000))
 
 lmp_class.cg_min(lmp)
 
