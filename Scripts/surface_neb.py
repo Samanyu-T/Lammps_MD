@@ -50,6 +50,9 @@ def main():
 
     orient = sys.argv[1]
 
+    print(orient)
+    sys.stdout.flush()
+    
     init_dict = {}
 
     with open('init_param.json', 'r') as file:
