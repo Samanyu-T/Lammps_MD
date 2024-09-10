@@ -52,7 +52,7 @@ def main():
 
     print(orient)
     sys.stdout.flush()
-    
+
     init_dict = {}
 
     with open('init_param.json', 'r') as file:
@@ -164,3 +164,7 @@ def main():
 
     with open('%s.neb' % orient, 'w') as file:
         file.write(neb_txt)
+
+
+if __name__ == '__main__':
+    main()
