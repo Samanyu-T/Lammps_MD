@@ -10,7 +10,7 @@ sys.path.append(os.path.join(os.getcwd(), 'git_folder', 'Classes'))
 
 from Lammps_Classes import LammpsParentClass
 
-def gen_neb_inputfile(init_path, pottype, potfile, final_path, neb_image_folder):
+def gen_neb_inputfile(init_path, pottype, potfile, final_path, neb_image_folder, natoms):
 
     neb_input_file = '''
 units metal 
@@ -31,8 +31,10 @@ timestep 1e-4
 min_style quickmin
 thermo 100 
 variable i equal part
-neb 10e-15 10e-18 50000 50000 1000 final %s
-write_dump all custom %s/neb.$i.atom id type x y z ''' %  (init_path, pottype, potfile, final_path, neb_image_folder)
+neb 10e-15 10e-18 50000 50000 10000 final %s
+write_dump all custom %s/neb.$i.atom id type x y z
+variable he_z equal z[%d]
+print "He_z $(v_he_z:%s)" ''' %  (init_path, pottype, potfile, final_path, neb_image_folder, natoms,'%.6f')
 
     return neb_input_file
 
@@ -151,6 +153,8 @@ lmp.command('write_data %s' % os.path.join(output_folder, 'Data_Files', 'tet_2.d
 
 lmp.command('write_dump all custom %s id x y z'  % os.path.join(output_folder, 'Atom_Files', 'tet_2.atom'))
 
+natoms = lmp.get_natoms()
+
 lmp.close()
 
 init_path = os.path.join(output_folder, 'Data_Files', 'tet_1.data')
@@ -164,7 +168,7 @@ with open(final_path, 'w') as file:
     file.write(lines[3])
     file.writelines(lines[9:])
 
-neb_txt = gen_neb_inputfile(init_path, pottype, potfile, final_path, neb_image_folder)
+neb_txt = gen_neb_inputfile(init_path, pottype, potfile, final_path, neb_image_folder, natoms)
 
 with open('in.neb', 'w') as file:
     file.write(neb_txt)

@@ -1,13 +1,9 @@
 import numpy as np
-import sys, os
+import sys, glob
 
 def main():
 
-    neb_script_file = sys.argv[1]
-
-    save_name = neb_script_file.split('.')[-1]
-
-    save_name += '.txt'
+    save_name = sys.argv[1]
 
     with open('log.lammps', 'r') as file:
         log = file.readlines()
@@ -19,6 +15,14 @@ def main():
     data = data.reshape(len(data)//2, 2)
 
     data[:, 1] -= data[:,1].min()
+
+    log_files = glob.glob('log.*.lammps')
+    
+    for i, _log_file in enumerate(log_files):
+        with open(_log_file, 'r') as file:
+            log = file.readlines()
+            txt = log[-2].split(' ')
+            data[i,0] = float(txt[-1])
 
     np.savetxt(save_name, data)
 
