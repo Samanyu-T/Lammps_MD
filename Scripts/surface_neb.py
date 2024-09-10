@@ -60,12 +60,13 @@ def main():
 
     init_dict['size'] = 7
 
-    init_dict['surface'] = 10
+    init_dict['surface'] = 20
 
     if orient == 'orient100':
         init_dict['orientx'] = [1, 0, 0]
         init_dict['orienty'] = [0, 1, 0]
         init_dict['orientz'] = [0, 0, 1]
+        init_dict['size'] = 12
 
     elif orient == 'orient110':
         init_dict['orientx'] = [1, 1, 0]
@@ -111,7 +112,7 @@ def main():
 
     pe_0 = lmp.get_thermo('pe')
 
-    lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.2500, 3.5000, 0.0000))
+    lmp.command('create_atoms 3 single %f %f %f units lattice' %  (lmp.get_thermo('xlat') * 3.2500, lmp.get_thermo('ylat') * 3.500, -1.000))
 
     lmp_class.cg_min(lmp)
 
@@ -133,7 +134,7 @@ def main():
 
     pe_0 = lmp.get_thermo('pe')
 
-    lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.2500, 3.500, 2.000))
+    lmp.command('create_atoms 3 single %f %f %f units box' % (lmp.get_thermo('xlat') * 3.2500, lmp.get_thermo('ylat') * 3.500, 7.000))
 
     lmp_class.cg_min(lmp)
 

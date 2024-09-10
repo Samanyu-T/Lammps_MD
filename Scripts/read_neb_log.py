@@ -16,10 +16,11 @@ def main():
 
     data[:, 1] -= data[:,1].min()
 
-    log_files = glob.glob('log.*.lammps')
+    nfiles = len(glob.glob('log.lammps.*'))
     
-    for i, _log_file in enumerate(log_files):
-        with open(_log_file, 'r') as file:
+    for i in range(nfiles):
+        log_file = 'log.lammps.%d' % i
+        with open(log_file, 'r') as file:
             log = file.readlines()
             txt = log[-2].split(' ')
             data[i,0] = float(txt[-1])
