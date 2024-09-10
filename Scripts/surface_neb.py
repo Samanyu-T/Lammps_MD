@@ -24,8 +24,8 @@ pair_style eam/%s
 pair_coeff * * %s W H He
 thermo 10
 run 0
-# partition yes 1 fix freeze all setforce 0.0 0.0 0.0
-# partition yes 7 fix freeze all setforce 0.0 0.0 0.0
+partition yes 1 fix freeze all setforce 0.0 0.0 0.0
+partition yes 112 fix freeze all setforce 0.0 0.0 0.0
 fix 1 all neb 10000
 timestep 1e-4
 min_style quickmin
