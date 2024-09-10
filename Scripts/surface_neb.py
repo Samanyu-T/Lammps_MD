@@ -136,6 +136,8 @@ def main():
     
     if orient == 'orient100':
         lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.2500, 3.500, 2.000))
+    elif orient == 'orient110':
+        lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.2500, 3.500, 1.500))
     else:
         lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.2500, 3.500, 1.000))
 
