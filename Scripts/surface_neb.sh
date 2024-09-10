@@ -1,7 +1,16 @@
+#!/bin/bash
+
+num_procs=$1  # Assign the first argument to the number of processors
 lmp_exec=/home/ir-tiru1/lammps/src/lmp_intel_cpu_intelmpi
-mpiexec -np $(1) $(lmp_exec) -p $(1)x1 -in orient_100.neb
+
+# Run the first NEB simulation
+mpiexec -np $num_procs $lmp_exec -p ${num_procs}x1 -in orient_100.neb
 python read_neb_log.py orient_100.txt
-mpiexec -np $(1) $(lmp_exec) -p $(1)x1 -in orient_110.neb
+
+# Run the second NEB simulation
+mpiexec -np $num_procs $lmp_exec -p ${num_procs}x1 -in orient_110.neb
 python read_neb_log.py orient_110.txt
-mpiexec -np $(1) $(lmp_exec) -p $(1)x1 -in orient_111.neb
+
+# Run the third NEB simulation
+mpiexec -np $num_procs $lmp_exec -p ${num_procs}x1 -in orient_111.neb
 python read_neb_log.py orient_111.txt
