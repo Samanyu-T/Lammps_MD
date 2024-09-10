@@ -18,7 +18,7 @@ comm_split = comm.Split(proc_id, n_procs)
 
 n_temp = 28
 
-temp_arr = np.linspace(100, 3000, n_temp)
+temp_arr = np.linspace(10, 300, n_temp)
 
 n_replica = n_procs // n_temp
 

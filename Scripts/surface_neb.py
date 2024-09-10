@@ -24,10 +24,10 @@ pair_style eam/%s
 pair_coeff * * %s W H He
 thermo 10
 run 0
-partition yes 1 fix freeze all setforce 0.0 0.0 0.0
-partition yes 112 fix freeze all setforce 0.0 0.0 0.0
+#partition yes 1 fix freeze all setforce 0.0 0.0 0.0
+#partition yes 112 fix freeze all setforce 0.0 0.0 0.0
 fix 1 all neb 10000
-timestep 1e-4
+timestep 5e-5
 min_style quickmin
 thermo 100 
 variable i equal part
@@ -66,7 +66,7 @@ def main():
         init_dict['orientx'] = [1, 0, 0]
         init_dict['orienty'] = [0, 1, 0]
         init_dict['orientz'] = [0, 0, 1]
-        init_dict['size'] = 12
+        init_dict['size'] = 10
 
     elif orient == 'orient110':
         init_dict['orientx'] = [1, 1, 0]
