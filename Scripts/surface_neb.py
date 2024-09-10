@@ -133,8 +133,12 @@ def main():
     lmp_class.cg_min(lmp)
 
     pe_0 = lmp.get_thermo('pe')
+    
+    if orient == 'orient100':
+        lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.2500, 3.500, 2.000))
+    else:
+        lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.2500, 3.500, 1.000))
 
-    lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.2500, 3.500, 2.000))
 
     lmp_class.cg_min(lmp)
 
