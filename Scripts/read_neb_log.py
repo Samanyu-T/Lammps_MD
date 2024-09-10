@@ -24,7 +24,7 @@ def main():
             log = file.readlines()
             txt = log[-2].split(' ')
             data[i,0] = float(txt[-1])
-
+            print(data[i])
     np.savetxt(save_name, data)
 
 if __name__ == '__main__':
