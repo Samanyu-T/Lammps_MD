@@ -112,7 +112,7 @@ def main():
 
     pe_0 = lmp.get_thermo('pe')
 
-    lmp.command('create_atoms 3 single %f %f %f units lattice' %  (lmp.get_thermo('xlat') * 3.2500, lmp.get_thermo('ylat') * 3.500, -1.000))
+    lmp.command('create_atoms 3 single %f %f %f units lattice' %  (3.2500, 3.500, 0.000))
 
     lmp_class.cg_min(lmp)
 
@@ -134,7 +134,7 @@ def main():
 
     pe_0 = lmp.get_thermo('pe')
 
-    lmp.command('create_atoms 3 single %f %f %f units box' % (lmp.get_thermo('xlat') * 3.2500, lmp.get_thermo('ylat') * 3.500, 7.000))
+    lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.2500, 3.500, 2.000))
 
     lmp_class.cg_min(lmp)
 
