@@ -4,7 +4,7 @@ import json
 import numpy as np
 sys.path.append(os.path.join(os.getcwd(), 'git_folder', 'Classes'))
 from lammps import lammps
-from Lammps_Classes_Serial import LammpsParentClass
+from Lammps_Classes import LammpsParentClass
 from mpi4py import MPI
 
 comm = MPI.COMM_WORLD
@@ -13,69 +13,48 @@ proc_id = comm.Get_rank()
 
 n_procs = comm.Get_size()
 
-comm_split = comm.Split(proc_id, n_procs)
 
-n_temp = 14
+temp = 50
 
-temp_arr = np.linspace(100, 2000, n_temp)
+init_dict = {}
 
-n_replica = n_procs // n_temp
+with open('init_param.json', 'r') as file:
+    init_dict = json.load(file)
 
-temp_id = proc_id // n_temp
+save_folder = os.path.join('He_Diffusion_Test')
+if not os.path.exists(save_folder):
+    os.makedirs(save_folder,exist_ok=True)
 
-output_folder = 'He_Diffusion'
+init_dict['orientx'] = [1, 0, 0]
 
-if proc_id == 0:
-    if not os.path.exists(output_folder):
-        os.mkdir(output_folder)
-comm.barrier()
+init_dict['orienty'] = [0, 1, 0]
 
-for i in range(10):
-    replica_id = proc_id % n_replica + i * n_replica
+init_dict['orientz'] = [0, 0, 1]
 
-    temp = temp_arr[temp_id]
+init_dict['size'] = 7
 
-    init_dict = {}
+init_dict['surface'] = 0
 
-    with open('init_param.json', 'r') as file:
-        init_dict = json.load(file)
+init_dict['potfile'] = 'git_folder/Potentials/final.eam.he'
 
-    save_folder = os.path.join(output_folder,'Temp_%d' % temp , 'Iteration_%d' % replica_id)
-    if not os.path.exists(save_folder):
-        os.makedirs(save_folder,exist_ok=True)
+init_dict['pottype'] = 'he'
 
-    init_dict['orientx'] = [1, 0, 0]
+init_dict['output_folder'] = save_folder
 
-    init_dict['orienty'] = [0, 1, 0]
+lmp_class = LammpsParentClass(init_dict, comm, proc_id)
 
-    init_dict['orientz'] = [0, 0, 1]
+lmp = lammps()
 
-    init_dict['size'] = 7
+lmp_class.init_from_box(lmp)
 
-    init_dict['surface'] = 0
+_xyz = init_dict['size'] // 2 + np.array([0.25, 0.5, 0])
 
-    init_dict['output_folder'] = output_folder
+lmp.command('create_atoms 3 single %f %f %f' % (_xyz[0], _xyz[1], _xyz[2]))
 
-    lmp_class = LammpsParentClass(init_dict, comm, proc_id)
+rng = np.random.randint(low = 1, high = 100000)
 
-    lmp = lammps(comm=comm_split,cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
+lmp.command('group mobile type 2 3')
 
-    lmp.commands_list(lmp_class.init_from_box()) 
+lmp.command('dump mydump all custom 1000 %s/out.*.atom id type x y z'  % save_folder)
 
-    _xyz = init_dict['size'] // 2 + np.array([0.25, 0.5, 0])
-
-    lmp.command('create_atoms 3 single %f %f %f' % (_xyz[0], _xyz[1], _xyz[2]))
-
-    rng = np.random.randint(low = 1, high = 100000)
-
-    lmp.command('group mobile type 2 3')
-
-    lmp.command('velocity all create %f %d rot no dist gaussian' % (2*temp, rng))
-
-    lmp.command('fix fix_temp all nve')
-
-    lmp.command('dump mydump mobile custom 1000 %s/out.*.atom id type x y z'  % save_folder)
-
-    lmp.command('timestep 1e-3')
-
-    lmp.command('run %d' % (5e6))
+lmp_class.run_MD(lmp, temp = 2 * temp, timestep=1e-3, N_steps=5e6)

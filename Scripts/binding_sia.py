@@ -161,3 +161,4 @@ eb = []
 for i in range(1, len(ef_arr)):
     _eb =  ef_arr[i - 1] + pe_he - ef_arr[i]
     print(_eb)
+

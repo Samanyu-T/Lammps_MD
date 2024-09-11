@@ -51,7 +51,7 @@ init_dict['orientz'] = [0, 0, 1]
 
 # init_dict['potfile'] = 'Fitting_Runtime/Potentials/optim.0.eam.fs'
 
-init_dict['potfile'] = 'git_folder/Potentials/init.eam.he'
+init_dict['potfile'] = 'git_folder/Potentials/final.eam.he'
 
 init_dict['pottype'] = 'he'
 

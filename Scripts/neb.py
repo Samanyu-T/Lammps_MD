@@ -106,11 +106,11 @@ lmp_class.cg_min(lmp)
 
 pe_0 = lmp.get_thermo('pe')
 
-# lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.350, 3.3500, 3.000))
+lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.250, 3.3500, 3.000))
 
-# lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.4500, 3.85000, 3.0000))
+lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.7500, 3.5000, 3.0000))
 
-lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.2500, 3.5000, 0.0000))
+# lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.2500, 3.5000, 0.0000))
 
 # lmp_class.run_MD(lmp, temp=600, timestep=1e-3, N_steps=1000)
 
@@ -137,11 +137,11 @@ lmp_class.cg_min(lmp)
 
 pe_0 = lmp.get_thermo('pe')
 
-# lmp.command('create_atoms 3 single %f %f %f units lattice' % (2.2500, 3.500, 3.00))
+lmp.command('create_atoms 3 single %f %f %f units lattice' % (2.2500, 3.500, 3.00))
 
-# lmp.command('create_atoms 3 single %f %f %f units lattice' % (5.2500, 3.500, 3.000))
+lmp.command('create_atoms 3 single %f %f %f units lattice' % (5.2500, 3.500, 3.000))
 
-lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.2500, 3.500, 1.000))
+# lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.2500, 3.500, 1.000))
 
 lmp_class.cg_min(lmp)
 

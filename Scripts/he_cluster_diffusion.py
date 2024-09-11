@@ -26,7 +26,7 @@ temp_id = proc_id // n_replica
 
 replica_id = proc_id % n_replica
 
-output_folder = 'He_Diffusion_He'
+output_folder = 'He_Diffusion_He2'
 
 if proc_id == 0:
     if not os.path.exists(output_folder):
@@ -82,7 +82,11 @@ for _iterations in range(n_iterations):
 
     lmp_class.init_from_box(lmp)
 
-    _xyz = init_dict['size'] // 2 + np.array([0.25, 0.5, 0])
+    _xyz = init_dict['size'] // 2 + np.array([0.25, 0.35, 0])
+
+    lmp.command('create_atoms 3 single %f %f %f' % (_xyz[0], _xyz[1], _xyz[2]))
+
+    _xyz = init_dict['size'] // 2 + np.array([0.75, 0.5, 0])
 
     lmp.command('create_atoms 3 single %f %f %f' % (_xyz[0], _xyz[1], _xyz[2]))
 
@@ -94,7 +98,9 @@ for _iterations in range(n_iterations):
 
     lmp.command('fix fix_temp all nve')
 
-    lmp.command('compute msd_mobile mobile msd com no average yes')
+    lmp.command('compute clusters mobile chunk/atom type')
+
+    lmp.command('compute msd_mobile mobile msd/chunk clusters')
 
     lmp.command('timestep 1e-3')
 
@@ -106,9 +112,9 @@ for _iterations in range(n_iterations):
         
         lmp.command('run %d' % (1e3))
 
-        _msd = np.copy(lmp.numpy.extract_compute('msd_mobile', 0, 1))
+        _msd = np.copy(lmp.numpy.extract_compute('msd_mobile', 0, 2))
 
-        msd[_steps] = _msd[-1]
+        msd[_steps] = _msd[-1, -1]
 
     t2 = time.perf_counter()
 

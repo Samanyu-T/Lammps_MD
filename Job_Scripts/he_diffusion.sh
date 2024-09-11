@@ -37,7 +37,7 @@ export PATH=$HOME/lammps/src/:$PATH
 
 
 #! Full path to application executable:
-application="python git_folder/Scripts/he_diffusion_new.py"
+application="python git_folder/Scripts/he_cluster_diffusion.py"
  
 #! Run options for the application:
 options=""
