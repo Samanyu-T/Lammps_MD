@@ -16,15 +16,15 @@ def main():
 
     data[:, 1] -= data[:,1].min()
 
-    nfiles = len(glob.glob('log.lammps.*'))
+    # nfiles = len(glob.glob('log.lammps.*'))
     
-    for i in range(nfiles):
-        log_file = 'log.lammps.%d' % i
-        with open(log_file, 'r') as file:
-            log = file.readlines()
-            txt = log[-2].split(' ')
-            data[i,0] = float(txt[-1])
-            print(data[i])
+    # for i in range(nfiles):
+    #     log_file = 'log.lammps.%d' % i
+    #     with open(log_file, 'r') as file:
+    #         log = file.readlines()
+    #         txt = log[-2].split(' ')
+    #         data[i,0] = float(txt[-1])
+    #         print(data[i])
     np.savetxt(save_name, data)
 
 if __name__ == '__main__':
