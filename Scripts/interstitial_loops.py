@@ -3,7 +3,6 @@ import os, shutil
 import json
 import numpy as np
 from mpi4py import MPI
-import matplotlib.pyplot as plt
 from lammps import lammps
 from scipy.spatial import cKDTree
 import copy
