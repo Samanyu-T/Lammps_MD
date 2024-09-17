@@ -110,7 +110,7 @@ lmp.command('group ghelium type 3')
 lmp.command('displace_atoms ghelium move 0 0 3 units lattice')
 lmp_class.cg_min(lmp)
 
-lmp_class.run_MD(lmp, temp=600, timestep=1e-3, N_steps= 10000)
+# lmp_class.run_MD(lmp, temp=600, timestep=1e-3, N_steps= 10000)
 
 lmp_class.cg_min(lmp)
 
