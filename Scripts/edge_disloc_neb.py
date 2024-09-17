@@ -64,7 +64,7 @@ init_dict['potfile'] = 'git_folder/Potentials/final.eam.he'
 init_dict['pottype'] = 'he'
 
 output_folder = 'Dislocation_Loops'
-neb_image_folder = os.path.join(output_folder,'neb_sia_loops')
+neb_image_folder = os.path.join(output_folder,'neb_edge_disloc')
 
 if not os.path.exists(output_folder):
     os.mkdir(output_folder)
@@ -83,13 +83,13 @@ lmp_class = LammpsParentClass(init_dict, comm, proc_id)
 
 lmp = lammps( cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
 
-lmp.commands_list(lmp_class.init_from_datafile('%s/sia_loop_he.data' % os.path.join(output_folder,'Data_Files')))
+lmp.commands_list(lmp_class.init_from_datafile('%s/edge_disloc_he.data' % os.path.join(output_folder,'Data_Files')))
 
 lmp_class.cg_min(lmp)
 pe_1 = lmp.get_thermo('pe')
 
 print(pe_1)
-filename = 'sia_loop'
+filename = 'edge_disloc'
 
 lmp.command('write_data %s' % os.path.join(output_folder, 'Data_Files', '%s_1.data' % filename))
 
@@ -100,9 +100,9 @@ lmp.close()
 
 lmp = lammps( cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
 
-lmp.commands_list(lmp_class.init_from_datafile('%s/sia_loop_he.data' % os.path.join(output_folder,'Data_Files')))
+lmp.commands_list(lmp_class.init_from_datafile('%s/edge_disloc_he.data' % os.path.join(output_folder,'Data_Files')))
 lmp.command('group ghelium type 3')
-lmp.command('displace_atoms ghelium move %f %f %f units box' % (2 * 3.14221, 2 * 3.14221, -1))
+lmp.command('displace_atoms ghelium move %f %f %f units box' % (1.5 * 3.14221, 1.5 * 3.14221, 0))
 
 lmp_class.cg_min(lmp)
 
@@ -135,5 +135,5 @@ with open(final_path, 'w') as file:
 
 neb_txt = gen_neb_inputfile(init_path, pottype, potfile, final_path, neb_image_folder, natoms)
 
-with open('sia_loop.neb', 'w') as file:
+with open('edge_disloc.neb', 'w') as file:
     file.write(neb_txt)

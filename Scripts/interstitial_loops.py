@@ -31,7 +31,6 @@ output_folder = 'Dislocation_Loops'
 
 
 if me == 0:
-    shutil.rmtree(output_folder)
     if not os.path.exists(output_folder):
         os.mkdir(output_folder)
         os.mkdir(os.path.join(output_folder,'Data_Files'))

@@ -202,15 +202,31 @@ pe_0 = lmp.get_thermo('pe')
 
 N_he = 1
 
-lmp.command('create_atoms 3 single %f %f %f units box' % (6.25*3.14221, 6.5*3.14221, 5*3.14221))
+lmp.command('create_atoms 3 single %f %f %f units box' % (23.4, 24.7, 14))
 
-lmp_class.run_MD(lmp, temp=600, timestep=1e-3, N_steps= 10000)
+lmp_class.run_MD(lmp, temp=600, timestep=1e-3, N_steps= 1000)
+
+lmp_class.cg_min(lmp)
+
+_x = np.ctypeslib.as_array(lmp.gather_atoms("x", 1, 3)).reshape(lmp.get_natoms(), 3)
+
+lmp.command('group ghelium type 3')
+
+lmp.command('delete_atoms group ghelium compress yes')
+
+lmp_class.cg_min(lmp)
+
+pe_0 = lmp.get_thermo('pe')
+
+lmp.command('create_atoms 3 single %f %f %f units box' % (_x[-1,0], _x[-1,1], _x[-1, 2]))
 
 lmp_class.cg_min(lmp)
 
 output_filepath = '%s/vac_loop_he.data' % os.path.join(output_folder,'Data_Files')
 
 lmp.command('write_data %s' % output_filepath)
+
 pe_1 = lmp.get_thermo('pe')
+
 
 print(pe_0 + 6.73 - pe_1)

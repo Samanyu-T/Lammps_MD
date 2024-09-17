@@ -64,13 +64,13 @@ init_dict['potfile'] = 'git_folder/Potentials/final.eam.he'
 init_dict['pottype'] = 'he'
 
 output_folder = 'Dislocation_Loops'
-neb_image_folder = os.path.join(output_folder,'neb_vac_loops')
 
 if not os.path.exists(output_folder):
     os.mkdir(output_folder)
+    os.mkdir(os.path.join(output_folder,'Data_Files'))
+    os.mkdir(os.path.join(output_folder,'Atom_Files'))
+    os.mkdir(os.path.join(output_folder,'Neb_Image_Folder'))
 
-if not os.path.exists(neb_image_folder):
-    os.mkdir(neb_image_folder)
 init_dict['output_folder'] = output_folder
 
 potfile = init_dict['potfile']
@@ -81,59 +81,32 @@ neb_image_folder = os.path.join(output_folder,'Neb_Image_Folder')
 
 lmp_class = LammpsParentClass(init_dict, comm, proc_id)
 
-lmp = lammps( cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
+lmp = lammps()# cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
 
-lmp.commands_list(lmp_class.init_from_datafile('%s/vac_loop_he.data' % os.path.join(output_folder,'Data_Files')))
+lmp.commands_list(lmp_class.init_from_datafile('Atomsk_Files/Dislocations/W_screw_111.lmp'))
+
+lmp.command('dump mydump all custom 1000 %s/screw.*.atom id type x y z' % os.path.join(output_folder,'Atom_Files'))
+
+lmp.command('run 0')
+lmp_class.cg_min(lmp)
+
+lmp_class.run_MD(lmp, temp=600, timestep=1e-3, N_steps= 1000)
 
 lmp_class.cg_min(lmp)
+
+pe_0 = lmp.get_thermo('pe')
+
+N_he = 1
+
+lmp.command('create_atoms 3 single %f %f %f units box' % (31.4, 34.4, 15))
+
+lmp_class.run_MD(lmp, temp=600, timestep=1e-3, N_steps= 1000)
+
+lmp_class.cg_min(lmp)
+
+output_filepath = '%s/screw_disloc_he.data' % os.path.join(output_folder,'Data_Files')
+
+lmp.command('write_data %s' % output_filepath)
 pe_1 = lmp.get_thermo('pe')
 
-print(pe_1)
-
-
-init_path = os.path.join(output_folder, 'Data_Files', 'vacloop_1.data')
-
-final_path = os.path.join(output_folder, 'Atom_Files', 'vacloop_2.atom')
-
-
-lmp.command('write_data %s' % init_path)
-
-lmp.command('write_dump all custom %s id x y z'  % os.path.join(output_folder, 'Atom_Files', 'vacloop_1.atom'))
-
-lmp.close()
-
-
-lmp = lammps( cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
-
-lmp.commands_list(lmp_class.init_from_datafile('%s/vac_loop_he.data' % os.path.join(output_folder,'Data_Files')))
-lmp.command('group ghelium type 3')
-lmp.command('displace_atoms ghelium move %f %f %f units box' % (2 * 3.14221, 2 * 3.14221, -1))
-lmp_class.cg_min(lmp)
-
-# lmp_class.run_MD(lmp, temp=600, timestep=1e-3, N_steps= 10000)
-
-lmp_class.cg_min(lmp)
-
-pe_1 = lmp.get_thermo('pe')
-
-print(pe_1)
-
-lmp.command('write_data %s' % os.path.join(output_folder, 'Data_Files', 'vacloop_2.data'))
-
-lmp.command('write_dump all custom %s id x y z'  % final_path)
-
-natoms = lmp.get_natoms()
-
-lmp.close()
-
-with open(final_path, 'r') as file:
-    lines = file.readlines()
-
-with open(final_path, 'w') as file:
-    file.write(lines[3])
-    file.writelines(lines[9:])
-
-neb_txt = gen_neb_inputfile(init_path, pottype, potfile, final_path, neb_image_folder, natoms)
-
-with open('vac_loop.neb', 'w') as file:
-    file.write(neb_txt)
+print(pe_0 + 6.73 - pe_1)
