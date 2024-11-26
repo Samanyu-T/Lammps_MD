@@ -95,6 +95,7 @@ for _iteration in range(init_iteration, len(param_arr)):
     if proc_id == 0:
         rng = np.random.randint(low = 1, high = 100000)
     comm.barrier()
+    
     rng = comm.bcast(rng, root=0)
 
     lmp.command('create_atoms %s random %d %d r_simbox overlap 0.5 maxtry 1000' % (3, int(natoms * he / 100), rng))
