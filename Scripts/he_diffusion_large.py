@@ -95,7 +95,7 @@ for _iteration in range(init_iteration, len(param_arr)):
     if proc_id == 0:
         rng = np.random.randint(low = 1, high = 100000)
     comm.barrier()
-    
+
     rng = comm.bcast(rng, root=0)
 
     lmp.command('create_atoms %s random %d %d r_simbox overlap 0.5 maxtry 1000' % (3, int(natoms * he / 100), rng))
@@ -104,13 +104,13 @@ for _iteration in range(init_iteration, len(param_arr)):
 
     lmp.command('velocity all create %f %d rot no dist gaussian' % (2*temp, rng))
 
-    lmp.command('fix 1 all nvt temp 300.0 300.0 100.0')
+    lmp.command('fix 1 all nvt temp %f %f 100.0' % temp)
 
     lmp.command('compute msd_mobile mobile msd com no average yes')
 
-    lmp.command('timestep 1e-3')
+    lmp.command('timestep 2e-3')
 
-    n_steps = 10000
+    n_steps = 1000
 
     msd = np.zeros((n_steps,))
 
