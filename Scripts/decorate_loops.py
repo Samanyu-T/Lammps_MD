@@ -28,11 +28,11 @@ init_dict = {}
 with open('init_param.json', 'r') as file:
     init_dict = json.load(file)
 
-output_folder = 'Stable_Loops/Vac_Loop_100'
+output_folder = 'Stable_Loops/sia_loop_111'
 
 
 if me == 0:
-    shutil.rmtree(output_folder)
+    # shutil.rmtree(output_folder)
     if not os.path.exists(output_folder):
         os.mkdir(output_folder)
         os.mkdir(os.path.join(output_folder,'Data_Files'))
@@ -60,19 +60,19 @@ lmp_class = LammpsParentClass(init_dict, comm, me)
 
 lmp = lammps()# cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
 
-lmp.commands_list(lmp_class.init_from_datafile('Stable_Loops/vac_loop_100.1.restart'))
+lmp.commands_list(lmp_class.init_from_datafile('Dislocation_Loops/Data_Files/sia_loop_he.data'))
 
 # lmp_class.cg_min(lmp)
 
 
-lmp.command('dump mydump all custom 1000 %s/vac_loop.*.atom id type x y z' % os.path.join(output_folder,'Atom_Files'))
+lmp.command('dump mydump all custom 1000 %s/sia_loop.*.atom id type x y z' % os.path.join(output_folder,'Atom_Files'))
 
 lmp.command('run 0')
 
 pe0 = lmp.get_thermo('pe')
 
 n_he = 20 #int(np.ceil(natoms * 1e-2 * 0.5))
-n_h =  1 #int(np.ceil(natoms * 1e-2 * 0.5))
+n_h =  20 #int(np.ceil(natoms * 1e-2 * 0.5))
 
 # extract cell dimensions 
 natoms = lmp.extract_global("natoms", 0)
@@ -178,7 +178,7 @@ comm.barrier()
 rng = comm.bcast(rng, 0)
 lmp.command('create_atoms 3 random %d %d disloc overlap 1.5 maxtry 1000' % (n_he, rng))
 
-# lmp_class.run_MD(lmp, 1000, 5e-4, 10000)
+lmp_class.run_MD(lmp, 1000, 5e-4, 1000)
 
 lmp_class.cg_min(lmp)
 

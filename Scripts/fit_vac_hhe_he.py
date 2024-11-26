@@ -276,17 +276,23 @@ for i, _r in enumerate(r_plt):
 
 total_hhe = (emd_H_He + emd_He_H + pot_hhe)
 np.savetxt('h_he_pairwise.txt',data_dft)
-plt.plot(r_plt, total_hhe, label='total')
-plt.plot(data_dft[:,0], data_dft[:,1], label='dft', color='black')
-plt.plot(r_plt, emd_H_He, label='Electron density of Hydrogen on Helium')
-plt.plot(r_plt, emd_He_H, label='Electron density of Helium on Hydrogen')
-plt.plot(r_plt, pot_hhe, label='Covalent')
+plt.plot(r_plt, total_hhe, label='our-work')
+plt.scatter(data_dft[:,0], data_dft[:,1], label='DFT', color='black', marker='o')
+# plt.plot(r_plt, emd_H_He, label='Electron density of Hydrogen on Helium')
+# plt.plot(r_plt, emd_He_H, label='Electron density of Helium on Hydrogen')
+# plt.plot(r_plt, pot_hhe, label='Covalent')
 
-plt.ylabel('Contributions / eV')
-plt.xlabel('Distance/ A')
-plt.title('H-He Pairwise Potential')
+plt.ylabel('Interaction Energy / eV', fontsize=16)
+plt.xlabel('Radial Distance/ A', fontsize=16)
+plt.title('H-He Pairwise Interaction', fontsize=16)
 
-plt.legend()
+np.savetxt('r_hhe.txt', r_plt)
+np.savetxt('our-hhe.txt', total_hhe)
+
+
+np.savetxt('dft_hhe.txt', data_dft)
+
+plt.legend(fontsize=14)
 plt.show()
 
 plt.plot(eam_fit.pot_lammps['H-He p'])

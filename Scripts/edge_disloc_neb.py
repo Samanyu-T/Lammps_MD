@@ -59,7 +59,7 @@ init_dict['size'] = 7
 
 init_dict['surface'] = 10
 
-init_dict['potfile'] = 'git_folder/Potentials/final.eam.he'
+init_dict['potfile'] = 'git_folder/Potentials/beck_full.eam.he'
 
 init_dict['pottype'] = 'he'
 
@@ -86,9 +86,9 @@ lmp = lammps( cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
 lmp.commands_list(lmp_class.init_from_datafile('%s/edge_disloc_he.data' % os.path.join(output_folder,'Data_Files')))
 
 lmp_class.cg_min(lmp)
-pe_1 = lmp.get_thermo('pe')
+pe_0 = lmp.get_thermo('pe')
 
-print(pe_1)
+print(pe_0)
 filename = 'edge_disloc'
 
 lmp.command('write_data %s' % os.path.join(output_folder, 'Data_Files', '%s_1.data' % filename))
@@ -112,7 +112,7 @@ lmp_class.cg_min(lmp)
 
 pe_1 = lmp.get_thermo('pe')
 
-print(pe_1)
+print(pe_1 - pe_0)
 
 lmp.command('write_data %s' % os.path.join(output_folder, 'Data_Files', '%s_2.data' % filename))
 

@@ -77,7 +77,9 @@ init_dict['orientz'] = [-1,0, 1]
 
 init_dict['potfile'] = 'git_folder/Potentials/final.eam.he'
 
-init_dict['pottype'] = 'he'
+init_dict['potfile'] = 'git_folder/Potentials/bonny.eam.alloy'
+
+init_dict['pottype'] = 'alloy'
 
 output_folder = 'neb_datafiles'
 
@@ -108,7 +110,7 @@ pe_0 = lmp.get_thermo('pe')
 
 lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.250, 3.3500, 3.000))
 
-lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.7500, 3.5000, 3.0000))
+# lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.7500, 3.5000, 3.0000))
 
 # lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.2500, 3.5000, 0.0000))
 
@@ -137,11 +139,11 @@ lmp_class.cg_min(lmp)
 
 pe_0 = lmp.get_thermo('pe')
 
-lmp.command('create_atoms 3 single %f %f %f units lattice' % (2.2500, 3.500, 3.00))
+# lmp.command('create_atoms 3 single %f %f %f units lattice' % (2.2500, 3.500, 3.00))
 
-lmp.command('create_atoms 3 single %f %f %f units lattice' % (5.2500, 3.500, 3.000))
+# lmp.command('create_atoms 3 single %f %f %f units lattice' % (5.2500, 3.500, 3.000))
 
-# lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.2500, 3.500, 1.000))
+lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.2500, 3.500, 1.000))
 
 lmp_class.cg_min(lmp)
 
