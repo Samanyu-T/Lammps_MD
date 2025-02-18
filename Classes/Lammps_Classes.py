@@ -396,7 +396,7 @@ class LammpsParentClass:
 
         delta_vol = (vol - self.vol_perfect) + np.trace(strain_tensor)*self.vol_perfect 
 
-        print(np.trace(strain_tensor)*self.vol_perfect ,  (vol - self.vol_perfect))
+        # print(np.trace(strain_tensor)*self.vol_perfect ,  (vol - self.vol_perfect))
 
         # print(vol - self.vol_perfect)
         relaxation_volume = (2/self.alattice**3)  * delta_vol # (vol + (np.trace(strain_tensor) - 1)*self.vol_perfect)
