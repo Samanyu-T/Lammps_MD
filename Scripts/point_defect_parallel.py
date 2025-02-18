@@ -31,7 +31,7 @@ init_dict = {}
 with open(sys.argv[1], 'r') as file:
     init_dict = json.load(file)
 
-output_folder = 'lcl_files_%d' % color
+output_folder = '%s_%d' % (sys.argv[1].split('.')[0], color)
 
 init_dict['output_folder'] = output_folder
 
@@ -40,7 +40,6 @@ if proc_id == 0:
         os.mkdir(output_folder)
         os.mkdir(os.path.join(output_folder,'Data_Files'))
         os.mkdir(os.path.join(output_folder,'Atom_Files'))
-
 comm.barrier()
 
 lmp = LammpsParentClass(init_dict, comm, proc_id)
@@ -99,6 +98,7 @@ for _iter in range(3):
 
         if proc_id == 0:
             print(input_filepath, defect_centre, pt, ef, rvol)
+        comm.barrier()
 
     data = np.array(data)
 
