@@ -82,7 +82,7 @@ def main():
         
     # init_dict['potfile'] = 'Fitting_Runtime/Potentials/optim.0.eam.fs'
 
-    init_dict['potfile'] = 'git_folder/Potentials/final.eam.he'
+    init_dict['potfile'] = 'git_folder/Potentials/TBMNL.eam.he'
 
     init_dict['pottype'] = 'he'
 

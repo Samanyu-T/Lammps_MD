@@ -194,7 +194,7 @@ lmp.command('group gvac id %s' % cmd_string)
 lmp.command('delete_atoms group gvac compress yes')
 
 lmp.command('run 0')
-lmp_class.run_MD(lmp, temp=600, timestep=1e-3, N_steps= 10000)
+lmp_class.run_MD(lmp, temp=1000, timestep=1e-3, N_steps= 10000)
 
 lmp_class.cg_min(lmp)
 
@@ -202,9 +202,14 @@ pe_0 = lmp.get_thermo('pe')
 
 N_he = 1
 
-lmp.command('create_atoms 3 single %f %f %f units box' % (23.4, 24.7, 14))
+# x_loop = np.array([23.4, 24.7, 14])
+# lmp.command('create_atoms 3 single %f %f %f units box' % (23.4, 24.7, 14))
 
-lmp_class.run_MD(lmp, temp=600, timestep=1e-3, N_steps= 1000)
+lmp.command('create_atoms 2 random 10 123324 NULL overlap 0.5 maxtry 1000')
+
+lmp_class.cg_min(lmp)
+
+lmp_class.run_MD(lmp, temp=1000, timestep=1e-3, N_steps= 100000)
 
 lmp_class.cg_min(lmp)
 

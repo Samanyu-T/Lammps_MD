@@ -13,10 +13,11 @@ def copy_files(w_he, he_he, h_he, work_dir, data_dir):
     
     data_files_folder = os.path.join(work_dir, 'Data_Files')
 
-    if os.path.exists(data_files_folder):
-        shutil.rmtree(data_files_folder)
+    if proc_id == 0:
+        if os.path.exists(data_files_folder):
+            shutil.rmtree(data_files_folder)
 
-    os.mkdir(data_files_folder)
+        os.mkdir(data_files_folder)
 
     files_to_copy = []
     
@@ -28,7 +29,7 @@ def copy_files(w_he, he_he, h_he, work_dir, data_dir):
         files_to_copy.extend(glob.glob('%s/V*H0He1.0.txt' % data_dir))
 
     if he_he:
-        # files_to_copy.extend(glob.glob('%s/V*H0He*.*.txt' % data_dir))
+        files_to_copy.extend(glob.glob('%s/V*H0He*.*.txt' % data_dir))
         files_to_copy.extend(glob.glob('%s/V*H0He2.*.txt' % data_dir))
         # files_to_copy.extend(glob.glob('%s/V*H0He3.*.txt' % data_dir))
         # files_to_copy.extend(glob.glob('%s/V*H0He4.*.txt' % data_dir))
@@ -47,21 +48,26 @@ def copy_files(w_he, he_he, h_he, work_dir, data_dir):
     
 comm = MPI.COMM_WORLD
 
-proc_id = 0
+# proc_id = 0
 
-n_procs = 1
+# n_procs = 1
 
-pot, potlines, pot_params = Handle_PotFiles_He.read_pot('git_folder/Potentials/init.eam.he')
+proc_id = comm.Get_rank()
+
+n_procs = comm.Get_size()
+
+pot, potlines, pot_params = Handle_PotFiles_He.read_pot('git_folder/Potentials/final.eam.he')
 
 n_knots = {}
 n_knots['He F'] = 2
 n_knots['H-He p'] = 0
-n_knots['He-W p'] = 2
+n_knots['He-W p'] = 0
 n_knots['He-H p'] = 0
 n_knots['He-He p'] = 0
-n_knots['W-He'] = 4
+n_knots['W-He'] = 0
 n_knots['He-He'] = 0
 n_knots['H-He'] = 0
+n_knots['W-He p'] = 0
 
 with open('fitting.json', 'r') as file:
     param_dict = json.load(file)

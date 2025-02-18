@@ -53,7 +53,7 @@ def surface_binding(lmp, depth):
 
 
 
-init_dict['size'] = 7
+init_dict['size'] = 10
 
 init_dict['surface'] = 0
 
@@ -67,13 +67,13 @@ init_dict['orientz'] = [0, 0, 1]
 
 # init_dict['potfile'] = 'Fitting_Runtime/Potentials/optim.0.eam.he'
 
-init_dict['potfile'] = 'git_folder/Potentials/beck_full.eam.he'
+# init_dict['potfile'] = 'git_folder/Potentials/beck_full.eam.he'
 
-init_dict['pottype'] = 'he'
+# init_dict['pottype'] = 'he'
 
-# init_dict['potfile'] = 'git_folder/Potentials/beck.eam.alloy'
+init_dict['potfile'] = '/Users/cd8607/Downloads/WHHe_zbl.eam.fs'
 
-# init_dict['pottype'] = 'alloy'
+init_dict['pottype'] = 'fs'
 
 depth = np.linspace(0, 10, 10)
 

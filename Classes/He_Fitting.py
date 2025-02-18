@@ -306,7 +306,7 @@ def create_init_file(filepath):
         1,
         0
     ],
-    "size": 4,
+    "size": 10,
     "surface": 0,
     "potfile": "git_folder/Potentials/final.eam.he",
     "conv": 100,
@@ -355,7 +355,7 @@ class Fit_EAM_Potential():
             0,
             1
         ],
-        "size": 4,
+        "size": 10,
         "surface": 0,
         "potfile": os.path.join(self.pot_folder, 'optim.%d.eam.he' % self.proc_id), #"git_folder/Potentials/final.eam.he"
         "pottype":"he",
@@ -1128,7 +1128,7 @@ def loss_func(sample, data_ref, optim_class:Fit_EAM_Potential, diag=False, write
     
     if diag:
         print(sample_mat[0, 0, 1, :, :], ref_mat[0, 0, 1, :, :])
-    # print(sample_mat[0, 0, 1, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 1, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
+    print(sample_mat[0, 0, 1, 1:, 0] - sample_mat[0, 0, 1, 0, 0], ref_mat[0, 0, 1, 1:, 0] - ref_mat[0, 0, 1, 0, 0])
     ''' Constraint '''
 
     # constraint = not (np.arange(sample_mat.shape[3]) == np.round(sample_mat[0, 0, 1, :, 0], 3).argsort()).all()
@@ -1541,7 +1541,7 @@ def gaussian_sampling(n_knots, comm, proc_id, mean, cov, max_time=3, work_dir = 
 
 
 
-def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_Local', save_folder = '../Fitting_Output', diag=False):
+def simplex(n_knots, comm, proc_id, x_init, maxiter = 100, work_dir = '../Optim_Local', save_folder = '../Fitting_Output', diag=True):
 
     data_files_folder = os.path.join(work_dir, 'Data_Files')
 

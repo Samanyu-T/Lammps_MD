@@ -473,7 +473,7 @@ eam_fit.sample_to_file(x)
 print(x[eam_fit.map['H-He']])
 Handle_PotFiles_He.write_pot(eam_fit.pot_lammps, eam_fit.potlines, eam_fit.lammps_param['potfile'])
 
-Handle_PotFiles_He.write_pot(eam_fit.pot_lammps, eam_fit.potlines, 'git_folder/Potentials/final.eam.he')
+Handle_PotFiles_He.write_pot(eam_fit.pot_lammps, eam_fit.potlines, 'git_folder/Potentials/mnl-tb.eam.he')
 
 plt.plot(rho[:1000], eam_fit.pot_lammps['H F'][:1000])
 plt.plot(rho[:1000], eam_fit.pot_lammps['He F'][:1000])

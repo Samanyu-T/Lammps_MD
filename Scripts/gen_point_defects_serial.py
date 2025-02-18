@@ -5,13 +5,21 @@ import numpy as np
 
 sys.path.append(os.path.join(os.getcwd(), 'git_folder', 'Classes'))
 
-from Lammps_Classes_Serial import LammpsParentClass
+from Lammps_Classes import LammpsParentClass
 
-comm = 0
+# comm = 0
 
-proc_id = 0
+# proc_id = 0
 
-n_procs = 1
+# n_procs = 1
+from mpi4py import MPI
+
+comm = MPI.COMM_WORLD
+
+proc_id = comm.Get_rank()
+
+n_procs = comm.Get_size()
+
 
 init_dict = {}
 
@@ -26,18 +34,21 @@ init_dict['orienty'] = [0, 1, 0]
 
 init_dict['orientz'] = [0, 0, 1]
 
-init_dict['size'] = 5
+init_dict['size'] = 10
 
 init_dict['surface'] = 0
 
-init_dict['potfile'] = 'git_folder/Potentials/final.eam.he'
+init_dict['potfile'] = 'git_folder/Potentials/TBMNL.eam.he'# '/Users/cd8607/Downloads/WHHe_zbl.eam.fs' #'git_folder/Potentials/TBMNL.eam.he' #'/Users/cd8607/Downloads/final.eam.he'
 
 # init_dict['conv'] = 10000
 
 # init_dict['potfile'] = 'Fitting_Runtime/Potentials/optim.0.eam.he'
-
-
 init_dict['pottype'] = 'he'
+
+# init_dict['potfile'] = '/Users/cd8607/Downloads/WHHe_zbl.eam.fs'
+# init_dict['pottype'] = 'fs'
+
+# init_dict['alattice'] = 3.165200
 
 init_dict['output_folder'] = output_folder
 
@@ -50,8 +61,10 @@ lmp = LammpsParentClass(init_dict, comm, proc_id)
 
 lmp.perfect_crystal()
 
+print(lmp.alattice)
+
 x = np.arange(3)
-y = np.arange(10)
+y = np.arange(4)
 z = np.arange(10)
 
 xx, yy, zz = np.meshgrid(x, y, z, indexing='ij')
@@ -103,8 +116,10 @@ for i, pt in enumerate(points[1:]):
     
     data.append([pt[0], pt[1], pt[2], ef, rvol])
 
-    print(input_filepath, defect_centre, pt, ef, rvol)
+    if proc_id == 0:
+        print(input_filepath, defect_centre, pt, ef, rvol)
 
 data = np.array(data)
 
-np.savetxt('new.txt', data)
+if proc_id == 0:
+    np.savetxt('zhou.txt', data)

@@ -197,12 +197,12 @@ class LammpsParentClass:
                                         lmp.get_thermo('pxz'),
                                         lmp.get_thermo('pyz')
                                         ]) 
-        
+        # print(lmp.get_thermo('pe') / lmp.get_natoms())
         # Update Lattice Constant after minimizing the box dimensions 
         if update_alat:
             self.alattice = lmp.get_thermo('xlat') / np.sqrt(np.dot(self.orientx, self.orientx))
             
-        self.E_cohesive = np.array([-8.94964, -2.121, 0])
+        self.E_cohesive = np.array([lmp.get_thermo('pe')/lmp.get_natoms(), -2.121, 0])
         
         self.N_species = np.array([lmp.get_natoms(), 0, 0])
         
@@ -379,12 +379,12 @@ class LammpsParentClass:
         pxz = lmp.get_thermo('pxz')
         pyz = lmp.get_thermo('pyz')
         
-        # vol = lmp.get_thermo('vol')
+        vol = lmp.get_thermo('vol')
         stress_voigt = np.array([pxx, pyy, pzz, pxy, pxz, pyz]) - self.stress_perfect
 
         strain_tensor = self.find_strain(stress_voigt)
         
-        relaxation_volume = 2*np.trace(strain_tensor)*self.vol_perfect/self.alattice**3
+        relaxation_volume = (2/self.alattice**3)  * (vol + (np.trace(strain_tensor) - 1)*self.vol_perfect)
 
         return relaxation_volume
     
@@ -542,8 +542,8 @@ class LammpsParentClass:
             self.cg_min(lmp)
         
         if run_MD:
-            self.run_MD(lmp, 800, 1e-3, 2000)
-            self.run_MD(lmp, 400, 1e-3, 2000)
+            self.run_MD(lmp, 1000, 1e-3, 6000)
+            self.run_MD(lmp, 500, 1e-3, 6000)
 
             self.cg_min(lmp)
 
