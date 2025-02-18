@@ -34,7 +34,7 @@ init_dict['orienty'] = [0, 1, 0]
 
 init_dict['orientz'] = [0, 0, 1]
 
-init_dict['size'] = 10
+init_dict['size'] = 12
 
 init_dict['surface'] = 0
 
@@ -47,7 +47,6 @@ init_dict['pottype'] = 'he'
 
 # init_dict['potfile'] = '/Users/cd8607/Downloads/WHHe_zbl.eam.fs'
 # init_dict['pottype'] = 'fs'
-
 # init_dict['alattice'] = 3.165200
 
 init_dict['output_folder'] = output_folder
@@ -60,8 +59,6 @@ if not os.path.exists(output_folder):
 lmp = LammpsParentClass(init_dict, comm, proc_id)
 
 lmp.perfect_crystal()
-
-print(lmp.alattice)
 
 x = np.arange(3)
 y = np.arange(4)

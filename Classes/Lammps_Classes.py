@@ -173,7 +173,7 @@ class LammpsParentClass:
 
             lmp.command('unfix zero_pressure')
     
-    def perfect_crystal(self, update_alat=False):
+    def perfect_crystal(self, update_alat=True):
         """
         Generate a perfect Tungsten crystal to use as reference for the rest of the point defects
         """
@@ -197,6 +197,9 @@ class LammpsParentClass:
                                         lmp.get_thermo('pxz'),
                                         lmp.get_thermo('pyz')
                                         ]) 
+        
+        # self.stress_perfect = np.zeros((6, ))
+
         # print(lmp.get_thermo('pe') / lmp.get_natoms())
         # Update Lattice Constant after minimizing the box dimensions 
         if update_alat:
@@ -228,7 +231,12 @@ class LammpsParentClass:
 
         lmp.command('fix 1 all nve')
 
-        rng_seed = np.random.randint(1, 10000)
+        rng_seed = None
+        
+        if self.proc_id == 0:
+            rng_seed = np.random.randint(1, 10000)
+
+        rng_seed = self.comm.bcast(rng_seed, root=0)
 
         lmp.command('velocity all create %f %d mom yes rot no dist gaussian units box' % (temp, rng_seed))
 
@@ -238,8 +246,8 @@ class LammpsParentClass:
 
         lmp.command('run %d' % N_steps)
 
-        lmp.command('velocity all zero linear')
-
+        lmp.command('velocity all scale 0.0')
+        
     def get_formation_energy(self, lmp, N_species=None):
 
         pe = lmp.get_thermo('pe')
@@ -380,11 +388,18 @@ class LammpsParentClass:
         pyz = lmp.get_thermo('pyz')
         
         vol = lmp.get_thermo('vol')
+
+
         stress_voigt = np.array([pxx, pyy, pzz, pxy, pxz, pyz]) - self.stress_perfect
 
+        # print(self.stress_perfect, stress_voigt)
+
         strain_tensor = self.find_strain(stress_voigt)
-        
-        relaxation_volume = (2/self.alattice**3)  * (vol + (np.trace(strain_tensor) - 1)*self.vol_perfect)
+
+        delta_vol = (vol - self.vol_perfect) + np.trace(strain_tensor)*self.vol_perfect 
+
+        # print(vol - self.vol_perfect)
+        relaxation_volume = (2/self.alattice**3)  * delta_vol # (vol + (np.trace(strain_tensor) - 1)*self.vol_perfect)
 
         return relaxation_volume
     
@@ -542,12 +557,25 @@ class LammpsParentClass:
             self.cg_min(lmp)
         
         if run_MD:
-            self.run_MD(lmp, 1000, 1e-3, 6000)
-            self.run_MD(lmp, 500, 1e-3, 6000)
+
+            self.run_MD(lmp, 1000, 1e-3, 10000)
+
+            self.run_MD(lmp, 500, 1e-3, 10000)
 
             self.cg_min(lmp)
 
+        lmp.command('run 100')
+
+        lmp.command('fix zero_pressure all box/relax aniso 0.0')    
+
+        lmp.command('minimize 1e-9 1e-12 10 10')
+
+        lmp.command('minimize 1e-12 1e-15 100 100')
+
+        lmp.command('minimize 1e-16 1e-18 %d %d' % (1e6, 1e6))
+
         rvol = self.get_rvol(lmp)
+        # print(rvol)
 
         # Save Data Files and Atom Files for diagnosis and restart purposes
         lmp.command('write_data %s' % (output_filepath))
@@ -567,6 +595,8 @@ class LammpsParentClass:
         # Calculate the relaxation volume and formation energy
 
         formation_energy = self.get_formation_energy(lmp)
+
+        lmp.close()
 
         if return_trials:
             return sites, pe_arr
@@ -795,8 +825,10 @@ class LammpsParentClass:
         avail_sites = np.arange(len(xyz_slct))
         
         while len(avail_sites) > 1:
-
-            rng_idx = np.random.randint(low=0, high=len(avail_sites))
+            rng_idx = None
+            if self.proc_id == 0:
+                rng_idx = np.random.randint(low=0, high=len(avail_sites))
+            rng_idx = self.comm.bcast(rng_idx, root=0)
 
             idx = avail_sites[rng_idx]
             
@@ -832,7 +864,13 @@ class LammpsParentClass:
             for j in range(target_species[i]):
 
                 while True:
-                    rng = np.random.rand(3)*(region_of_interest[1,:] - region_of_interest[0,:]) + region_of_interest[0,:]
+
+                    _rng = None
+                    if self.proc_id == 0:
+                        _rng = np.random.rand(3)
+                    _rng = self.comm.bcast(_rng, root=0)
+
+                    rng = _rng*(region_of_interest[1,:] - region_of_interest[0,:]) + region_of_interest[0,:]
                     
                     d, nn = kdtree.query(rng, k=1)
 
