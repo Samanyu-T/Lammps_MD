@@ -564,7 +564,7 @@ class LammpsParentClass:
 
             self.cg_min(lmp)
 
-        lmp.command('run 100')
+        # lmp.command('run 100')
 
         lmp.command('fix zero_pressure all box/relax aniso 0.0')    
 
