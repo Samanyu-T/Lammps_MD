@@ -98,6 +98,7 @@ for _iter in range(3):
 
         if proc_id == 0:
             print(input_filepath, defect_centre, pt, ef, rvol)
+            sys.stdout.flush()
         comm.barrier()
 
     data = np.array(data)
