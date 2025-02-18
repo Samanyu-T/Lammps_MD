@@ -355,7 +355,7 @@ class Fit_EAM_Potential():
             0,
             1
         ],
-        "size": 10,
+        "size": 4,
         "surface": 0,
         "potfile": os.path.join(self.pot_folder, 'optim.%d.eam.he' % self.proc_id), #"git_folder/Potentials/final.eam.he"
         "pottype":"he",

@@ -392,11 +392,11 @@ class LammpsParentClass:
 
         stress_voigt = np.array([pxx, pyy, pzz, pxy, pxz, pyz]) - self.stress_perfect
 
-        # print(self.stress_perfect, stress_voigt)
-
         strain_tensor = self.find_strain(stress_voigt)
 
         delta_vol = (vol - self.vol_perfect) + np.trace(strain_tensor)*self.vol_perfect 
+
+        print(np.trace(strain_tensor)*self.vol_perfect ,  (vol - self.vol_perfect))
 
         # print(vol - self.vol_perfect)
         relaxation_volume = (2/self.alattice**3)  * delta_vol # (vol + (np.trace(strain_tensor) - 1)*self.vol_perfect)
@@ -558,13 +558,15 @@ class LammpsParentClass:
         
         if run_MD:
 
-            self.run_MD(lmp, 1000, 1e-3, 10000)
+            self.run_MD(lmp, 800, 1e-3, 10000)
 
-            self.run_MD(lmp, 500, 1e-3, 10000)
+            self.run_MD(lmp, 400, 1e-3, 10000)
 
             self.cg_min(lmp)
 
-        # lmp.command('run 100')
+            # self.cg_min(lmp, fix_aniso=True)
+
+        lmp.command('run 100')
 
         lmp.command('fix zero_pressure all box/relax aniso 0.0')    
 
