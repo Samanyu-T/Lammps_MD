@@ -88,7 +88,7 @@ lmp = lammps( cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
 
 lmp.commands_list(cmd)
 
-lmp.command('create_atoms 3 single %f %f %f units box' % (2.5*3.14221, 2.5*3.14221, 2*3.14221))
+lmp.command('create_atoms 3 single %f %f %f units box' % (2.5*3.14221, 2.25*3.14221, 2*3.14221))
 
 lmp_class.cg_min(lmp)
 
@@ -96,9 +96,9 @@ pe_he_int = lmp_class.get_formation_energy(lmp, np.array([2*lmp_class.size**3, 0
 
 rvol = lmp_class.get_rvol(lmp)
 
-print(rvol)
+# print(rvol)
 
-exit()
+# exit()
 lmp.command('write_data %s' % os.path.join(output_folder, 'Data_Files', 'he_int.data'))
 
 lmp.command('write_dump all custom %s id type x y z'  % os.path.join(output_folder, 'Atom_Files', 'he_int.atom'))
@@ -133,7 +133,7 @@ lmp.commands_list(cmd)
 
 lmp.command('create_atoms 3 single %f %f %f units box' % (2.5*3.14221, 2.5*3.14221, 2*3.14221))
 
-lmp_class.run_MD(lmp, temp=600, timestep=1e-3, N_steps= 1000)
+lmp_class.run_MD(lmp, temp=300, timestep=1e-3, N_steps= 25000)
 lmp_class.cg_min(lmp)
 
 pe_he = lmp_class.get_formation_energy(lmp, np.array([2*lmp_class.size**3 + 1, 0 , 1]))
@@ -164,6 +164,6 @@ for i in range(1, n_int):
 ef_arr = np.array(ef_lst)
 eb = []
 for i in range(1, len(ef_arr)):
-    _eb =  ef_arr[i - 1] + pe_he - ef_arr[i]
+    _eb =  ef_arr[i - 1] + pe_he_int - ef_arr[i]
     print(_eb)
 

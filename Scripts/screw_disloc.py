@@ -59,9 +59,14 @@ init_dict['size'] = 7
 
 init_dict['surface'] = 10
 
-init_dict['potfile'] = 'git_folder/Potentials/final.eam.he'
+# init_dict['potfile'] = 'git_folder/Potentials/final.eam.he'
 
-init_dict['pottype'] = 'he'
+# init_dict['pottype'] = 'he'
+
+
+init_dict['potfile'] = 'git_folder/Potentials/xcli.eam.fs'
+
+init_dict['pottype'] = 'fs'
 
 output_folder = 'Dislocation_Loops'
 
@@ -90,17 +95,17 @@ lmp.command('dump mydump all custom 1000 %s/screw.*.atom id type x y z' % os.pat
 lmp.command('run 0')
 lmp_class.cg_min(lmp)
 
-lmp_class.run_MD(lmp, temp=600, timestep=1e-3, N_steps= 1000)
+# lmp_class.run_MD(lmp, temp=600, timestep=1e-3, N_steps= 1000)
 
-lmp_class.cg_min(lmp)
+lmp_class.cg_min(lmp, 25000, fix_aniso=True)
 
 pe_0 = lmp.get_thermo('pe')
 
 N_he = 1
 
-lmp.command('create_atoms 3 single %f %f %f units box' % (31.4, 34.4, 15))
+lmp.command('create_atoms 3 single %f %f %f units box' % (79, 68, 0.5))
 
-lmp_class.run_MD(lmp, temp=600, timestep=1e-3, N_steps= 1000)
+# lmp_class.run_MD(lmp, temp=600, timestep=1e-3, N_steps= 1000)
 
 lmp_class.cg_min(lmp)
 

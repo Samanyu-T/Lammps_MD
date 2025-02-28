@@ -558,7 +558,7 @@ class LammpsParentClass:
         
         if run_MD:
 
-            self.run_MD(lmp, 800, 1e-3, 10000)
+            # self.run_MD(lmp, 800, 1e-3, 10000)
 
             self.run_MD(lmp, 400, 1e-3, 10000)
 

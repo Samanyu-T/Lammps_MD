@@ -38,15 +38,23 @@ init_dict['orientz'] = [1, 1, 2]
 
 # init_dict['orientz'] = [0, 0, 1]
 
-init_dict['size'] = 50
+init_dict['size'] = 10
 
 init_dict['surface'] = 0
 
 init_dict['output_folder'] = output_folder
 
-init_dict['potfile'] = 'git_folder/Potentials/final.eam.he'
+# init_dict['potfile'] = 'git_folder/Potentials/final.eam.he'
 
-init_dict['pottype'] = 'he'
+# init_dict['pottype'] = 'he'
+
+
+init_dict['potfile'] = 'git_folder/Potentials/xcli.eam.fs'
+
+init_dict['pottype'] = 'fs'
+
+
+init_dict['alattice'] = 3.1652
 
 lmp_class = LammpsParentClass(init_dict, comm, proc_id)
 

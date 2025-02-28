@@ -55,9 +55,16 @@ init_dict['orientz'] = [0, 0, 1]
 # init_dict['orienty'] = [-1,2,-1]
 # init_dict['orientz'] = [-1,0, 1]
 
-init_dict['potfile'] = 'git_folder/Potentials/final.eam.he'
+init_dict['potfile'] = 'git_folder/Potentials/mnl-tb.eam.he'
 
 init_dict['pottype'] = 'he'
+
+
+# init_dict['potfile'] = 'git_folder/Potentials/xcli.eam.fs'
+
+# init_dict['pottype'] = 'fs'
+
+# init_dict['alattice'] = 3.1652 
 
 depth = np.linspace(0, 10, 10)
 
@@ -179,7 +186,7 @@ for i in range(N):
 
 lmp.command('run 0')
 lmp.command('dump mydump all custom 1000 %s/interstitial_loop.*.atom id type x y z' % os.path.join(output_folder,'Atom_Files'))
-lmp_class.cg_min(lmp)
+lmp_class.cg_min(lmp, conv = 25000,fix_aniso=True)
 
 pe_0 = lmp.get_thermo('pe')
 ef0 = lmp_class.get_formation_energy(lmp, np.array([2*lmp_class.size**3 + N, 0 , 0]))
@@ -204,7 +211,7 @@ lmp.command('create_atoms 3 single %f %f %f units box' % (6.25*3.14221, 6.5*3.14
 
 lmp_class.run_MD(lmp, temp=600, timestep=1e-3, N_steps= 10000)
 
-lmp_class.cg_min(lmp)
+lmp_class.cg_min(lmp, conv =25000, fix_aniso=True)
 
 output_filepath = '%s/sia_loop_he.data' % os.path.join(output_folder,'Data_Files')
 

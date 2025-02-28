@@ -59,9 +59,14 @@ init_dict['size'] = 7
 
 init_dict['surface'] = 10
 
-init_dict['potfile'] = 'git_folder/Potentials/final.eam.he'
+# init_dict['potfile'] = 'git_folder/Potentials/beck_full.eam.he'
 
-init_dict['pottype'] = 'he'
+# init_dict['pottype'] = 'he'
+
+
+init_dict['potfile'] = 'git_folder/Potentials/xcli.eam.fs'
+
+init_dict['pottype'] = 'fs'
 
 output_folder = 'Dislocation_Loops'
 
@@ -83,30 +88,43 @@ lmp_class = LammpsParentClass(init_dict, comm, proc_id)
 
 lmp = lammps()# cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
 
-lmp.commands_list(lmp_class.init_from_datafile('Atomsk_Files/Dislocations/W_edge_111.lmp'))
+input_filepath = '%s/edge_disloc.data' % os.path.join(output_folder,'Data_Files')
+output_filepath = '%s/edge_disloc_he.data' % os.path.join(output_folder,'Data_Files')
 
-lmp.command('dump mydump all custom 1000 %s/edge.*.atom id type x y z' % os.path.join(output_folder,'Atom_Files'))
+lmp.commands_list(lmp_class.init_from_datafile(input_filepath))#'Atomsk_Files/Dislocations/W_edge_111.lmp'))
+
 
 lmp.command('run 0')
-lmp_class.cg_min(lmp)
-
-lmp_class.run_MD(lmp, temp=600, timestep=1e-3, N_steps= 1000)
-
-lmp_class.cg_min(lmp)
-
-pe_0 = lmp.get_thermo('pe')
-
-N_he = 1
-
-lmp.command('create_atoms 3 single %f %f %f units box' % (30, 31.0, 42))
+# lmp_class.cg_min(lmp)
 
 # lmp_class.run_MD(lmp, temp=600, timestep=1e-3, N_steps= 1000)
 
-lmp_class.cg_min(lmp)
+lmp_class.cg_min(lmp, fix_aniso=True)
+
+pe_0 = lmp.get_thermo('pe')
+
+# N_he = 1
+
+# lmp.command('dump mydump all custom 1000 %s/edge.*.atom id type x y z' % os.path.join(output_folder,'Atom_Files'))
+
+
+# lmp.command('write_data %s' % input_filepath)
+
+lmp.command('create_atoms 3 single %f %f %f units box' % (41.9, 78, 0.2))
+
+centre = np.array([40.9, 78, 0])
+
+lmp_class.cg_min(lmp, fix_aniso=True)
+
+# lmp_class.run_MD(lmp, temp=1000, timestep=1e-3, N_steps= 10000)
+
+# lmp_class.add_defect(input_filepath, output_filepath, 3, 1, centre, minimizer='random')
+
+lmp_class.cg_min(lmp, fix_aniso=True)
 
 output_filepath = '%s/edge_disloc_he.data' % os.path.join(output_folder,'Data_Files')
 
 lmp.command('write_data %s' % output_filepath)
 pe_1 = lmp.get_thermo('pe')
 
-print(pe_0 + 6.73 - pe_1)
+print(pe_0 + 6.21 - pe_1)

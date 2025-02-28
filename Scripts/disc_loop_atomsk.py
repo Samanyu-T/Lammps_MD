@@ -31,229 +31,71 @@ if not os.path.exists(output_folder):
 
 lmp_class = LammpsParentClass(init_dict, comm, proc_id)
 
-# lmp = lammps()# cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
-
-# lmp.commands_list(lmp_class.init_from_datafile('Atomsk_Files/Dislocations/W_loop_111.lmp')) 
-
-# fix_length = 10
-
-# # lmp.command('region centre block %f %f %f %f %f %f side in units box' % (fix_length, lmp.get_thermo('xhi') - fix_length ,
-# #                                                   fix_length, lmp.get_thermo('yhi') - fix_length ,
-# #                                                   0, lmp.get_thermo('zhi')  ))
-
-# # lmp.command('group fix_atoms_0 region centre')
-
-# # lmp.command('fix freeze_0 fix_atoms_0 setforce 0.0 0.0 0.0')
-
-# # lmp_class.cg_min(lmp, conv=1000, fix_aniso=False)
-
-
-# # lmp.command('unfix freeze_0')
-
-
-# # lmp.command('region out_centre block %f %f %f %f %f %f side out units box' % (fix_length, lmp.get_thermo('xhi') - fix_length ,
-# #                                                   fix_length, lmp.get_thermo('yhi') - fix_length ,
-# #                                                   0, lmp.get_thermo('zhi') ))
-
-# # lmp.command('group fix_atoms_1 region centre')
-
-# # lmp.command('fix freeze_1 fix_atoms_1 setforce 0.0 0.0 0.0')
-
-# # lmp_class.cg_min(lmp, conv=10000, fix_aniso=False)
-
-# pe_loop_0 = lmp.get_thermo('pe')
-
-# lmp.command('write_dump all custom %s/test.0.atom id type x y z' % output_folder)
-
-# lmp.command('create_atoms 3 single 33 33 20 units box')
-
-
-# lmp.command('fix 1 all nve')
-
-# rng_seed = np.random.randint(1, 10000)
-
-# temp = 10
-
-# timestep = 1e-3
-
-# N_steps = 1000
-
-# lmp.command('velocity all create %f %d mom yes rot no dist gaussian units box' % (temp, rng_seed))
-
-# lmp.command('run 0')
-
-# lmp.command('timestep %f' % timestep)
-
-# lmp.command('run %d' % N_steps)
-
-# # lmp_class.cg_min(lmp, conv=10000)
-
-# pe_loop_1 = lmp.get_thermo('pe')
-
-# xyz = np.array(lmp.gather_atoms('x', 1, 3))
-
-# xhi = lmp.get_thermo('xhi') - 300
-
-# yhi = lmp.get_thermo('yhi') - 300
-
-# xyz_loop_he = xyz[-3:]
-
-# xyz_loop_he[0] -= xhi * 0.501
-# xyz_loop_he[1] -= yhi * 0.501
-
-# lmp.command('write_dump all custom %s/test.1.atom id type x y z' % output_folder)
-
-# lmp.close()
-
-# print(pe_loop_0 + 6.73 - pe_loop_1, pe_loop_0, pe_loop_1)
 
 lmp = lammps()# cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
 
-lmp.commands_list(lmp_class.init_from_datafile('Atomsk_Files/Dislocations/W_edge_111.lmp')) 
+lmp.commands_list(lmp_class.init_from_datafile('Atomsk_Files/Dislocations/W_loop_111.lmp')) 
 
+lmp_class.cg_min(lmp, conv=25000)
 
-# fix_length = 10
+lmp.command('write_dump all custom %s/loop.0.atom id type x y z' % output_folder)
 
-# lmp.command('region centre block %f %f %f %f %f %f side in units box' % (fix_length, lmp.get_thermo('xhi') - fix_length ,
-#                                                   fix_length, lmp.get_thermo('yhi') - fix_length ,
-#                                                   0, lmp.get_thermo('zhi') ))
+pe_0 = lmp.get_thermo('pe')
 
-# lmp.command('group fix_atoms_0 region centre')
+lmp.command('create_atoms 3 single 33.4 77.4 30 units box')
 
-# lmp.command('fix freeze_0 fix_atoms_0 setforce 0.0 0.0 0.0')
+lmp_class.run_MD(lmp, temp=600, timestep=1e-3, N_steps= 10000)
 
-# lmp_class.cg_min(lmp, conv=10000, fix_aniso=False)
+lmp_class.cg_min(lmp, conv=25000)
 
+pe_1 = lmp.get_thermo('pe')
 
-# lmp.command('unfix freeze_0')
+lmp.command('write_dump all custom %s/loop.1.atom id type x y z' % output_folder)
 
-
-# lmp.command('region out_centre block %f %f %f %f %f %f side out units box' % (fix_length, lmp.get_thermo('xhi') - fix_length ,
-#                                                   fix_length, lmp.get_thermo('yhi') - fix_length ,
-#                                                   0, lmp.get_thermo('zhi')))
-
-# lmp.command('group fix_atoms_1 region centre')
-
-# lmp.command('fix freeze_1 fix_atoms_1 setforce 0.0 0.0 0.0')
-
-lmp_class.cg_min(lmp, conv=10000, fix_aniso=False)
-
-pe_edge_0 = lmp.get_thermo('pe')
-
-lmp.command('create_atoms 3 single 33 33 1 units box')
-
-lmp.command('fix 1 all nve')
-
-rng_seed = np.random.randint(1, 10000)
-
-temp = 10
-
-timestep = 1e-3
-
-N_steps = 1000
-
-lmp.command('velocity all create %f %d mom yes rot no dist gaussian units box' % (temp, rng_seed))
-
-lmp.command('run 0')
-
-lmp.command('timestep %f' % timestep)
-
-lmp.command('run %d' % N_steps)
-
-lmp_class.cg_min(lmp, conv=10000)
-
-pe_edge_1 = lmp.get_thermo('pe')
-
-xyz = np.array(lmp.gather_atoms('x', 1, 3))
-
-xhi = lmp.get_thermo('xhi') - 300
-
-yhi = lmp.get_thermo('yhi') - 300
-
-xyz_edge_he = xyz[-3:]
-
-xyz_edge_he[0] -= xhi * 0.51
-xyz_edge_he[1] -= yhi * 0.51
-
-lmp.command('write_dump all custom %s/test.1.atom id type x y z' % output_folder)
 
 lmp.close()
 
-print(pe_edge_0 + 6.73 - pe_edge_1)
-exit()
+print( pe_0 + 6.21 - pe_1)
 
-lmp = lammps( cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
+# C11 = 3.229
+# C12 = 1.224
+# C44 = 0.888
 
-lmp.commands_list(lmp_class.init_from_datafile('Atomsk_Files/Dislocations/W_screw_111.lmp')) 
+# C_voigt = np.array([[C11, C12, C12, 0, 0, 0],
+#               [C12, C11, C12, 0, 0, 0],
+#               [C12, C12, C11, 0, 0, 0],
+#               [0, 0, 0, C44, 0, 0],
+#               [0, 0, 0, 0, C44, 0],
+#               [0, 0, 0, 0, 0, C44]])
 
-fix_length = 20
+# Cinv = np.linalg.inv(C_voigt)
 
-lmp_class.cg_min(lmp, conv=10000, fix_aniso=False)
+# G = 1.020
+# b = 2.721233684
+# v = 0.2819650067
+# t = G / (2* np.pi * (1 - v))
+# a = 3.145
+# rvol = 0.32662381279305125
 
-pe_screw_0 = lmp.get_thermo('pe')
+# strain = np.array([2.60513267e-04, 4.21136936e-05, 1.73493355e-04, 0, 0, 0])
 
-lmp.command('create_atoms 3 single 32 33 1 units box')
+# x = xyz_edge_he[0] 
+# y = xyz_edge_he[1] 
+# xx = (b / (2 * np.pi)) * ( - y / (x**2 + y**2) + (y**3 - 2*x**2*y)/( (2* (1-v) * (x**2 + y**2)**2 ))) 
+# yy = (b / (2 * np.pi)) * ((y**3 + x**2*y - 2*x*y**2)/( (2* (1-v) * (x**2 + y**2)**2 ))) 
+# zz = 0
 
-lmp_class.cg_min(lmp, conv=10000)
+# stress = np.array([xx, yy, zz, 0, 0, 0])
 
-pe_screw_1 = lmp.get_thermo('pe')
+# print( (C11 + 2*C12) * np.sum(stress) * rvol * (a**3/2) / 3,  stress)
 
-xyz = np.array(lmp.gather_atoms('x', 1, 3))
-
-xhi = lmp.get_thermo('xhi') - 300
-
-yhi = lmp.get_thermo('yhi') - 300
-
-xyz_screw_he = xyz[-3:]
-
-xyz_screw_he[0] -= xhi * 0.51
-xyz_screw_he[1] -= yhi * 0.51
-
-lmp.command('write_dump all custom %s/test.2.atom id type x y z' % output_folder)
-
-lmp.close()
-
-# print(pe_loop_0, pe_loop_1, xyz_loop_he)
-
-C11 = 3.229
-C12 = 1.224
-C44 = 0.888
-
-C_voigt = np.array([[C11, C12, C12, 0, 0, 0],
-              [C12, C11, C12, 0, 0, 0],
-              [C12, C12, C11, 0, 0, 0],
-              [0, 0, 0, C44, 0, 0],
-              [0, 0, 0, 0, C44, 0],
-              [0, 0, 0, 0, 0, C44]])
-
-Cinv = np.linalg.inv(C_voigt)
-
-G = 1.020
-b = 2.721233684
-v = 0.2819650067
-t = G / (2* np.pi * (1 - v))
-a = 3.145
-rvol = 0.32662381279305125
-
-strain = np.array([2.60513267e-04, 4.21136936e-05, 1.73493355e-04, 0, 0, 0])
-
-x = xyz_edge_he[0] 
-y = xyz_edge_he[1] 
-xx = (b / (2 * np.pi)) * ( - y / (x**2 + y**2) + (y**3 - 2*x**2*y)/( (2* (1-v) * (x**2 + y**2)**2 ))) 
-yy = (b / (2 * np.pi)) * ((y**3 + x**2*y - 2*x*y**2)/( (2* (1-v) * (x**2 + y**2)**2 ))) 
-zz = 0
-
-stress = np.array([xx, yy, zz, 0, 0, 0])
-
-print( (C11 + 2*C12) * np.sum(stress) * rvol * (a**3/2) / 3,  stress)
-
-xz = - ( (G * b) / (2* np.pi)) * xyz_edge_he[1] / (xyz_edge_he[0] **2 + xyz_edge_he[1] **2)
-yz = - ( (G * b) / (xyz_edge_he[0] )) * xyz_edge_he[1] / (xyz_edge_he[0] **2 + xyz_edge_he[1] **2)
+# xz = - ( (G * b) / (2* np.pi)) * xyz_edge_he[1] / (xyz_edge_he[0] **2 + xyz_edge_he[1] **2)
+# yz = - ( (G * b) / (xyz_edge_he[0] )) * xyz_edge_he[1] / (xyz_edge_he[0] **2 + xyz_edge_he[1] **2)
  
-stress = np.array([0, 0, 0, xz, yz, 0])
+# stress = np.array([0, 0, 0, xz, yz, 0])
 
-print( (C11 + 2*C12) * np.sum(stress) * rvol * (a**3/2) ,  stress)
+# print( (C11 + 2*C12) * np.sum(stress) * rvol * (a**3/2) ,  stress)
 
-print(pe_edge_0, pe_edge_1, xyz_edge_he)
+# print(pe_edge_0, pe_edge_1, xyz_edge_he)
 
-print(pe_screw_0, pe_screw_1, xyz_screw_he)
+# print(pe_screw_0, pe_screw_1, xyz_screw_he)

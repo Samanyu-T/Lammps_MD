@@ -24,8 +24,6 @@ pair_style eam/%s
 pair_coeff * * %s W H He
 thermo 10
 run 0
-# partition yes 1 fix freeze all setforce 0.0 0.0 0.0
-# partition yes 7 fix freeze all setforce 0.0 0.0 0.0
 fix 1 all neb 10000
 timestep 1e-4
 min_style quickmin
@@ -55,31 +53,34 @@ init_dict = {}
 with open('init_param.json', 'r') as file:
     init_dict = json.load(file)
 
-init_dict['size'] = 7
+init_dict['size'] = 8
 
-init_dict['surface'] = 10
+init_dict['surface'] = 0
 
-# init_dict['orientx'] = [1, 0, 0]
+init_dict['orientx'] = [1, 0, 0]
 
-# init_dict['orienty'] = [0, 1, 0]
+init_dict['orienty'] = [0, 1, 0]
 
-# init_dict['orientz'] = [0, 0, 1]
+init_dict['orientz'] = [0, 0, 1]
+
+# init_dict['alattice'] = 3.14221
 
 
 # init_dict['orientx'] = [1, 1, 0]
 # init_dict['orienty'] = [0, 0, 1]
 # init_dict['orientz'] = [1, -1, 0]
 
-init_dict['orientx'] = [1, 1, 1]
-init_dict['orienty'] = [-1,2,-1]
-init_dict['orientz'] = [-1,0, 1]
+# init_dict['orientx'] = [1, 1, 1]
+# init_dict['orienty'] = [-1,2,-1]
+# init_dict['orientz'] = [-1,0, 1]
+
 # init_dict['potfile'] = 'Fitting_Runtime/Potentials/optim.0.eam.fs'
 
-init_dict['potfile'] = 'git_folder/Potentials/final.eam.he'
+# init_dict['potfile'] = 'git_folder/Potentials/mnl-tb.eam.he'
 
-init_dict['potfile'] = 'git_folder/Potentials/bonny.eam.alloy'
+# init_dict['potfile'] = 'git_folder/Potentials/bonny.eam.alloy'
 
-init_dict['pottype'] = 'alloy'
+# init_dict['pottype'] = 'alloy'
 
 output_folder = 'neb_datafiles'
 
@@ -100,6 +101,7 @@ neb_image_folder = os.path.join(output_folder,'Neb_Image_Folder')
 
 lmp_class = LammpsParentClass(init_dict, comm, proc_id)
 
+
 lmp = lammps( cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
 
 lmp_class.init_from_box(lmp)
@@ -108,17 +110,9 @@ lmp_class.cg_min(lmp)
 
 pe_0 = lmp.get_thermo('pe')
 
-lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.250, 3.3500, 3.000))
-
-# lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.7500, 3.5000, 3.0000))
-
-# lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.2500, 3.5000, 0.0000))
-
-# lmp_class.run_MD(lmp, temp=600, timestep=1e-3, N_steps=1000)
-
+lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.250, 3.500, 3.000))
 
 lmp_class.cg_min(lmp)
-
 
 pe_1 = lmp.get_thermo('pe')
 
@@ -139,17 +133,14 @@ lmp_class.cg_min(lmp)
 
 pe_0 = lmp.get_thermo('pe')
 
-# lmp.command('create_atoms 3 single %f %f %f units lattice' % (2.2500, 3.500, 3.00))
-
-# lmp.command('create_atoms 3 single %f %f %f units lattice' % (5.2500, 3.500, 3.000))
-
-lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.2500, 3.500, 1.000))
+lmp.command('create_atoms 3 single %f %f %f units lattice' % (3.3500, 3.3500, 3.000))
+# lmp.command('create_atoms 3 single %f %f %f units box' % (10.9019, 10.9019, 9.4956))
 
 lmp_class.cg_min(lmp)
 
-pe_1 = lmp.get_thermo('pe')
+pe_2 = lmp.get_thermo('pe')
 
-print(pe_1 - pe_0)
+print(pe_2 - pe_1)
 
 lmp.command('write_data %s' % os.path.join(output_folder, 'Data_Files', 'tet_2.data'))
 

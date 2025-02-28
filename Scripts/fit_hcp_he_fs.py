@@ -11,7 +11,7 @@ import FS_Fitting_Serial, Handle_PotFiles_FS
 from scipy.optimize import minimize
 
 def sim_hcp_helium(filepath, potfile, type='fs'):
-    lmp = lammps(cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
+    lmp = lammps()#cmdargs=['-screen', 'none', '-echo', 'none', '-log', 'none'])
     lmp.command('units metal')
     lmp.command('atom_style atomic')
     lmp.command('atom_modify map array sort 0 0.0')
@@ -20,6 +20,8 @@ def sim_hcp_helium(filepath, potfile, type='fs'):
         lmp.command('pair_style eam/alloy' )
     elif type=='fs':
         lmp.command('pair_style eam/fs' )
+    elif type == 'he':
+        lmp.command('pair_style eam/he' )
     else:
         return 'ERROR'
     lmp.command('pair_coeff * * %s W H He' % potfile)
@@ -98,7 +100,7 @@ proc_id = 0
 
 n_procs = 1
 
-pot, potlines, pot_params = Handle_PotFiles_FS.read_pot('git_folder/Potentials/beck.eam.fs')
+pot, potlines, pot_params = Handle_PotFiles_FS.read_pot('git_folder/Potentials/xcli.eam.fs')
 
 
 n_knots = {}
@@ -115,44 +117,64 @@ n_knots['H-He'] = 0
 with open('fitting.json', 'r') as file:
     param_dict = json.load(file)
 
-# potfile =  'Fitting_Runtime/Potentials/optim.0.eam.alloy' 
+# # potfile =  'Fitting_Runtime/Potentials/optim.0.eam.alloy' 
 eam_fit = FS_Fitting_Serial.Fit_EAM_Potential(pot, n_knots, pot_params, potlines, comm, proc_id, param_dict['work_dir'])
 
-# x = np.array([-4.078e-01, 6.777e-01, -1.038e+00, -2.816e-02,  4.515e-02, -7.875e-02])
+# # x = np.array([-4.078e-01, 6.777e-01, -1.038e+00, -2.816e-02,  4.515e-02, -7.875e-02])
 
-''' CURRENT STABLE OPTIMA '''
-x =  np.array(  [3e-4, -3.670e-01,  4.789e-01 ,-3.762e-01, -2.760e-02,  4.344e-02, -7.470e-02])
+# ''' CURRENT STABLE OPTIMA '''
+# x =  np.array(  [3e-4, -3.670e-01,  4.789e-01 ,-3.762e-01, -2.760e-02,  4.344e-02, -7.470e-02])
 
-# x_res = minimize(loss_func, x , args=(eam_fit, data_dft), method='Powell',options={"maxiter":100}, tol=1e-4)
-# print(x_res)
-# x = x_res.x
+# # x_res = minimize(loss_func, x , args=(eam_fit, data_dft), method='Powell',options={"maxiter":100}, tol=1e-4)
+# # print(x_res)
+# # x = x_res.x
 
-loss_func(x, eam_fit, data_dft)
+# loss_func(x, eam_fit, data_dft)
+
+
+
+# A = 5.46
+# Z = 2
+# h = 1
+
+# x = np.hstack([A, Z, x])
+
+# sample = x
+# print(sample)
+
+# eam_fit.sample_to_file(sample)
+
+# Handle_PotFiles_FS.write_pot(eam_fit.pot_lammps, eam_fit.potlines, eam_fit.lammps_param['potfile'])
+
 stress_arr = np.zeros((len(data_dft,)))
 pe_arr = np.zeros((len(data_dft,)))
-
-
-A = 5.46
-Z = 2
-h = 1
-
-x = np.hstack([A, Z, x])
-
-sample = x
-print(sample)
-
-eam_fit.sample_to_file(sample)
-
-Handle_PotFiles_FS.write_pot(eam_fit.pot_lammps, eam_fit.potlines, eam_fit.lammps_param['potfile'])
 
 for i, row in enumerate(data_dft):
     lat, dft_stress, dft_pe = row
 
-    pot_stress, pot_pe = sim_hcp_helium('HCP_Helium_DataFiles/lat.%.1f.data' % lat, eam_fit.lammps_param['potfile'])
+    pot_stress, pot_pe = sim_hcp_helium('HCP_Helium_DataFiles/lat.%.1f.data' % lat,'git_folder/Potentials/xcli.eam.fs' )
     
     stress_arr[i]  = pot_stress
     pe_arr[i] = pot_pe
 
+np.savetxt('xcli-hcp-stress.txt', stress_arr)
+np.savetxt('xcli-hcp-energy.txt', pe_arr)
+
+
+mnltb_stress_arr = np.zeros((len(data_dft,)))
+mnltb_pe_arr = np.zeros((len(data_dft,)))
+
+for i, row in enumerate(data_dft):
+    lat, dft_stress, dft_pe = row
+
+    pot_stress, pot_pe = sim_hcp_helium('HCP_Helium_DataFiles/lat.%.1f.data' % lat, potfile =  'git_folder/Potentials/mnl-tb.eam.he' , type='he')
+    
+    mnltb_stress_arr[i]  = pot_stress
+    mnltb_pe_arr[i] = pot_pe
+
+
+np.savetxt('mnltb-hcp-stress.txt', mnltb_stress_arr)
+np.savetxt('mnltb-hcp-energy.txt', mnltb_pe_arr)
 
 
 beck_stress_arr = np.zeros((len(data_dft,)))
@@ -161,11 +183,14 @@ beck_pe_arr = np.zeros((len(data_dft,)))
 for i, row in enumerate(data_dft):
     lat, dft_stress, dft_pe = row
 
-    pot_stress, pot_pe = sim_hcp_helium('HCP_Helium_DataFiles/lat.%.1f.data' % lat, potfile =  'git_folder/Potentials/WHHe_test.eam.alloy' , type='alloy')
+    pot_stress, pot_pe = sim_hcp_helium('HCP_Helium_DataFiles/lat.%.1f.data' % lat, potfile =  'git_folder/Potentials/beck_full.eam.he' , type='he')
     
     beck_stress_arr[i]  = pot_stress
     beck_pe_arr[i] = pot_pe
 
+
+np.savetxt('beck-hcp-stress.txt', beck_stress_arr)
+np.savetxt('beck-hcp-energy.txt', beck_pe_arr)
 
 # conv = 0.602214
 
@@ -188,6 +213,7 @@ r = np.linspace(0, eam_fit.pot_params['rc'], eam_fit.pot_params['Nr'])
 plt.plot(data_dft[:,0], pe_arr, label='fit')
 plt.plot(data_dft[:,0], beck_pe_arr, label='beck_zbl')
 plt.plot(data_dft[:,0], data_dft[:,2], label='dft', color='black')
+
 plt.xlabel('Lattice Constant/ A')
 plt.ylabel('Energy/ eV')
 plt.title('Energy-Lattice Constant curve of a HCP Helium Lattice')
